@@ -204,14 +204,33 @@ Content-Type: application/json
 
 ## Running the Application
 
-### Install Dependencies
+### Install Dependencies with uv
+
+**First time setup:**
 ```bash
-pip install -r requirements.txt
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install dependencies
+uv sync
 ```
+
+**Quick install:**
+```bash
+uv sync
+```
+
+This installs all project dependencies including dev dependencies from `pyproject.toml`.
 
 ### Run the API Server
 ```bash
-python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+# Using uv run
+uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+
+# Or activate the virtual environment first
+source .venv/bin/activate  # Unix/macOS
+.venv\Scripts\activate     # Windows
+uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Access Interactive API Documentation
@@ -220,7 +239,11 @@ python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 
 ### Run Unit Tests
 ```bash
-pytest tests/unit/test_notebook_management_service.py -v
+# Using uv run
+uv run pytest tests/unit/test_notebook_management_service.py -v
+
+# Or run all tests
+uv run pytest tests/ -v
 ```
 
 **Test Coverage**: 38 tests covering:

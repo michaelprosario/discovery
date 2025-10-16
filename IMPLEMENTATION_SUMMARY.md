@@ -188,28 +188,35 @@ discovery/
 
 ## How to Run
 
-### Install Dependencies
+### Install Dependencies with uv
 ```bash
-pip install -r requirements.txt
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Sync dependencies
+uv sync
 ```
+
+This installs all dependencies from `pyproject.toml` and creates a `.venv` automatically.
 
 ### Run Tests
 ```bash
-# All tests
-pytest tests/ -v
+# All tests using uv run
+uv run pytest tests/ -v
 
 # Unit tests only
-pytest tests/unit/ -v
+uv run pytest tests/unit/ -v
 
 # Integration tests only
-pytest tests/integration/ -v
+uv run pytest tests/integration/ -v
 ```
 
 **Result: 42/42 tests passing ✅**
 
 ### Run API Server
 ```bash
-python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+# Using uv run
+uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Access Documentation

@@ -1,28 +1,59 @@
 # Quick Start Guide
 
+## Prerequisites
+
+Install **uv** (fast Python package manager):
+
+```bash
+# Unix/macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Or using pip
+pip install uv
+```
+
 ## Setup
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Sync dependencies (creates .venv automatically)
+uv sync
+
+# This installs all dependencies from pyproject.toml including dev dependencies
 ```
 
 ## Run Tests
 
 ```bash
-# All tests (42 tests)
-pytest tests/ -v
+# All tests (42 tests) using uv run
+uv run pytest tests/ -v
 
 # Expected output: 42 passed ✅
+
+# Or run specific test files
+uv run pytest tests/unit/ -v
+uv run pytest tests/integration/ -v
 ```
 
 ## Run API Server
 
 ```bash
-# Start server
-python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+# Start server using uv run
+uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 
 # Access docs: http://localhost:8000/docs
+```
+
+**Alternative (using activated virtual environment):**
+```bash
+# Activate virtual environment
+source .venv/bin/activate  # Unix/macOS
+.venv\Scripts\activate     # Windows
+
+# Run server
+uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ## Try the API
@@ -37,7 +68,9 @@ curl -X POST http://localhost:8000/api/notebooks \
 curl http://localhost:8000/api/notebooks
 
 # Access interactive docs
-open http://localhost:8000/docs
+open http://localhost:8000/docs  # macOS
+xdg-open http://localhost:8000/docs  # Linux
+start http://localhost:8000/docs  # Windows
 ```
 
 ## Project Structure
