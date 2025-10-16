@@ -2,6 +2,14 @@
 
 This document defines the domain entities and services for the Discovery application, following Clean Architecture principles where the Core contains business logic independent of infrastructure concerns.
 
+## Rules for repositories that do CRUD
+- provide a way to add domain entity
+- provide a way to update domain entity
+- provide a way to upsert domain entity
+- provide a way to get entity by Id(Guid)
+- provide a way to check if entity exists by Id(Guid)
+
+
 ## Domain Entities
 
 Domain entities represent the core business objects with identity, behavior, and business rules. They reside in the **Core** layer.
