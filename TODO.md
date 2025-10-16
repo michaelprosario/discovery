@@ -1,0 +1,2 @@
+- define structure for a notebook
+- define structure for a source
