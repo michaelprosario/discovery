@@ -26,6 +26,18 @@ app.add_middleware(
 app.include_router(notebooks_router)
 
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on application startup."""
+    from ..infrastructure.database.connection import init_db
+    try:
+        init_db()
+        print("✓ Database initialized successfully")
+    except Exception as e:
+        print(f"⚠️  Warning: Could not initialize database: {e}")
+        print("   Make sure PostgreSQL is running and DATABASE_URL is configured correctly")
+
+
 @app.get("/")
 def root():
     """Root endpoint."""

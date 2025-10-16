@@ -37,7 +37,11 @@ uv run pytest tests/unit/ -v
 uv run pytest tests/integration/ -v
 ```
 
-## Run API Server
+## Run API Server 
+
+
+## export DATABASE_URL
+export DATABASE_URL="postgresql://postgres:Foobar321@localhost:5432/postgres"
 
 ```bash
 # Start server using uv run

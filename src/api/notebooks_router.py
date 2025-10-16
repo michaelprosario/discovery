@@ -33,28 +33,31 @@ from .dtos import (
 router = APIRouter(prefix="/api/notebooks", tags=["notebooks"])
 
 
-# Singleton repository instance (for demo purposes)
-# In production, use proper dependency injection with FastAPI's Depends and lifetime management
-_repository_instance = None
-
-
 def get_notebook_repository():
-    """Get or create the singleton repository instance."""
-    global _repository_instance
-    if _repository_instance is None:
-        from ..infrastructure.repositories.in_memory_notebook_repository import InMemoryNotebookRepository
-        _repository_instance = InMemoryNotebookRepository()
-    return _repository_instance
+    """
+    Dependency injection for INotebookRepository.
+
+    Creates a PostgresNotebookRepository with a database session.
+    Uses FastAPI's dependency injection system.
+    """
+    from ..infrastructure.database.connection import get_db
+    from ..infrastructure.repositories.postgres_notebook_repository import PostgresNotebookRepository
+
+    # Get database session
+    db = next(get_db())
+    try:
+        repository = PostgresNotebookRepository(db)
+        yield repository
+    finally:
+        db.close()
 
 
-def get_notebook_service() -> NotebookManagementService:
+def get_notebook_service(repository = Depends(get_notebook_repository)) -> NotebookManagementService:
     """
     Dependency injection for NotebookManagementService.
 
-    In a real application, this would be configured with proper
-    dependency injection and repository implementation.
+    Uses dependency injection to get the repository implementation.
     """
-    repository = get_notebook_repository()
     return NotebookManagementService(repository)
 
 

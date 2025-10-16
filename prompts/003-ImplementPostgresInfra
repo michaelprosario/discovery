@@ -1,0 +1,8 @@
+- Implement a working infrastructure /workspaces/discovery/src/core/interfaces/repositories/i_notebook_repository.py
+- Implement with postgres
+- Follow rules in specs/clean_architecture.md
+- Follow rules in specs/core_stories for notebook
+- Follow design in specs/domain_model
+- Implement backend using python, fastapi
+- Write unit tests for core services. Unit tests must pass.
+
