@@ -1,0 +1,6 @@
+- Follow rules in specs/clean_architecture.md
+- Focus attention on making domain service methods for source
+- Follow rules in specs/core_stories for source
+- Follow design in specs/domain_model
+- Implement backend using python, fastapi
+- Write unit tests for core services. Unit tests must pass.

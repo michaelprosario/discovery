@@ -1,0 +1,6 @@
+- Follow rules in specs/clean_architecture.md
+- Focus attention on making domain service methods for notebook
+- Follow rules in specs/core_stories for notebook
+- Follow design in specs/domain_model
+- Implement backend using python, fastapi
+- Write unit tests for core services. Unit tests must pass.
