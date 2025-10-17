@@ -224,8 +224,7 @@ def import_file_source(
 )
 def import_url_source(
     request: ImportUrlSourceRequest,
-    service: SourceIngestionService = Depends(get_source_service),
-    web_fetch_provider = Depends(get_web_fetch_provider)
+    service: SourceIngestionService = Depends(get_source_service)
 ):
     """
     Import a URL source into a notebook.
@@ -244,33 +243,15 @@ def import_url_source(
     Raises:
         HTTPException: 400 for validation/fetch errors, 404 if notebook not found, 409 for duplicates
     """
-    # Fetch content from URL
-    fetch_result = web_fetch_provider.fetch_url(request.url)
-
-    if fetch_result.is_failure:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": f"Failed to fetch URL: {fetch_result.error}"}
-        )
-
-    web_content = fetch_result.value
 
     # Use provided title or extracted title as the name
     # If title is provided in request, use it; otherwise use extracted title
-    name = request.title if request.title else web_content.title
-
-    # Build metadata
-    metadata = {
-        "title": name,  # Store the title in metadata as well
-        **web_content.metadata  # Include all extracted metadata
-    }
+    name = request.title
 
     command = ImportUrlSourceCommand(
         notebook_id=request.notebook_id,
-        name=name,  # Use title as name
-        url=request.url,
-        content=web_content.text,  # Use extracted text content
-        metadata=metadata
+        title=name,  # Use title as name
+        url=request.url
     )
 
     result = service.import_url_source(command)
