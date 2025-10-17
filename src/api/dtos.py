@@ -134,18 +134,27 @@ class ImportUrlSourceRequest(BaseModel):
     """Request model for importing a URL source."""
 
     notebook_id: UUID = Field(..., description="UUID of the parent notebook")
-    name: str = Field(..., min_length=1, max_length=500, description="Source name or title")
-    url: str = Field(..., min_length=1, description="Source URL")
-    content: str = Field(..., description="Fetched content")
-    title: Optional[str] = Field(None, description="Page title (if different from name)")
+    url: str = Field(..., min_length=1, description="Source URL (content will be fetched automatically)")
+    title: Optional[str] = Field(None, description="Page title/name (optional, will be extracted from page if not provided)")
 
-    @field_validator('name')
+    @field_validator('title')
     @classmethod
-    def name_not_empty(cls, v: str) -> str:
-        """Validate name is not just whitespace."""
+    def title_not_empty_if_provided(cls, v: Optional[str]) -> Optional[str]:
+        """Validate title is not just whitespace if provided."""
+        if v is not None and not v.strip():
+            raise ValueError('Title cannot be empty or whitespace only if provided')
+        return v.strip() if v else None
+
+    @field_validator('url')
+    @classmethod
+    def url_valid_format(cls, v: str) -> str:
+        """Validate URL format."""
         if not v.strip():
-            raise ValueError('Name cannot be empty or whitespace only')
-        return v.strip()
+            raise ValueError('URL cannot be empty')
+        v = v.strip()
+        if not (v.startswith('http://') or v.startswith('https://')):
+            raise ValueError('URL must start with http:// or https://')
+        return v
 
 
 class RenameSourceRequest(BaseModel):

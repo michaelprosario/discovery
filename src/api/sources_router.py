@@ -71,23 +71,32 @@ def get_notebook_repository():
         db.close()
 
 
+def get_web_fetch_provider():
+    """
+    Dependency injection for IWebFetchProvider.
+
+    Creates an HttpWebFetchProvider instance.
+    """
+    from ..infrastructure.providers.http_web_fetch_provider import HttpWebFetchProvider
+    return HttpWebFetchProvider()
+
+
 def get_source_service(
     source_repo = Depends(get_source_repository),
-    notebook_repo = Depends(get_notebook_repository)
+    notebook_repo = Depends(get_notebook_repository),
+    web_fetch_provider = Depends(get_web_fetch_provider)
 ) -> SourceIngestionService:
     """
     Dependency injection for SourceIngestionService.
 
-    Uses dependency injection to get repository implementations.
+    Uses dependency injection to get repository implementations and providers.
     """
-    # For now, we pass None for provider dependencies (file storage, content extraction, web fetch)
-    # These would be implemented later when those providers are added
     return SourceIngestionService(
         source_repository=source_repo,
         notebook_repository=notebook_repo,
-        file_storage_provider=None,
-        content_extraction_provider=None,
-        web_fetch_provider=None
+        file_storage_provider=None,  # Future implementation
+        content_extraction_provider=None,  # Future implementation
+        web_fetch_provider=web_fetch_provider
     )
 
 
@@ -215,30 +224,52 @@ def import_file_source(
 )
 def import_url_source(
     request: ImportUrlSourceRequest,
-    service: SourceIngestionService = Depends(get_source_service)
+    service: SourceIngestionService = Depends(get_source_service),
+    web_fetch_provider = Depends(get_web_fetch_provider)
 ):
     """
     Import a URL source into a notebook.
 
+    The content will be automatically fetched from the URL.
+    The name/title will be extracted from the page if not provided.
+
     Args:
-        request: URL source import data
+        request: URL source import data (url, notebook_id, optional title)
         service: Injected source service
+        web_fetch_provider: Injected web fetch provider
 
     Returns:
         Created source
 
     Raises:
-        HTTPException: 400 for validation errors, 404 if notebook not found, 409 for duplicates
+        HTTPException: 400 for validation/fetch errors, 404 if notebook not found, 409 for duplicates
     """
-    metadata = {}
-    if request.title:
-        metadata["title"] = request.title
+    # Fetch content from URL
+    fetch_result = web_fetch_provider.fetch_url(request.url)
+
+    if fetch_result.is_failure:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": f"Failed to fetch URL: {fetch_result.error}"}
+        )
+
+    web_content = fetch_result.value
+
+    # Use provided title or extracted title as the name
+    # If title is provided in request, use it; otherwise use extracted title
+    name = request.title if request.title else web_content.title
+
+    # Build metadata
+    metadata = {
+        "title": name,  # Store the title in metadata as well
+        **web_content.metadata  # Include all extracted metadata
+    }
 
     command = ImportUrlSourceCommand(
         notebook_id=request.notebook_id,
-        name=request.name,
+        name=name,  # Use title as name
         url=request.url,
-        content=request.content,
+        content=web_content.text,  # Use extracted text content
         metadata=metadata
     )
 

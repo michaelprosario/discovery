@@ -339,30 +339,48 @@ Import a file source (PDF, DOCX, TXT, MD) into a notebook.
 
 Import a URL source (web page, article) into a notebook.
 
-**Request Body**:
+**The content AND title are automatically fetched from the URL** - you only need to provide the URL!
+
+**Minimal Request Body**:
 ```json
 {
   "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
-  "name": "Attention Is All You Need",
+  "url": "https://arxiv.org/abs/1706.03762"
+}
+```
+
+**Request Body with Custom Title**:
+```json
+{
+  "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
   "url": "https://arxiv.org/abs/1706.03762",
-  "content": "fetched web page content...",
-  "title": "Transformer Architecture Paper"
+  "title": "Custom Title for This Source"
 }
 ```
 
 **Fields**:
 - `notebook_id` (UUID, required): Parent notebook
-- `name` (string, required): Source display name
 - `url` (string, required): Source URL (must start with http:// or https://)
-- `content` (string, required): Fetched web page content
-- `title` (string, optional): Page title if different from name
+  - Content will be automatically fetched from this URL
+  - Title will be automatically extracted if not provided
+- `title` (string, optional): Custom title/name for the source
+  - If not provided, the page title will be extracted automatically
+
+**How It Works**:
+1. System validates the URL format
+2. Fetches content from the URL using HTTP request
+3. Extracts page title (from `<title>` tag, og:title, or `<h1>`)
+4. Extracts main text content from HTML (removing ads, navigation, etc.)
+5. Extracts metadata (description, author, etc.)
+6. Uses provided title OR extracted title as the source name
+7. Creates source with fetched content
 
 **Response (201 Created)**: Returns source object (similar to file source)
 
 **Error Responses**:
-- `400 Bad Request`: Validation error (invalid URL format)
+- `400 Bad Request`: Validation error, invalid URL format, or failed to fetch URL
 - `404 Not Found`: Notebook does not exist
-- `409 Conflict`: Duplicate content
+- `409 Conflict`: Duplicate content (same URL content already imported)
 
 ---
 
@@ -646,12 +664,33 @@ curl -X POST http://localhost:8000/api/sources/file \
   }'
 ```
 
-3. **List all sources in notebook**:
+3. **Import a URL source** (content and title fetched automatically):
+```bash
+curl -X POST http://localhost:8000/api/sources/url \
+  -H "Content-Type: application/json" \
+  -d '{
+    "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
+    "url": "https://arxiv.org/abs/1706.03762"
+  }'
+```
+
+Or with custom title:
+```bash
+curl -X POST http://localhost:8000/api/sources/url \
+  -H "Content-Type: application/json" \
+  -d '{
+    "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
+    "url": "https://arxiv.org/abs/1706.03762",
+    "title": "Attention Is All You Need - Transformer Paper"
+  }'
+```
+
+4. **List all sources in notebook**:
 ```bash
 curl -X GET "http://localhost:8000/api/sources/notebook/550e8400-e29b-41d4-a716-446655440000"
 ```
 
-4. **Get source preview**:
+5. **Get source preview**:
 ```bash
 curl -X GET "http://localhost:8000/api/sources/660e8400-e29b-41d4-a716-446655440001/preview?length=500"
 ```
