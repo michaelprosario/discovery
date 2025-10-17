@@ -107,3 +107,101 @@ class ValidationErrorResponse(BaseModel):
 
     error: str
     validation_errors: List[ValidationErrorDetail]
+
+
+# Source DTOs
+
+class ImportFileSourceRequest(BaseModel):
+    """Request model for importing a file source."""
+
+    notebook_id: UUID = Field(..., description="UUID of the parent notebook")
+    name: str = Field(..., min_length=1, max_length=500, description="Source name")
+    file_path: str = Field(..., min_length=1, description="Path to the file")
+    file_type: str = Field(..., description="File type (pdf, docx, doc, txt, md)")
+    file_size: int = Field(..., gt=0, description="File size in bytes")
+    content: str = Field(..., description="Base64 encoded file content for hash calculation")
+
+    @field_validator('name')
+    @classmethod
+    def name_not_empty(cls, v: str) -> str:
+        """Validate name is not just whitespace."""
+        if not v.strip():
+            raise ValueError('Name cannot be empty or whitespace only')
+        return v.strip()
+
+
+class ImportUrlSourceRequest(BaseModel):
+    """Request model for importing a URL source."""
+
+    notebook_id: UUID = Field(..., description="UUID of the parent notebook")
+    name: str = Field(..., min_length=1, max_length=500, description="Source name or title")
+    url: str = Field(..., min_length=1, description="Source URL")
+    content: str = Field(..., description="Fetched content")
+    title: Optional[str] = Field(None, description="Page title (if different from name)")
+
+    @field_validator('name')
+    @classmethod
+    def name_not_empty(cls, v: str) -> str:
+        """Validate name is not just whitespace."""
+        if not v.strip():
+            raise ValueError('Name cannot be empty or whitespace only')
+        return v.strip()
+
+
+class RenameSourceRequest(BaseModel):
+    """Request model for renaming a source."""
+
+    new_name: str = Field(..., min_length=1, max_length=500, description="New source name")
+
+    @field_validator('new_name')
+    @classmethod
+    def name_not_empty(cls, v: str) -> str:
+        """Validate name is not just whitespace."""
+        if not v.strip():
+            raise ValueError('Name cannot be empty or whitespace only')
+        return v.strip()
+
+
+class ExtractContentRequest(BaseModel):
+    """Request model for extracting content from a source."""
+
+    force: bool = Field(False, description="Force re-extraction even if already extracted")
+
+
+class SourceResponse(BaseModel):
+    """Response model for a source."""
+
+    id: UUID
+    notebook_id: UUID
+    name: str
+    source_type: str  # 'file' or 'url'
+    file_type: Optional[str]  # 'pdf', 'docx', etc.
+    url: Optional[str]
+    file_path: Optional[str]
+    file_size: Optional[int]
+    content_hash: str
+    extracted_text: str
+    metadata: dict
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: Optional[datetime]
+
+    class Config:
+        """Pydantic configuration."""
+        from_attributes = True
+
+
+class SourceListResponse(BaseModel):
+    """Response model for a list of sources."""
+
+    sources: List[SourceResponse]
+    total: int
+
+
+class SourcePreviewResponse(BaseModel):
+    """Response model for source content preview."""
+
+    id: UUID
+    name: str
+    preview: str
+    full_text_length: int

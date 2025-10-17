@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .notebooks_router import router as notebooks_router
+from .sources_router import router as sources_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -24,6 +25,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(notebooks_router)
+app.include_router(sources_router)
 
 
 @app.on_event("startup")
