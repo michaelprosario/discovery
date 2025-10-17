@@ -2,9 +2,9 @@
 from datetime import datetime
 from uuid import UUID
 import json
-from sqlalchemy import Column, String, DateTime, Integer, Text, TypeDecorator
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ARRAY
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, String, DateTime, Integer, Text, TypeDecorator, ForeignKey, BigInteger
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ARRAY, JSON as PG_JSON
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
@@ -40,6 +40,36 @@ class JSONEncodedList(TypeDecorator):
             return []
 
 
+class JSONEncodedDict(TypeDecorator):
+    """
+    Custom type that stores dictionaries as JSON in both SQLite and PostgreSQL.
+    """
+    impl = Text
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(PG_JSON())
+        else:
+            return dialect.type_descriptor(Text())
+
+    def process_bind_param(self, value, dialect):
+        if dialect.name == 'postgresql':
+            return value if value is not None else {}
+        else:
+            if value is not None:
+                return json.dumps(value)
+            return json.dumps({})
+
+    def process_result_value(self, value, dialect):
+        if dialect.name == 'postgresql':
+            return value if value is not None else {}
+        else:
+            if value is not None:
+                return json.loads(value)
+            return {}
+
+
 class NotebookModel(Base):
     """
     SQLAlchemy model for Notebook entity.
@@ -60,3 +90,34 @@ class NotebookModel(Base):
 
     def __repr__(self):
         return f"<NotebookModel(id={self.id}, name='{self.name}')>"
+
+
+class SourceModel(Base):
+    """
+    SQLAlchemy model for Source entity.
+
+    Maps to the 'sources' table in PostgreSQL.
+    Following clean architecture, this is an infrastructure concern.
+    """
+    __tablename__ = "sources"
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True)
+    notebook_id = Column(PG_UUID(as_uuid=True), ForeignKey('notebooks.id', ondelete='CASCADE'), nullable=False, index=True)
+    name = Column(String(500), nullable=False)
+    source_type = Column(String(20), nullable=False)  # 'file' or 'url'
+    file_type = Column(String(20), nullable=True)  # 'pdf', 'docx', 'doc', 'txt', 'md'
+    url = Column(Text, nullable=True)
+    file_path = Column(Text, nullable=True)
+    file_size = Column(BigInteger, nullable=True)
+    content_hash = Column(String(64), nullable=False, index=True)  # SHA256 hash
+    extracted_text = Column(Text, nullable=False, default="")
+    source_metadata = Column(JSONEncodedDict, nullable=False, default={})
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True, index=True)
+
+    # Relationship to notebook (optional, for SQLAlchemy ORM queries)
+    notebook = relationship("NotebookModel", backref="sources")
+
+    def __repr__(self):
+        return f"<SourceModel(id={self.id}, name='{self.name}', type='{self.source_type}')>"

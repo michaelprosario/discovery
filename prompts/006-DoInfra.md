@@ -1,0 +1,11 @@
+- Follow rules in specs/clean_architecture.md
+- Follow rules in specs/core_stories for source
+- Follow design in specs/domain_model
+- Implement backend using python, fastapi
+- Write unit tests for core services. Unit tests must pass.
+- Please implement infrastructure layer for the following services, their repositories and providers.
+    - NotebookManagementService
+    - SourceIngestionService
+- Please write database migrations to implement database tables.
+- Implement with postgres
+- Provide instructions for running migrations
