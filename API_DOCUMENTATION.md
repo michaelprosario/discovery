@@ -286,25 +286,36 @@ Remove tags from a notebook.
 
 Import a file source (PDF, DOCX, TXT, MD) into a notebook.
 
+**The content is automatically extracted from the file** - you only need to provide the file path!
+
 **Request Body**:
 ```json
 {
   "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
   "name": "Research Paper on Neural Networks",
   "file_path": "/documents/neural_networks.pdf",
-  "file_type": "pdf",
-  "file_size": 2048576,
-  "content": "base64_encoded_file_content..."
+  "file_type": "pdf"
 }
 ```
 
 **Fields**:
 - `notebook_id` (UUID, required): Parent notebook
 - `name` (string, required): Source display name (1-500 chars)
-- `file_path` (string, required): File path or identifier
+- `file_path` (string, required): Path to the file on the server
+  - Content will be automatically extracted from this file
 - `file_type` (string, required): File type (`pdf`, `docx`, `doc`, `txt`, `md`)
-- `file_size` (integer, required): File size in bytes (max 50MB)
-- `content` (string, required): Base64-encoded file content for hash calculation
+
+**How It Works**:
+1. System validates the file path exists and is accessible
+2. Extracts text content from the file using the appropriate extraction method:
+   - PDF: Uses PyPDF2 to extract text from all pages
+   - DOCX: Uses python-docx to extract paragraphs and tables
+   - DOC: Uses antiword system utility (requires `antiword` to be installed)
+   - TXT/MD: Direct text file reading with encoding detection
+3. Calculates file size automatically
+4. Generates content hash for duplicate detection
+5. Extracts metadata (file name, extension)
+6. Creates source with extracted content
 
 **Response (201 Created)**:
 ```json
@@ -318,8 +329,11 @@ Import a file source (PDF, DOCX, TXT, MD) into a notebook.
   "file_path": "/documents/neural_networks.pdf",
   "file_size": 2048576,
   "content_hash": "sha256_hash...",
-  "extracted_text": "",
-  "metadata": {},
+  "extracted_text": "Extracted text content from the PDF...",
+  "metadata": {
+    "original_file_name": "neural_networks.pdf",
+    "file_extension": ".pdf"
+  },
   "created_at": "2024-01-16T10:00:00Z",
   "updated_at": "2024-01-16T10:00:00Z",
   "deleted_at": null
@@ -327,9 +341,9 @@ Import a file source (PDF, DOCX, TXT, MD) into a notebook.
 ```
 
 **Error Responses**:
-- `400 Bad Request`: Validation error (invalid file type, file too large, etc.)
+- `400 Bad Request`: Validation error, file not found, unsupported file type, or extraction failed
 - `404 Not Found`: Notebook does not exist
-- `409 Conflict`: Duplicate content (same file already imported)
+- `409 Conflict`: Duplicate content (same file content already imported)
 
 ---
 
@@ -650,7 +664,7 @@ curl -X POST http://localhost:8000/api/notebooks \
   }'
 ```
 
-2. **Import a PDF source**:
+2. **Import a PDF source** (content extracted automatically):
 ```bash
 curl -X POST http://localhost:8000/api/sources/file \
   -H "Content-Type: application/json" \
@@ -658,9 +672,7 @@ curl -X POST http://localhost:8000/api/sources/file \
     "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
     "name": "Attention Is All You Need",
     "file_path": "/papers/attention.pdf",
-    "file_type": "pdf",
-    "file_size": 2048576,
-    "content": "base64_content..."
+    "file_type": "pdf"
   }'
 ```
 

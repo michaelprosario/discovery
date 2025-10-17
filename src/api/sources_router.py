@@ -15,7 +15,8 @@ from ..core.commands.source_commands import (
 )
 from ..core.queries.source_queries import (
     GetSourceByIdQuery,
-    ListSourcesQuery
+    ListSourcesQuery,
+    GetSourceCountQuery
 )
 from ..core.value_objects.enums import SourceType, FileType, SortOption, SortOrder
 from .dtos import (
@@ -81,10 +82,32 @@ def get_web_fetch_provider():
     return HttpWebFetchProvider()
 
 
+def get_content_extraction_provider():
+    """
+    Dependency injection for IContentExtractionProvider.
+
+    Creates a FileContentExtractionProvider instance.
+    """
+    from ..infrastructure.providers.file_content_extraction_provider import FileContentExtractionProvider
+    return FileContentExtractionProvider()
+
+
+def get_file_storage_provider():
+    """
+    Dependency injection for IFileStorageProvider.
+
+    Creates a LocalFileStorageProvider instance.
+    """
+    from ..infrastructure.providers.local_file_storage_provider import LocalFileStorageProvider
+    return LocalFileStorageProvider()
+
+
 def get_source_service(
     source_repo = Depends(get_source_repository),
     notebook_repo = Depends(get_notebook_repository),
-    web_fetch_provider = Depends(get_web_fetch_provider)
+    web_fetch_provider = Depends(get_web_fetch_provider),
+    content_extraction_provider = Depends(get_content_extraction_provider),
+    file_storage_provider = Depends(get_file_storage_provider)
 ) -> SourceIngestionService:
     """
     Dependency injection for SourceIngestionService.
@@ -94,8 +117,8 @@ def get_source_service(
     return SourceIngestionService(
         source_repository=source_repo,
         notebook_repository=notebook_repo,
-        file_storage_provider=None,  # Future implementation
-        content_extraction_provider=None,  # Future implementation
+        file_storage_provider=file_storage_provider,
+        content_extraction_provider=content_extraction_provider,
         web_fetch_provider=web_fetch_provider
     )
 
@@ -120,6 +143,26 @@ def to_source_response(source) -> SourceResponse:
     )
 
 
+def summary_to_source_response(summary) -> SourceResponse:
+    """Convert source summary to response DTO."""
+    return SourceResponse(
+        id=summary.id,
+        notebook_id=summary.notebook_id,
+        name=summary.name,
+        source_type=summary.source_type.value,
+        file_type=summary.file_type.value if summary.file_type else None,
+        url=summary.url,
+        file_path=None,  # SourceSummary doesn't include file_path
+        file_size=summary.file_size,
+        content_hash="",  # SourceSummary doesn't include content_hash
+        extracted_text="",  # SourceSummary only has has_extracted_text flag
+        metadata={},  # SourceSummary doesn't include metadata
+        created_at=summary.created_at,
+        updated_at=summary.updated_at,
+        deleted_at=summary.deleted_at
+    )
+
+
 @router.post(
     "/file",
     response_model=SourceResponse,
@@ -132,30 +175,25 @@ def to_source_response(source) -> SourceResponse:
 )
 def import_file_source(
     request: ImportFileSourceRequest,
-    service: SourceIngestionService = Depends(get_source_service)
+    service: SourceIngestionService = Depends(get_source_service),
+    content_extraction_provider = Depends(get_content_extraction_provider)
 ):
     """
     Import a file source into a notebook.
 
+    The content will be automatically extracted from the file using the appropriate extraction method.
+
     Args:
-        request: File source import data
+        request: File source import data (name, file_path, file_type, notebook_id)
         service: Injected source service
+        content_extraction_provider: Injected content extraction provider
 
     Returns:
         Created source
 
     Raises:
-        HTTPException: 400 for validation errors, 404 if notebook not found, 409 for duplicates
+        HTTPException: 400 for validation/extraction errors, 404 if notebook not found, 409 for duplicates
     """
-    # Decode base64 content for hash calculation
-    try:
-        content_bytes = base64.b64decode(request.content)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": f"Invalid base64 content: {str(e)}"}
-        )
-
     # Convert file_type string to enum
     try:
         file_type_enum = FileType(request.file_type.lower())
@@ -165,14 +203,44 @@ def import_file_source(
             detail={"error": f"Unsupported file type: {request.file_type}"}
         )
 
+    # Extract content from file
+    extraction_result = content_extraction_provider.extract_text(request.file_path, file_type_enum)
+
+    if extraction_result.is_failure:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": f"Failed to extract content from file: {extraction_result.error}"}
+        )
+
+    extracted_text = extraction_result.value
+
+    # Get file size
+    import os
+    try:
+        file_size = os.path.getsize(request.file_path)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": f"Failed to get file size: {str(e)}"}
+        )
+
+    # Convert extracted text to bytes for hash calculation
+    content_bytes = extracted_text.encode('utf-8')
+
+    # Build metadata
+    metadata = {
+        "original_file_name": os.path.basename(request.file_path),
+        "file_extension": os.path.splitext(request.file_path)[1],
+        "file_size": file_size,
+    }
+
     command = ImportFileSourceCommand(
         notebook_id=request.notebook_id,
-        name=request.name,
         file_path=request.file_path,
+        file_name=request.name,
         file_type=file_type_enum,
-        file_size=request.file_size,
-        content=content_bytes,
-        metadata={}
+        file_content=content_bytes,
+        metadata=metadata
     )
 
     result = service.import_file_source(command)
@@ -391,8 +459,8 @@ def list_sources_by_notebook(
     query = ListSourcesQuery(
         notebook_id=notebook_id,
         include_deleted=include_deleted,
-        source_type=source_type_enum,
-        file_type=file_type_enum,
+        source_types=[source_type_enum] if source_type_enum else None,
+        file_types=[file_type_enum] if file_type_enum else None,
         sort_by=sort_by,
         sort_order=sort_order,
         limit=limit,
@@ -407,11 +475,12 @@ def list_sources_by_notebook(
             detail={"error": result.error}
         )
 
-    count_result = service.get_count(notebook_id, include_deleted)
+    count_query = GetSourceCountQuery(notebook_id=notebook_id, include_deleted=include_deleted)
+    count_result = service.get_count(count_query)
     total = count_result.value if count_result.is_success else 0
 
     return SourceListResponse(
-        sources=[to_source_response(src) for src in result.value],
+        sources=[summary_to_source_response(summary) for summary in result.value],
         total=total
     )
 
@@ -445,6 +514,7 @@ def rename_source(
     """
     command = RenameSourceCommand(
         source_id=source_id,
+        notebook_id=UUID('00000000-0000-0000-0000-000000000000'),  # Placeholder - not used in validation
         new_name=request.new_name
     )
 
@@ -594,7 +664,8 @@ def extract_content(
     """
     command = ExtractContentCommand(
         source_id=source_id,
-        force=request.force
+        notebook_id=UUID('00000000-0000-0000-0000-000000000000'),  # Placeholder - service doesn't validate this
+        force_reextract=request.force
     )
 
     result = service.extract_content(command)

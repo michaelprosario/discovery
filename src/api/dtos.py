@@ -116,10 +116,8 @@ class ImportFileSourceRequest(BaseModel):
 
     notebook_id: UUID = Field(..., description="UUID of the parent notebook")
     name: str = Field(..., min_length=1, max_length=500, description="Source name")
-    file_path: str = Field(..., min_length=1, description="Path to the file")
+    file_path: str = Field(..., min_length=1, description="Path to the file (content will be extracted automatically)")
     file_type: str = Field(..., description="File type (pdf, docx, doc, txt, md)")
-    file_size: int = Field(..., gt=0, description="File size in bytes")
-    content: str = Field(..., description="Base64 encoded file content for hash calculation")
 
     @field_validator('name')
     @classmethod

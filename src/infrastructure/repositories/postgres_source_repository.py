@@ -277,20 +277,15 @@ class PostgresSourceRepository(ISourceRepository):
 
             # Apply filters if query provided
             if query:
-                # Filter by source type
-                if query.source_type:
-                    db_query = db_query.filter(SourceModel.source_type == query.source_type.value)
+                # Filter by source types
+                if query.source_types:
+                    source_type_values = [st.value for st in query.source_types]
+                    db_query = db_query.filter(SourceModel.source_type.in_(source_type_values))
 
-                # Filter by file type
-                if query.file_type:
-                    db_query = db_query.filter(SourceModel.file_type == query.file_type.value)
-
-                # Filter by date range
-                if query.date_from:
-                    db_query = db_query.filter(SourceModel.created_at >= query.date_from)
-
-                if query.date_to:
-                    db_query = db_query.filter(SourceModel.created_at <= query.date_to)
+                # Filter by file types
+                if query.file_types:
+                    file_type_values = [ft.value for ft in query.file_types]
+                    db_query = db_query.filter(SourceModel.file_type.in_(file_type_values))
 
                 # Sort sources
                 if query.sort_by == SortOption.NAME:
