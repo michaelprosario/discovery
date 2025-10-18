@@ -1,5 +1,7 @@
-- follow standards at specs/clean_architecture
+- follow standards at specs/clean_architecture.md
 - setup core services for  vector database services , content segmentation for RAG, and apis for content similarity queries. 
+- at core level, make sure core services have unit tests and all unit tests pass.
+- implement infra code for vector database providers using weaviate
 - write a program that does the following
     - create a notebook with a random name
     - import the following urls as content sources 
