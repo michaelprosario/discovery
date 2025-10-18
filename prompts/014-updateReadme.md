@@ -1,0 +1,4 @@
+- review scope and standards in specs folder
+- review project structure
+- provide a concise overview of purpose of project, how to get started quickly
+- comment upon setup of database using docker and doing migrations

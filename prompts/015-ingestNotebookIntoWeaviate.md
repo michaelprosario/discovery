@@ -1,0 +1,8 @@
+- follow standards at specs/clean_architecture
+- setup core services for  vector database services , content segmentation for RAG, and apis for content similarity queries. 
+- write a program that does the following
+    - create a notebook with a random name
+    - import the following urls as content sources 
+        - https://en.wikipedia.org/wiki/Monsters,_Inc.
+        - https://en.wikipedia.org/wiki/Monsters_University
+- Ingest the notebook and related sources into our vector database that uses weaviate on the infra level
