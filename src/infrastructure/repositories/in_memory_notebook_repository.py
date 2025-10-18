@@ -155,7 +155,7 @@ class InMemoryNotebookRepository(INotebookRepository):
             if query.tags:
                 notebooks = [
                     nb for nb in notebooks
-                    if any(tag in nb.tags for tag in query.tags)
+                    if all(tag in nb.tags for tag in query.tags)
                 ]
 
             # Filter by date range
@@ -187,14 +187,35 @@ class InMemoryNotebookRepository(INotebookRepository):
         # Return deep copies to prevent external modification
         return Result.success([deepcopy(nb) for nb in notebooks])
 
-    def count(self) -> Result[int]:
+    def count(self, query: Optional[ListNotebooksQuery] = None) -> Result[int]:
         """
-        Get the total count of notebooks.
+        Get the total count of notebooks, with optional filtering.
+
+        Args:
+            query: Optional query parameters for filtering
 
         Returns:
             Result[int]: Success with count
         """
-        return Result.success(len(self._storage))
+        if not query:
+            return Result.success(len(self._storage))
+
+        notebooks = list(self._storage.values())
+
+        # Apply filters if query provided
+        if query.tags:
+            notebooks = [
+                nb for nb in notebooks
+                if all(tag in nb.tags for tag in query.tags)
+            ]
+
+        if query.date_from:
+            notebooks = [nb for nb in notebooks if nb.created_at >= query.date_from]
+
+        if query.date_to:
+            notebooks = [nb for nb in notebooks if nb.created_at <= query.date_to]
+
+        return Result.success(len(notebooks))
 
     def clear(self) -> None:
         """Clear all notebooks from the repository (useful for testing)."""

@@ -2,6 +2,8 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 import sys
+from uuid import uuid4
+
 sys.path.insert(0, '/workspaces/discovery')
 
 from src.api.main import app
@@ -105,3 +107,54 @@ async def test_full_crud_workflow(override_get_repository):
         # Verify deleted
         get_deleted_response = await client.get(f"/api/notebooks/{notebook_id}")
         assert get_deleted_response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_notebook_not_found(override_get_repository):
+    """Test getting a non-existent notebook."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get(f"/api/notebooks/{uuid4()}")
+        assert response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_update_notebook_not_found(override_get_repository):
+    """Test updating a non-existent notebook."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.put(
+            f"/api/notebooks/{uuid4()}",
+            json={"description": "Updated"}
+        )
+        assert response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_delete_notebook_not_found(override_get_repository):
+    """Test deleting a non-existent notebook."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.delete(f"/api/notebooks/{uuid4()}")
+        assert response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_list_notebooks_with_filters(override_get_repository):
+    """Test listing notebooks with tag filtering."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        await client.post("/api/notebooks", json={"name": "Tagged 1", "tags": ["A", "B"]})
+        await client.post("/api/notebooks", json={"name": "Tagged 2", "tags": ["B", "C"]})
+        await client.post("/api/notebooks", json={"name": "Tagged 3", "tags": ["C", "D"]})
+
+        # Filter by single tag
+        response_b = await client.get("/api/notebooks?tags=B")
+        assert response_b.status_code == 200
+        assert response_b.json()["total"] == 2
+
+        # Filter by multiple tags
+        response_c_d = await client.get("/api/notebooks?tags=C&tags=D")
+        assert response_c_d.status_code == 200
+        assert response_c_d.json()["total"] == 1
+
+@pytest.mark.asyncio
+async def test_create_notebook_duplicate_name(override_get_repository):
+    """Test creating a notebook with a duplicate name."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        await client.post("/api/notebooks", json={"name": "Duplicate"})
+        response = await client.post("/api/notebooks", json={"name": "Duplicate"})
+        assert response.status_code == 400

@@ -1,5 +1,5 @@
 """Notebook management service - orchestrates notebook CRUD operations."""
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from ..entities.notebook import Notebook
@@ -389,11 +389,11 @@ class NotebookManagementService:
 
         return Result.success(update_result.value)
 
-    def get_count(self) -> Result[int]:
+    def get_count(self, query: Optional[ListNotebooksQuery] = None) -> Result[int]:
         """
         Get total count of notebooks.
 
         Returns:
             Result[int]: Success with count or failure
         """
-        return self._notebook_repository.count()
+        return self._notebook_repository.count(query)

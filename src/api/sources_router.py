@@ -54,22 +54,7 @@ def get_source_repository():
         db.close()
 
 
-def get_notebook_repository():
-    """
-    Dependency injection for INotebookRepository.
-
-    Needed by SourceIngestionService to validate notebooks and update counts.
-    """
-    from ..infrastructure.database.connection import get_db
-    from ..infrastructure.repositories.postgres_notebook_repository import PostgresNotebookRepository
-
-    # Get database session
-    db = next(get_db())
-    try:
-        repository = PostgresNotebookRepository(db)
-        yield repository
-    finally:
-        db.close()
+from .notebooks_router import get_notebook_repository
 
 
 def get_web_fetch_provider():

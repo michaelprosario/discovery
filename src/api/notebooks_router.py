@@ -1,7 +1,7 @@
 """FastAPI router for Notebook CRUD operations."""
 from typing import List, Optional
 from uuid import UUID
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Query
 
 from ..core.services.notebook_management_service import NotebookManagementService
 from ..core.commands.notebook_commands import (
@@ -178,7 +178,7 @@ def get_notebook(
     }
 )
 def list_notebooks(
-    tags: Optional[List[str]] = None,
+    tags: Optional[List[str]] = Query(None),
     sort_by: SortOption = SortOption.UPDATED_AT,
     sort_order: SortOrder = SortOrder.DESC,
     limit: Optional[int] = None,
@@ -209,17 +209,20 @@ def list_notebooks(
 
     result = service.list_notebooks(query)
 
+    result = service.list_notebooks(query)
+
     if result.is_failure:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": result.error}
         )
 
-    count_result = service.get_count()
+    notebooks = result.value
+    count_result = service.get_count(query)
     total = count_result.value if count_result.is_success else 0
 
     return NotebookListResponse(
-        notebooks=[to_notebook_response(nb) for nb in result.value],
+        notebooks=[to_notebook_response(nb) for nb in notebooks],
         total=total
     )
 

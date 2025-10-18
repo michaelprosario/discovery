@@ -129,7 +129,7 @@ class INotebookRepository(ABC):
         pass
 
     @abstractmethod
-    def count(self) -> Result[int]:
+    def count(self, query: Optional[ListNotebooksQuery] = None) -> Result[int]:
         """
         Get the total count of notebooks.
 

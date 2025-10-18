@@ -18,7 +18,11 @@ class GetNotebookByIdQuery:
 class ListNotebooksQuery:
     """Query to list notebooks with optional filtering and sorting."""
 
-    tags: Optional[List[str]] = None
+    tags: Optional[List[str]] = field(default=None)
+
+    def __post_init__(self):
+        if self.tags:
+            self.tags = [tag.lower() for tag in self.tags]
     date_from: Optional[datetime] = None
     date_to: Optional[datetime] = None
     sort_by: SortOption = SortOption.UPDATED_AT
