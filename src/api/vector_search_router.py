@@ -86,7 +86,8 @@ def get_vector_ingestion_service() -> VectorIngestionService:
 
     # Create providers
     weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url)
+    weaviate_key = os.getenv("WEAVIATE_KEY")
+    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
     content_segmenter = SimpleContentSegmenter()
 
     # Create and return service
@@ -123,7 +124,8 @@ def get_content_similarity_service() -> ContentSimilarityService:
 
     # Create provider
     weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url)
+    weaviate_key = os.getenv("WEAVIATE_KEY")
+    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
 
     # Create and return service
     service = ContentSimilarityService(

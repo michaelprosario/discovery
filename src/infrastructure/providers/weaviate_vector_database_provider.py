@@ -13,14 +13,16 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
     This provider uses the weaviate-client library to interact with a Weaviate instance.
     """
 
-    def __init__(self, url: str = "http://localhost:8080"):
+    def __init__(self, url: str = "http://localhost:8080", api_key: Optional[str] = None):
         """
         Initialize the Weaviate provider.
 
         Args:
             url: URL of the Weaviate instance
+            api_key: Optional API key for cloud instances
         """
         self.url = url
+        self.api_key = api_key
         self._client = None
 
     def _get_client(self):
@@ -30,11 +32,19 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
                 import weaviate
                 from weaviate.classes.init import Auth
 
-                # Connect to Weaviate without authentication (local development)
-                self._client = weaviate.connect_to_local(
-                    host=self.url.replace("http://", "").replace("https://", "").split(":")[0],
-                    port=int(self.url.split(":")[-1]) if ":" in self.url.split("//")[-1] else 8080
-                )
+                # Determine if this is a cloud or local instance
+                if self.api_key:
+                    # Cloud instance with API key authentication
+                    self._client = weaviate.connect_to_weaviate_cloud(
+                        cluster_url=self.url,
+                        auth_credentials=Auth.api_key(self.api_key)
+                    )
+                else:
+                    # Local instance without authentication
+                    self._client = weaviate.connect_to_local(
+                        host=self.url.replace("http://", "").replace("https://", "").split(":")[0],
+                        port=int(self.url.split(":")[-1]) if ":" in self.url.split("//")[-1] else 8080
+                    )
             except ImportError:
                 raise ImportError(
                     "weaviate-client library not installed. "
@@ -92,7 +102,7 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
                     }
                 ]
 
-            # Create collection with text2vec-transformers vectorizer
+            # Create collection with appropriate vectorizer
             from weaviate.classes.config import Configure, Property, DataType
 
             # Convert properties to Weaviate Property objects
@@ -112,13 +122,30 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
                     )
                 )
 
-            client.collections.create(
-                name=collection_name,
-                properties=weaviate_properties,
-                vectorizer_config=Configure.Vectorizer.text2vec_transformers(
+            # Choose vectorizer based on instance type
+            # Cloud instances use text2vec-openai, local uses text2vec-transformers
+            if self.api_key:
+                # Cloud instance - use none vectorizer (expects pre-computed vectors or external service)
+                # Weaviate Cloud Serverless comes with text2vec-openai by default
+                vectorizer_config = None  # Use default vectorizer
+            else:
+                # Local instance with text2vec-transformers module
+                vectorizer_config = Configure.Vectorizer.text2vec_transformers(
                     vectorize_collection_name=False
                 )
-            )
+
+            if vectorizer_config:
+                client.collections.create(
+                    name=collection_name,
+                    properties=weaviate_properties,
+                    vectorizer_config=vectorizer_config
+                )
+            else:
+                # Create without explicit vectorizer (use cluster default)
+                client.collections.create(
+                    name=collection_name,
+                    properties=weaviate_properties
+                )
 
             return Result.success(None)
 

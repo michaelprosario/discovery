@@ -11,7 +11,7 @@ from .models import Base
 # Database URL from environment variable with fallback
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://discovery_user:discovery_pass@localhost:5432/discovery_db"
+    "postgresql://postgres:Foobar321@localhost:5432/postgres"
 )
 
 # Create SQLAlchemy engine

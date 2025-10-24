@@ -40,7 +40,7 @@ This project is a FastAPI-based application that allows users to create notebook
 3.  **Install dependencies:**
 
     ```bash
-    uv pip install -r requirements.txt
+    uv pip install -e .
     ```
 
 ### Database Setup

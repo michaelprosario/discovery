@@ -1,0 +1,3 @@
+- Amend /workspaces/discovery/scripts/ingest_wikipedia_notebook.py
+- Change the weaviate providers to use a cloud instance
+- Cloud instance of weaviate will leverage environment variables weaviate_url and weaviate_key
