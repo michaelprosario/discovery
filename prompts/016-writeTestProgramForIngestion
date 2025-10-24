@@ -1,0 +1,14 @@
+Given
+- I am running /workspaces/discovery/src/apps/ingest_notebook_into_vectordb2.py
+- Borrow from themes of work from: /workspaces/discovery/src/apps/ingest_notebook_into_vectordb.py
+- I have created a notebook on Ben Franklin notes
+- I have created a source for for https://www.gutenberg.org/files/20203/20203-8.txt in the notebook
+
+When I invoke the ingest notebook for vectordatabase service 
+
+Then 
+- The system does the following work for each source
+    - it segments that source into smaller parts
+    - The segments are stored in the vector database on index "ben_franklink"
+    - Each segment should have a embedding associated with it
+    - The system should enable me to trace the parent notebook id and source id on each segment

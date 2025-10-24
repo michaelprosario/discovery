@@ -1,0 +1,4 @@
+- Amend /workspaces/discovery/src/apps/ingest_notebook_into_vectordb.py and related files
+- I have embedding turned on in weaviate cloud
+- I am ok with using Snowflake/snowflake-arctic-embed-m-v1.5 embedder
+- Make appropriate changes
