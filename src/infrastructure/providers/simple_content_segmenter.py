@@ -56,7 +56,13 @@ class SimpleContentSegmenter(IContentSegmenter):
 
             # Create overlapping chunks
             start = 0
+            prev_start = -1  # Track previous start to prevent infinite loops
             while start < len(text):
+                # Prevent infinite loop - if start hasn't advanced, break
+                if start <= prev_start:
+                    break
+                prev_start = start
+
                 end = start + chunk_size
 
                 # If this is not the last chunk, try to break at a sentence or word boundary
@@ -82,8 +88,8 @@ class SimpleContentSegmenter(IContentSegmenter):
                 # Move start position (with overlap)
                 start = end - overlap
 
-                # Prevent infinite loop
-                if start <= chunks[-1] if chunks else 0:
+                # Ensure we always make progress
+                if start <= prev_start:
                     start = end
 
             return Result.success(chunks)

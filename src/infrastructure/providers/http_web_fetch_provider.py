@@ -53,31 +53,64 @@ class HttpWebFetchProvider(IWebFetchProvider):
                 response = client.get(url, headers=self.headers)
                 response.raise_for_status()
 
-            # Parse HTML
-            soup = BeautifulSoup(response.text, 'html.parser')
-
-            # Extract title
-            title = self._extract_title(soup, url)
-
-            # Extract main content
-            text_result = self.extract_main_content(response.text)
-            if text_result.is_failure:
-                return Result.failure(f"Failed to extract content: {text_result.error}")
-
-            text = text_result.value
-
-            # Extract metadata
-            metadata = self._extract_metadata(soup, response)
-
-            web_content = WebContent(
-                url=url,
-                title=title,
-                html=response.text,
-                text=text,
-                metadata=metadata
+            # Determine if content is plain text or HTML
+            content_type = response.headers.get('content-type', '').lower()
+            is_plain_text = (
+                'text/plain' in content_type or
+                url.endswith('.txt') or
+                url.endswith('.md')
             )
 
-            return Result.success(web_content)
+            if is_plain_text:
+                # Handle plain text files
+                text = response.text.strip()
+
+                # Extract a simple title from URL
+                title = url.split('/')[-1] if '/' in url else url
+
+                # Basic metadata
+                metadata = {
+                    'content_type': content_type,
+                    'charset': response.encoding or 'utf-8',
+                    'final_url': str(response.url)
+                }
+
+                web_content = WebContent(
+                    url=url,
+                    title=title,
+                    html=response.text,  # Store raw text in html field too
+                    text=text,
+                    metadata=metadata
+                )
+
+                return Result.success(web_content)
+            else:
+                # Handle HTML content (existing logic)
+                # Parse HTML
+                soup = BeautifulSoup(response.text, 'html.parser')
+
+                # Extract title
+                title = self._extract_title(soup, url)
+
+                # Extract main content
+                text_result = self.extract_main_content(response.text)
+                if text_result.is_failure:
+                    return Result.failure(f"Failed to extract content: {text_result.error}")
+
+                text = text_result.value
+
+                # Extract metadata
+                metadata = self._extract_metadata(soup, response)
+
+                web_content = WebContent(
+                    url=url,
+                    title=title,
+                    html=response.text,
+                    text=text,
+                    metadata=metadata
+                )
+
+                return Result.success(web_content)
 
         except httpx.TimeoutException:
             return Result.failure(f"Request timeout after {timeout} seconds")

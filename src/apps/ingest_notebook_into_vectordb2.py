@@ -1,30 +1,23 @@
 #!/usr/bin/env python3
 """
-Command-line application to ingest an existing notebook into the vector database.
+Command-line application to create a notebook and ingest content into the vector database.
 
-This script works with an existing notebook (finds by name, e.g., Ben Franklin notes) and:
-1. Searches for notebook by name pattern
-2. Retrieves all sources for the notebook
-3. Segments each source content into smaller chunks
+This script:
+1. Creates a new notebook with a GUID as the name
+2. Imports a URL source (Ben Franklin autobiography from Project Gutenberg)
+3. Segments the source content into smaller chunks
 4. Stores segments in the vector database with embeddings
-5. Ensures traceability of notebook_id and source_id on each segment
+5. Demonstrates similarity search on the ingested content
+6. Ensures traceability of notebook_id and source_id on each segment
 
 Usage:
-    python src/apps/ingest_notebook_into_vectordb2.py [options]
+    python src/apps/ingest_notebook_into_vectordb2.py
 
-Options:
-    --notebook-name TEXT    Name pattern to search for (default: searches for "franklin")
-    --collection-name TEXT  Name of the vector database collection (default: ben_franklin)
-    --chunk-size INT        Size of text chunks in characters (default: 1000)
-    --overlap INT          Overlap between chunks in characters (default: 200)
-    --force-reingest       Force re-ingestion even if already ingested
-
-Example:
-    python src/apps/ingest_notebook_into_vectordb2.py --notebook-name "Ben Franklin"
+No command-line arguments required - the script runs a complete demo workflow.
 """
 import sys
 import os
-import argparse
+import uuid
 from uuid import UUID
 
 # Add parent directory to path to import from src
@@ -37,146 +30,93 @@ from src.infrastructure.providers.weaviate_vector_database_provider import Weavi
 from src.infrastructure.providers.simple_content_segmenter import SimpleContentSegmenter
 from src.core.services.vector_ingestion_service import VectorIngestionService
 from src.core.commands.vector_commands import IngestNotebookCommand
-from src.core.queries.notebook_queries import GetNotebookByIdQuery
-from src.core.queries.source_queries import ListSourcesQuery
 
 # Load environment variables
 from dotenv import load_dotenv
 load_dotenv()
 
+# Configuration
+GUTENBERG_URL = "https://www.gutenberg.org/files/20203/20203-8.txt"
+COLLECTION_NAME = "ben_franklin"
+CHUNK_SIZE = 1000
+OVERLAP = 200
 
-def create_services():
+
+def create_notebook_with_guid() -> UUID:
     """
-    Create and configure all required services with dependency injection.
+    Create a new notebook with a GUID as its name.
 
     Returns:
-        tuple: (db_session, vector_ingestion_service, vector_db_provider)
-    """
-    # Get database session
-    db = SessionLocal()
-
-    # Create repositories
-    notebook_repository = PostgresNotebookRepository(db)
-    source_repository = PostgresSourceRepository(db)
-
-    # Create providers
-    weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-    weaviate_key = os.getenv("WEAVIATE_KEY")
-    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
-    content_segmenter = SimpleContentSegmenter()
-
-    # Create service with all dependencies
-    service = VectorIngestionService(
-        notebook_repository=notebook_repository,
-        source_repository=source_repository,
-        vector_db_provider=vector_db_provider,
-        content_segmenter=content_segmenter
-    )
-
-    return db, service, vector_db_provider, notebook_repository, source_repository
-
-
-def find_notebook_by_name(name_pattern: str = "franklin"):
-    """
-    Find a notebook by name pattern.
-
-    Args:
-        name_pattern: Name pattern to search for (case-insensitive)
-
-    Returns:
-        UUID: notebook_id or exits if not found
+        UUID: The ID of the created notebook
     """
     db = None
     try:
         db = SessionLocal()
         notebook_repository = PostgresNotebookRepository(db)
 
-        # Search for notebooks
+        from src.core.commands.notebook_commands import CreateNotebookCommand
         from src.core.services.notebook_management_service import NotebookManagementService
-        from src.core.queries.notebook_queries import ListNotebooksQuery
 
-        notebook_service = NotebookManagementService(notebook_repository)
+        # Generate GUID for notebook name
+        notebook_guid = str(uuid.uuid4())
 
-        query = ListNotebooksQuery()
-        result = notebook_service.list_notebooks(query)
+        service = NotebookManagementService(notebook_repository)
+        command = CreateNotebookCommand(
+            name=notebook_guid,
+            description="Ben Franklin Autobiography - Project Gutenberg",
+            tags=["ben_franklin", "autobiography", "demo", "gutenberg"]
+        )
+
+        result = service.create_notebook(command)
 
         if result.is_failure:
-            print(f"[ERROR] Failed to search notebooks: {result.error}")
-            sys.exit(1)
+            raise Exception(f"Failed to create notebook: {result.error}")
 
-        notebooks = result.value
-
-        # Filter by name pattern
-        matching = [nb for nb in notebooks if name_pattern.lower() in nb.name.lower()]
-
-        if not matching:
-            print(f"[ERROR] No notebooks found matching pattern: '{name_pattern}'")
-            print(f"        Available notebooks:")
-            for nb in notebooks[:5]:
-                print(f"          - {nb.name}")
-            sys.exit(1)
-
-        if len(matching) > 1:
-            print(f"[WARNING] Found {len(matching)} notebooks matching '{name_pattern}':")
-            for idx, nb in enumerate(matching, 1):
-                print(f"          {idx}. {nb.name} ({nb.id})")
-            print(f"[*] Using first match: {matching[0].name}")
-            print()
-
-        notebook = matching[0]
-        print(f"[SUCCESS] Found notebook: {notebook.name}")
-        print(f"          Notebook ID: {notebook.id}")
-        print(f"          Description: {notebook.description}")
-        print(f"          Tags: {', '.join(notebook.tags) if notebook.tags else 'None'}")
+        notebook_id = result.value.id
+        print(f"[SUCCESS] Created notebook with GUID name")
+        print(f"          Notebook Name: {notebook_guid}")
+        print(f"          Notebook ID: {notebook_id}")
+        print(f"          Description: Ben Franklin Autobiography - Project Gutenberg")
+        print(f"          Tags: ben_franklin, autobiography, demo, gutenberg")
         print()
 
-        return notebook.id
+        return notebook_id
 
     finally:
         if db:
             db.close()
 
 
-def verify_notebook_and_sources(notebook_id: UUID):
+def import_gutenberg_source(notebook_id: UUID, url: str) -> UUID:
     """
-    Verify that the notebook has sources.
+    Import a source from Project Gutenberg URL.
 
     Args:
-        notebook_id: UUID of the notebook
+        notebook_id: ID of the notebook
+        url: URL to import
 
     Returns:
-        tuple: (notebook, sources_list) or exits if not found
+        UUID: The ID of the created source
     """
     db = None
     try:
         db = SessionLocal()
-        notebook_repository = PostgresNotebookRepository(db)
         source_repository = PostgresSourceRepository(db)
+        notebook_repository = PostgresNotebookRepository(db)
 
-        # Get notebook details
-        from src.core.services.notebook_management_service import NotebookManagementService
-        notebook_service = NotebookManagementService(notebook_repository)
-
-        query = GetNotebookByIdQuery(notebook_id=notebook_id)
-        result = notebook_service.get_notebook_by_id(query)
-
-        if result.is_failure:
-            print(f"[ERROR] Notebook not found: {result.error}")
-            sys.exit(1)
-
-        notebook = result.value
-
-        # Get sources for the notebook
-        from src.core.services.source_ingestion_service import SourceIngestionService
         from src.infrastructure.providers.local_file_storage_provider import LocalFileStorageProvider
         from src.infrastructure.providers.file_content_extraction_provider import FileContentExtractionProvider
         from src.infrastructure.providers.http_web_fetch_provider import HttpWebFetchProvider
+        from src.core.commands.source_commands import ImportUrlSourceCommand
+        from src.core.services.source_ingestion_service import SourceIngestionService
 
+        # Create providers
         file_storage_provider = LocalFileStorageProvider()
         content_extraction_provider = FileContentExtractionProvider()
         web_fetch_provider = HttpWebFetchProvider()
 
-        source_service = SourceIngestionService(
+        # Create service
+        service = SourceIngestionService(
             source_repository=source_repository,
             notebook_repository=notebook_repository,
             file_storage_provider=file_storage_provider,
@@ -184,29 +124,32 @@ def verify_notebook_and_sources(notebook_id: UUID):
             web_fetch_provider=web_fetch_provider
         )
 
-        sources_query = ListSourcesQuery(notebook_id=notebook_id)
-        sources_result = source_service.list_sources(sources_query)
+        print(f"[*] Importing source from: {url}")
+        print(f"    This may take a moment...")
 
-        if sources_result.is_failure:
-            print(f"[ERROR] Failed to retrieve sources: {sources_result.error}")
-            sys.exit(1)
+        # Create command
+        command = ImportUrlSourceCommand(
+            notebook_id=notebook_id,
+            url=url,
+            title="The Autobiography of Benjamin Franklin"
+        )
 
-        sources = sources_result.value
-        if not sources:
-            print(f"[WARNING] No sources found in notebook")
-            print(f"          Please add sources before ingesting")
-            sys.exit(1)
+        # Import source
+        result = service.import_url_source(command)
 
-        print(f"[SUCCESS] Found {len(sources)} source(s) in notebook:")
-        for idx, source in enumerate(sources, 1):
-            print(f"          {idx}. {source.name}")
-            print(f"             Source ID: {source.id}")
-            print(f"             Type: {source.source_type}")
-            if source.extracted_text:
-                print(f"             Content length: {len(source.extracted_text)} characters")
-            print()
+        if result.is_failure:
+            raise Exception(f"Failed to import source: {result.error}")
 
-        return notebook, sources
+        source = result.value
+        source_id = source.id
+        print(f"[SUCCESS] Imported source: {source.name}")
+        print(f"          Source ID: {source_id}")
+        print(f"          Source Type: {source.source_type}")
+        if source.extracted_text:
+            print(f"          Content length: {len(source.extracted_text)} characters")
+        print()
+
+        return source_id
 
     finally:
         if db:
@@ -215,10 +158,9 @@ def verify_notebook_and_sources(notebook_id: UUID):
 
 def ingest_notebook(
     notebook_id: UUID,
-    collection_name: str = "ben_franklin",
-    chunk_size: int = 1000,
-    overlap: int = 200,
-    force_reingest: bool = False
+    collection_name: str = COLLECTION_NAME,
+    chunk_size: int = CHUNK_SIZE,
+    overlap: int = OVERLAP
 ):
     """
     Ingest a notebook and all its sources into the vector database.
@@ -228,7 +170,6 @@ def ingest_notebook(
         collection_name: Name of the collection in vector database
         chunk_size: Target size for each text chunk in characters
         overlap: Number of characters to overlap between chunks
-        force_reingest: Whether to force re-ingestion even if already exists
 
     Returns:
         int: Number of chunks ingested
@@ -237,13 +178,32 @@ def ingest_notebook(
     vector_db_provider = None
 
     try:
-        # Create services
-        db, service, vector_db_provider, _, _ = create_services()
+        # Get database session
+        db = SessionLocal()
 
-        print(f"[*] Starting ingestion for notebook: {notebook_id}")
+        # Create repositories
+        notebook_repository = PostgresNotebookRepository(db)
+        source_repository = PostgresSourceRepository(db)
+
+        # Create providers
+        weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
+        weaviate_key = os.getenv("WEAVIATE_KEY")
+        vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
+        content_segmenter = SimpleContentSegmenter()
+
+        # Create service with all dependencies
+        service = VectorIngestionService(
+            notebook_repository=notebook_repository,
+            source_repository=source_repository,
+            vector_db_provider=vector_db_provider,
+            content_segmenter=content_segmenter
+        )
+
+        print(f"[*] Starting vector database ingestion")
+        print(f"    Notebook ID: {notebook_id}")
         print(f"    Collection: {collection_name}")
-        print(f"    Chunk size: {chunk_size}, Overlap: {overlap}")
-        print(f"    Force reingest: {force_reingest}")
+        print(f"    Chunk size: {chunk_size} characters")
+        print(f"    Overlap: {overlap} characters")
         print()
 
         # Create ingestion command
@@ -252,10 +212,11 @@ def ingest_notebook(
             collection_name=collection_name,
             chunk_size=chunk_size,
             overlap=overlap,
-            force_reingest=force_reingest
+            force_reingest=False
         )
 
         # Execute ingestion
+        print(f"[*] Segmenting text and creating embeddings...")
         result = service.ingest_notebook(command)
 
         if result.is_failure:
@@ -273,22 +234,14 @@ def ingest_notebook(
         )
 
         if count_result.is_success:
-            print(f"[VERIFIED] {count_result.value} vectors stored for notebook {notebook_id}")
+            print(f"[VERIFIED] {count_result.value} vectors stored in collection '{collection_name}'")
             print()
-            print("Summary of ingestion process:")
-            print("  1. ✓ Notebook validated")
-            print("  2. ✓ Collection created/verified in vector database")
-            print(f"  3. ✓ Sources segmented into {chunks_ingested} chunks")
-            print("  4. ✓ Each segment stored with embeddings")
-            print("  5. ✓ Traceability metadata (notebook_id, source_id, chunk_index) added")
+            print("Traceability Information:")
+            print(f"  ✓ Each segment includes notebook_id: {notebook_id}")
+            print(f"  ✓ Each segment includes source_id (parent source)")
+            print(f"  ✓ Each segment includes chunk_index (position)")
+            print(f"  ✓ Each segment has vector embedding for similarity search")
             print()
-            print(f"Vector database index: {collection_name}")
-            print(f"Each segment includes:")
-            print(f"  - text: The actual content chunk")
-            print(f"  - notebook_id: {notebook_id}")
-            print(f"  - source_id: ID of the parent source")
-            print(f"  - chunk_index: Position within the source")
-            print(f"  - embedding: Vector representation for similarity search")
 
         return chunks_ingested
 
@@ -306,57 +259,83 @@ def ingest_notebook(
             db.close()
 
 
-def query_sample_vectors(
-    notebook_id: UUID,
-    collection_name: str = "ben_franklin",
-    sample_query: str = "What were Franklin's key accomplishments?"
-):
+def demo_similarity_searches(notebook_id: UUID, collection_name: str = COLLECTION_NAME):
     """
-    Query the vector database to verify ingestion and demonstrate search.
+    Demonstrate similarity search on the ingested content.
 
     Args:
         notebook_id: UUID of the notebook
         collection_name: Name of the collection
-        sample_query: Sample query text for similarity search
     """
     vector_db_provider = None
 
     try:
-        # Create minimal services for querying
+        # Create vector database provider
         weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
         weaviate_key = os.getenv("WEAVIATE_KEY")
         vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
 
-        print(f"\n[*] Testing similarity search with query: '{sample_query}'")
+        print("="*70)
+        print("  SIMILARITY SEARCH DEMONSTRATION")
+        print("="*70)
         print()
 
-        # Perform similarity search
-        search_result = vector_db_provider.query_similarity(
-            collection_name=collection_name,
-            query_text=sample_query,
-            limit=3,
-            filters={"notebook_id": str(notebook_id)}
-        )
+        # Sample queries about Ben Franklin
+        queries = [
+            "What were Franklin's key accomplishments?",
+            "Tell me about Franklin's early life and education",
+            "What was Franklin's role in politics and government?",
+            "Describe Franklin's scientific experiments and discoveries"
+        ]
 
-        if search_result.is_failure:
-            print(f"[ERROR] Search failed: {search_result.error}")
-            return
+        for idx, query in enumerate(queries, 1):
+            print(f"\n{'='*70}")
+            print(f"Query {idx}: \"{query}\"")
+            print('='*70)
 
-        results = search_result.value
-        print(f"[*] Found {len(results)} similar chunks:")
+            # Perform similarity search
+            search_result = vector_db_provider.query_similarity(
+                collection_name=collection_name,
+                query_text=query,
+                limit=3,
+                filters={"notebook_id": str(notebook_id)}
+            )
+
+            if search_result.is_failure:
+                print(f"[ERROR] Search failed: {search_result.error}")
+                continue
+
+            results = search_result.value
+            print(f"\nFound {len(results)} similar chunks:\n")
+
+            for i, result in enumerate(results, 1):
+                certainty = result.get('certainty')
+                distance = result.get('distance')
+
+                print(f"Result {i}:")
+                if certainty is not None:
+                    print(f"  Certainty: {certainty:.4f} (higher = more similar)")
+                if distance is not None:
+                    print(f"  Distance:  {distance:.4f} (lower = more similar)")
+                print(f"  Source ID: {result['metadata'].get('source_id', 'N/A')}")
+                print(f"  Chunk:     {result['metadata'].get('chunk_index', 'N/A')}")
+                print(f"\n  Text Preview:")
+                text = result['text']
+                # Show first 300 characters
+                preview = text[:300] + "..." if len(text) > 300 else text
+                # Indent each line
+                for line in preview.split('\n'):
+                    if line.strip():
+                        print(f"    {line}")
+                print()
+
+        print("\n" + "="*70)
+        print("  Similarity Search Demo Complete")
+        print("="*70)
         print()
-
-        for i, result in enumerate(results, 1):
-            print(f"Result {i}:")
-            print(f"  Source ID: {result['metadata'].get('source_id', 'N/A')}")
-            print(f"  Chunk Index: {result['metadata'].get('chunk_index', 'N/A')}")
-            print(f"  Certainty: {result.get('certainty', 'N/A'):.4f}" if result.get('certainty') else "  Certainty: N/A")
-            print(f"  Distance: {result.get('distance', 'N/A'):.4f}" if result.get('distance') else "  Distance: N/A")
-            print(f"  Text preview: {result['text'][:200]}...")
-            print()
 
     except Exception as e:
-        print(f"[ERROR] Exception during query: {e}")
+        print(f"[ERROR] Exception during similarity search: {e}")
         import traceback
         traceback.print_exc()
 
@@ -366,100 +345,60 @@ def query_sample_vectors(
 
 
 def main():
-    """Main entry point for the ingestion script."""
-    parser = argparse.ArgumentParser(
-        description="Ingest an existing notebook and its sources into the vector database",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # Find and ingest Ben Franklin notebook
-  python src/apps/ingest_notebook_into_vectordb2.py --notebook-name "franklin"
-
-  # Ingest with custom collection name and chunk size
-  python src/apps/ingest_notebook_into_vectordb2.py --notebook-name "Ben Franklin" --collection-name ben_franklin --chunk-size 1500
-
-  # Force re-ingestion even if already ingested
-  python src/apps/ingest_notebook_into_vectordb2.py --notebook-name "franklin" --force-reingest
-
-  # Run with test search after ingestion
-  python src/apps/ingest_notebook_into_vectordb2.py --notebook-name "franklin" --test-search
-        """
-    )
-
-    parser.add_argument(
-        "--notebook-name",
-        type=str,
-        default="franklin",
-        help="Name pattern to search for (default: franklin)"
-    )
-    parser.add_argument(
-        "--collection-name",
-        type=str,
-        default="ben_franklin",
-        help="Name of the vector database collection (default: ben_franklin)"
-    )
-    parser.add_argument(
-        "--chunk-size",
-        type=int,
-        default=1000,
-        help="Size of text chunks in characters (default: 1000)"
-    )
-    parser.add_argument(
-        "--overlap",
-        type=int,
-        default=200,
-        help="Overlap between chunks in characters (default: 200)"
-    )
-    parser.add_argument(
-        "--force-reingest",
-        action="store_true",
-        help="Force re-ingestion even if already ingested"
-    )
-    parser.add_argument(
-        "--test-search",
-        action="store_true",
-        help="Run a test similarity search after ingestion"
-    )
-    parser.add_argument(
-        "--query",
-        type=str,
-        default="What were Franklin's key accomplishments?",
-        help="Query text for test search (default: 'What were Franklin's key accomplishments?')"
-    )
-
-    args = parser.parse_args()
-
+    """Main entry point for the demo script."""
     print("\n" + "="*70)
-    print("  Vector Database Ingestion Tool")
-    print("  Ingest existing notebook with sources")
+    print("  BEN FRANKLIN VECTOR DATABASE DEMO")
+    print("  Create, Import, Ingest, and Search")
     print("="*70 + "\n")
 
-    # Find notebook by name pattern
-    notebook_id = find_notebook_by_name(args.notebook_name)
+    try:
+        # Step 1: Create notebook with GUID name
+        print("[STEP 1] Creating new notebook with GUID name...")
+        notebook_id = create_notebook_with_guid()
 
-    # Verify notebook and sources exist
-    notebook, sources = verify_notebook_and_sources(notebook_id)
+        # Step 2: Import Project Gutenberg source
+        print("[STEP 2] Importing Ben Franklin autobiography from Project Gutenberg...")
+        source_id = import_gutenberg_source(notebook_id, GUTENBERG_URL)
 
-    # Run ingestion
-    chunks = ingest_notebook(
-        notebook_id=notebook_id,
-        collection_name=args.collection_name,
-        chunk_size=args.chunk_size,
-        overlap=args.overlap,
-        force_reingest=args.force_reingest
-    )
+        # Step 3: Ingest into vector database
+        print("[STEP 3] Ingesting content into vector database...")
+        chunks = ingest_notebook(notebook_id, COLLECTION_NAME, CHUNK_SIZE, OVERLAP)
 
-    # Optionally run test search
-    if args.test_search and chunks > 0:
-        query_sample_vectors(
-            notebook_id=notebook_id,
-            collection_name=args.collection_name,
-            sample_query=args.query
-        )
+        if chunks == 0:
+            print("[ERROR] No chunks ingested, cannot proceed with demo")
+            sys.exit(1)
 
-    print("\n" + "="*70)
-    print("  Ingestion Complete!")
-    print("="*70)
+        # Step 4: Demo similarity searches
+        print("[STEP 4] Demonstrating similarity searches...")
+        demo_similarity_searches(notebook_id, COLLECTION_NAME)
+
+        # Summary
+        print("\n" + "="*70)
+        print("  DEMO COMPLETE!")
+        print("="*70)
+        print()
+        print(f"Summary:")
+        print(f"  ✓ Created notebook: {notebook_id}")
+        print(f"  ✓ Imported source: {source_id}")
+        print(f"  ✓ Ingested {chunks} chunks")
+        print(f"  ✓ Demonstrated similarity search")
+        print()
+        print(f"Vector database collection: '{COLLECTION_NAME}'")
+        print(f"Each segment includes traceability:")
+        print(f"  - notebook_id: {notebook_id}")
+        print(f"  - source_id: {source_id}")
+        print(f"  - chunk_index: 0, 1, 2, ...")
+        print(f"  - embedding: Vector representation")
+        print()
+
+    except KeyboardInterrupt:
+        print("\n\n[*] Demo interrupted by user")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\n[ERROR] Demo failed: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
