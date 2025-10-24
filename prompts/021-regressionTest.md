@@ -1,0 +1,6 @@
+- make tests here: /workspaces/discovery/tests/regression/test_api_regression2.py
+- start the flask server
+- test all the end points with proper test cases
+- on failed tests, fix code
+- make sure all unit test pass
+- repeat process upgrading the regression script and unit tests
