@@ -123,29 +123,23 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
                 )
 
             # Choose vectorizer based on instance type
-            # Cloud instances use text2vec-openai, local uses text2vec-transformers
             if self.api_key:
-                # Cloud instance - use none vectorizer (expects pre-computed vectors or external service)
-                # Weaviate Cloud Serverless comes with text2vec-openai by default
-                vectorizer_config = None  # Use default vectorizer
+                # Cloud instance - use text2vec-weaviate (default cloud vectorizer)
+                # This is the built-in vectorizer for Weaviate Cloud Serverless
+                vectorizer_config = Configure.Vectorizer.text2vec_weaviate(
+                    vectorize_collection_name=False
+                )
             else:
                 # Local instance with text2vec-transformers module
                 vectorizer_config = Configure.Vectorizer.text2vec_transformers(
                     vectorize_collection_name=False
                 )
 
-            if vectorizer_config:
-                client.collections.create(
-                    name=collection_name,
-                    properties=weaviate_properties,
-                    vectorizer_config=vectorizer_config
-                )
-            else:
-                # Create without explicit vectorizer (use cluster default)
-                client.collections.create(
-                    name=collection_name,
-                    properties=weaviate_properties
-                )
+            client.collections.create(
+                name=collection_name,
+                properties=weaviate_properties,
+                vectorizer_config=vectorizer_config
+            )
 
             return Result.success(None)
 
@@ -225,13 +219,8 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
             client = self._get_client()
             collection = client.collections.get(collection_name)
 
-            # Build query
-            query = collection.query.near_text(
-                query=query_text,
-                limit=limit
-            )
-
-            # Apply filters if provided
+            # Build filters if provided
+            where_filter = None
             if filters:
                 from weaviate.classes.query import Filter
                 filter_conditions = []
@@ -243,15 +232,24 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
 
                 # Combine filters with AND
                 if len(filter_conditions) == 1:
-                    query = query.where(filter_conditions[0])
+                    where_filter = filter_conditions[0]
                 elif len(filter_conditions) > 1:
-                    combined = filter_conditions[0]
+                    where_filter = filter_conditions[0]
                     for condition in filter_conditions[1:]:
-                        combined = combined & condition
-                    query = query.where(combined)
+                        where_filter = where_filter & condition
 
-            # Execute query
-            response = query
+            # Execute query with filters
+            if where_filter:
+                response = collection.query.near_text(
+                    query=query_text,
+                    limit=limit,
+                    filters=where_filter
+                )
+            else:
+                response = collection.query.near_text(
+                    query=query_text,
+                    limit=limit
+                )
 
             # Format results
             results = []
