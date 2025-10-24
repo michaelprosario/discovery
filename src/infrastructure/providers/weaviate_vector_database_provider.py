@@ -238,30 +238,43 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
                     for condition in filter_conditions[1:]:
                         where_filter = where_filter & condition
 
-            # Execute query with filters
+            # Execute query with filters and request metadata
+            from weaviate.classes.query import MetadataQuery
+
             if where_filter:
                 response = collection.query.near_text(
                     query=query_text,
                     limit=limit,
-                    filters=where_filter
+                    filters=where_filter,
+                    return_metadata=MetadataQuery(distance=True, certainty=True)
                 )
             else:
                 response = collection.query.near_text(
                     query=query_text,
-                    limit=limit
+                    limit=limit,
+                    return_metadata=MetadataQuery(distance=True, certainty=True)
                 )
 
             # Format results
             results = []
             for obj in response.objects:
+                # Get distance and certainty from metadata
+                distance = obj.metadata.distance if hasattr(obj.metadata, 'distance') else None
+                certainty = obj.metadata.certainty if hasattr(obj.metadata, 'certainty') else None
+
+                # If certainty is None but distance exists, calculate it
+                # Certainty = 1 - (distance / 2) for cosine distance
+                if certainty is None and distance is not None:
+                    certainty = 1.0 - (distance / 2.0)
+
                 results.append({
                     "id": str(obj.uuid),
                     "text": obj.properties.get("text", ""),
                     "metadata": {
                         k: v for k, v in obj.properties.items() if k != "text"
                     },
-                    "distance": obj.metadata.distance if hasattr(obj.metadata, 'distance') else None,
-                    "certainty": obj.metadata.certainty if hasattr(obj.metadata, 'certainty') else None
+                    "distance": distance,
+                    "certainty": certainty
                 })
 
             return Result.success(results)
