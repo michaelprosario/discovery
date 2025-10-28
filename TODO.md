@@ -5,7 +5,7 @@
 
 * `/` - done
 * `/health`
-* `/api/notebooks`
+* `/api/notebooks` - done
 * `/api/notebooks/{notebook_id}` - done
 * `/api/notebooks/{notebook_id}/rename`
 * `/api/notebooks/{notebook_id}/tags`

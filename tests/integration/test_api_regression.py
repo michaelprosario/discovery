@@ -37,3 +37,21 @@ async def test_root_endpoint():
     
     assert "message" in data
     assert data["message"] == "Discovery API"
+
+
+def test_list_notebooks_after_creation():
+    """Tests that a newly created notebook appears in the list of notebooks."""
+    # Create a new notebook
+    notebook_name = f"My Test Notebook {uuid4()}"
+    create_response = requests.post(f"{root_url}/api/notebooks", json={"name": notebook_name})
+    assert create_response.status_code == 201
+    created_notebook = create_response.json()
+    notebook_id = created_notebook["id"]
+
+    # List notebooks
+    list_response = requests.get(f"{root_url}/api/notebooks")
+    assert list_response.status_code == 200
+    listed_notebooks = list_response.json()["notebooks"]
+
+    # Check if the created notebook is in the list
+    assert any(notebook['id'] == notebook_id for notebook in listed_notebooks)
