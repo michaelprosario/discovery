@@ -1,6 +1,5 @@
-- make tests here: /workspaces/discovery/tests/regression/test_api_regression2.py
-- start the flask server
-- test all the end points with proper test cases
-- on failed tests, fix code
-- make sure all unit test pass
-- repeat process upgrading the regression script and unit tests
+- inspect /workspaces/discovery/openapi.json
+- assume that the fastapi server is active and running
+- write an integration test using requests library that uses an active instance of the fastapi
+    - make a new notebook
+    - do approperiate get requests to prove that insert operation worked
