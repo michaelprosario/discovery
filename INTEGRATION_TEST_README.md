@@ -27,18 +27,22 @@ Before running the integration tests, ensure:
 
 3. **Python dependencies are installed**:
    ```bash
+   # Install main dependencies
    uv pip install -e .
+   
+   # Optional: Install dev dependencies (includes Jupyter for running the notebook)
+   uv pip install -e ".[dev]"
    ```
 
 ## Running the Tests
 
 ### Option 1: Using Jupyter Notebook
 
-If you have Jupyter installed:
+If you have Jupyter installed (or install with dev dependencies):
 
 ```bash
-# Install Jupyter if needed
-pip install jupyter
+# Install dev dependencies including Jupyter
+uv pip install -e ".[dev]"
 
 # Start Jupyter
 jupyter notebook
@@ -162,7 +166,8 @@ Or uncomment the cleanup code at the end of the Jupyter notebook.
 
 ## Notes
 
-- The tests use the `requests` library which is already available in the project dependencies
+- The tests use the `requests` library which is included in the project dependencies
 - These tests use a live instance of the FastAPI server (not mocked)
 - The tests create real data in your database (cleanup manually or use the DELETE endpoint)
 - The URL source creation test may fail gracefully if external services are unavailable
+- To run the Jupyter notebook, install dev dependencies: `uv pip install -e ".[dev]"`
