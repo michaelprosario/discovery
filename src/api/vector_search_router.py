@@ -68,6 +68,19 @@ class VectorCountResponse(BaseModel):
     vector_count: int
 
 
+class CreateCollectionRequest(BaseModel):
+    """Request to create a collection for a notebook."""
+    pass  # No parameters needed - notebook_id comes from path parameter
+
+
+class CreateCollectionResponse(BaseModel):
+    """Response from collection creation."""
+    notebook_id: UUID
+    collection_name: str
+    message: str
+    created: bool
+
+
 # Dependency injection
 def get_vector_ingestion_service() -> VectorIngestionService:
     """
@@ -145,8 +158,23 @@ def get_content_similarity_service() -> ContentSimilarityService:
         db.close()
 
 def get_collection_name(notebook_id: UUID) -> str:
-    """Helper to get collection name for a notebook."""
-    return "notebook" + str(notebook_id)
+    """
+    Helper to get collection name for a notebook.
+    
+    Weaviate collection names must:
+    - Start with uppercase letter
+    - Contain only alphanumeric characters (no hyphens, underscores, etc.)
+    - Be a valid class name
+    
+    Args:
+        notebook_id: UUID of the notebook
+        
+    Returns:
+        Valid Weaviate collection name in format: Notebook{uuid_without_hyphens}
+    """
+    # Remove hyphens from UUID and ensure it starts with uppercase
+    clean_uuid = str(notebook_id).replace("-", "")
+    return f"Notebook{clean_uuid}"
 
 # Endpoints
 @router.post(
@@ -375,3 +403,182 @@ def delete_notebook_vectors(
             )
 
     return None
+
+
+@router.post(
+    "/{notebook_id}/collection",
+    response_model=CreateCollectionResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        404: {"model": ErrorResponse, "description": "Notebook not found"},
+        500: {"model": ErrorResponse, "description": "Collection creation failed"}
+    }
+)
+def create_collection(
+    notebook_id: UUID,
+    request: CreateCollectionRequest = CreateCollectionRequest(),
+    service: VectorIngestionService = Depends(get_vector_ingestion_service)
+):
+    """
+    Create a vector collection for a notebook.
+
+    This endpoint creates a Weaviate collection with the schema defined for storing
+    notebook content chunks. The collection name follows the pattern 'Notebook{notebook_id_without_hyphens}'.
+
+    Args:
+        notebook_id: UUID of the notebook to create collection for (from path)
+        request: Collection creation parameters (currently empty)
+        service: Injected vector ingestion service
+
+    Returns:
+        Collection creation result with collection name and status
+
+    Raises:
+        HTTPException: 404 if notebook not found, 500 if creation fails
+    """
+    from ..infrastructure.database.connection import get_db
+    from ..infrastructure.repositories.postgres_notebook_repository import PostgresNotebookRepository
+    from ..infrastructure.providers.weaviate_vector_database_provider import WeaviateVectorDatabaseProvider
+    import os
+
+    # First verify that the notebook exists
+    db = next(get_db())
+    try:
+        notebook_repository = PostgresNotebookRepository(db)
+        from ..core.queries.notebook_queries import GetNotebookByIdQuery
+        from ..core.services.notebook_management_service import NotebookManagementService
+        
+        notebook_service = NotebookManagementService(notebook_repository)
+        query = GetNotebookByIdQuery(notebook_id=notebook_id)
+        notebook_result = notebook_service.get_notebook_by_id(query)
+        
+        if notebook_result.is_failure:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": f"Notebook with ID {notebook_id} not found"}
+            )
+    finally:
+        db.close()
+
+    # Get collection name using the existing helper function
+    collection_name = get_collection_name(notebook_id)
+
+    # Create vector database provider
+    weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
+    weaviate_key = os.getenv("WEAVIATE_KEY")
+    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
+
+    try:
+        # Check if collection already exists
+        exists_result = vector_db_provider.collection_exists(collection_name)
+        if exists_result.is_failure:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={"error": f"Failed to check collection existence: {exists_result.error}"}
+            )
+
+        already_existed = exists_result.value
+
+        # Create collection using the provider's method
+        result = vector_db_provider.create_collection_if_not_exists(collection_name)
+
+        if result.is_failure:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={"error": f"Failed to create collection: {result.error}"}
+            )
+
+        message = f"Collection '{collection_name}' already existed" if already_existed else f"Collection '{collection_name}' created successfully"
+
+        return CreateCollectionResponse(
+            notebook_id=notebook_id,
+            collection_name=collection_name,
+            message=message,
+            created=not already_existed
+        )
+
+    finally:
+        vector_db_provider.close()
+
+
+@router.get(
+    "/{notebook_id}/collection/debug",
+    responses={
+        404: {"model": ErrorResponse, "description": "Notebook not found"},
+        500: {"model": ErrorResponse, "description": "Debug failed"}
+    }
+)
+def debug_collection(
+    notebook_id: UUID
+):
+    """
+    Debug endpoint to check collection contents and counts.
+    
+    This endpoint helps troubleshoot collection issues by showing both
+    filtered and unfiltered counts, plus sample data.
+    """
+    from ..infrastructure.providers.weaviate_vector_database_provider import WeaviateVectorDatabaseProvider
+    import os
+
+    collection_name = get_collection_name(notebook_id)
+    
+    # Create vector database provider
+    weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
+    weaviate_key = os.getenv("WEAVIATE_KEY")
+    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
+
+    try:
+        # Check if collection exists
+        exists_result = vector_db_provider.collection_exists(collection_name)
+        if exists_result.is_failure or not exists_result.value:
+            return {
+                "collection_name": collection_name,
+                "exists": False,
+                "error": exists_result.error if exists_result.is_failure else "Collection does not exist"
+            }
+
+        # Get total count (no filter)
+        total_count_result = vector_db_provider.get_document_count(collection_name, None)
+        total_count = total_count_result.value if total_count_result.is_success else 0
+
+        # Get filtered count (with notebook_id filter)
+        filtered_count_result = vector_db_provider.get_document_count(
+            collection_name, 
+            {"notebook_id": str(notebook_id)}
+        )
+        filtered_count = filtered_count_result.value if filtered_count_result.is_success else 0
+
+        # Try to get a sample document to see the structure
+        client = vector_db_provider._get_client()
+        collection = client.collections.get(collection_name)
+        
+        sample_docs = []
+        try:
+            response = collection.query.fetch_objects(limit=3)
+            for obj in response.objects:
+                sample_docs.append({
+                    "id": str(obj.uuid),
+                    "properties": dict(obj.properties)
+                })
+        except:
+            try:
+                response = collection.query.near_text(query="", limit=3)
+                for obj in response.objects:
+                    sample_docs.append({
+                        "id": str(obj.uuid),
+                        "properties": dict(obj.properties)
+                    })
+            except Exception as e:
+                sample_docs = [{"error": f"Could not fetch sample: {str(e)}"}]
+
+        return {
+            "collection_name": collection_name,
+            "exists": True,
+            "total_count": total_count,
+            "filtered_count": filtered_count,
+            "filter_used": {"notebook_id": str(notebook_id)},
+            "sample_documents": sample_docs
+        }
+
+    finally:
+        vector_db_provider.close()
