@@ -18,6 +18,11 @@ from .dtos import ErrorResponse
 
 router = APIRouter(prefix="/api/notebooks", tags=["vector-search"])
 
+# make sure to read .env file 
+from dotenv import load_dotenv
+load_dotenv()
+
+
 
 # DTOs
 class IngestNotebookRequest(BaseModel):
@@ -139,6 +144,9 @@ def get_content_similarity_service() -> ContentSimilarityService:
         vector_db_provider.close()
         db.close()
 
+def get_collection_name(notebook_id: UUID) -> str:
+    """Helper to get collection name for a notebook."""
+    return "notebook" + str(notebook_id)
 
 # Endpoints
 @router.post(
@@ -172,9 +180,10 @@ def ingest_notebook(
     Raises:
         HTTPException: 404 if notebook not found, 500 if ingestion fails
     """
+    collection_name = get_collection_name(notebook_id)
     command = IngestNotebookCommand(
         notebook_id=notebook_id,
-        collection_name="discovery_content",
+        collection_name=collection_name,
         chunk_size=request.chunk_size,
         overlap=request.overlap,
         force_reingest=request.force_reingest
@@ -236,7 +245,7 @@ def search_similar_content(
     search_query = SimilaritySearchQuery(
         notebook_id=notebook_id,
         query_text=query,
-        collection_name="discovery_content",
+        collection_name=get_collection_name(notebook_id),
         limit=limit
     )
 
@@ -299,7 +308,7 @@ def get_vector_count(
     """
     query = GetVectorCountQuery(
         notebook_id=notebook_id,
-        collection_name="discovery_content"
+        collection_name=get_collection_name(notebook_id)
     )
 
     result = service.get_vector_count(query)
@@ -348,7 +357,7 @@ def delete_notebook_vectors(
     """
     command = DeleteNotebookVectorsCommand(
         notebook_id=notebook_id,
-        collection_name="discovery_content"
+        collection_name=get_collection_name(notebook_id)
     )
 
     result = service.delete_notebook_vectors(command)

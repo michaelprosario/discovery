@@ -1,0 +1,3 @@
+- add fastapi api so that I can create a  collection given a  notebook_id guid
+- the schema for the collection should be  created using  /workspaces/discovery/src/infrastructure/providers/weaviate_vector_database_provider.py and the method  create_collection_if_not_exists
+- collection name should be  notebook+str(notebookId)

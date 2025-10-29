@@ -79,3 +79,4 @@ def test_add_source_to_notebook():
     assert list_sources_response.status_code == 200
     listed_sources = list_sources_response.json()["sources"]
     assert any(source['id'] == added_source['id'] for source in listed_sources)
+
