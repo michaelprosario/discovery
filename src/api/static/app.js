@@ -99,6 +99,11 @@ class DiscoveryApp {
                 throw new Error(errorData.error || `HTTP ${response.status}`);
             }
             
+            // Handle 204 No Content responses (like DELETE operations)
+            if (response.status === 204) {
+                return null;
+            }
+            
             return await response.json();
         } catch (error) {
             console.error('API call failed:', error);
