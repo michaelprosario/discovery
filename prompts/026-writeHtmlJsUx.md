@@ -1,0 +1,3 @@
+- Read /workspaces/discovery/specs/core_stories.md
+- understand the current apis here:/workspaces/discovery/openapi.json
+- implement html/js user interface hosted by fastapi focusing  on Core Functionality (Notebooks & Sources)
