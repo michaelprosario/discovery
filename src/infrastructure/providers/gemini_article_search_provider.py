@@ -1,16 +1,16 @@
 """Gemini AI provider for article search with Google search integration."""
 import json
 import os
-from typing import Dict, Any
+from typing import Any, List, Optional
 
 from ...core.interfaces.providers.i_article_search_provider import IArticleSearchProvider
 from ...core.queries.article_search_queries import ArticleSearchQuery, ArticleSearchResult
 from ...core.results.result import Result
 
 try:
-    import google.generativeai as genai
-    from google.generativeai import types as genai_types
-except ImportError:
+    from google import genai
+    from google.genai import types as genai_types
+except ImportError:  # pragma: no cover - surfaced through explicit error handling
     genai = None
     genai_types = None
 
@@ -23,22 +23,24 @@ class GeminiArticleSearchProvider(IArticleSearchProvider):
     high-quality blog articles that answer specific questions.
     """
 
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: Optional[str] = None):
         """
         Initialize the Gemini provider.
 
         Args:
-            api_key: Google AI API key. If None, will use GOOGLE_AI_API_KEY env var
+            api_key: Gemini API key. Falls back to GEMINI_API_KEY or GOOGLE_AI_API_KEY env vars
         """
         if genai is None or genai_types is None:
-            raise ImportError("google-generativeai package is required. Install it with: pip install google-generativeai")
-            
-        self._api_key = api_key or os.getenv("GOOGLE_AI_API_KEY")
-        if not self._api_key:
-            raise ValueError("Google AI API key is required. Set GOOGLE_AI_API_KEY environment variable.")
+            raise ImportError("google-genai package is required. Install it with: pip install google-genai")
 
-        genai.configure(api_key=self._api_key)
-        self._model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        self._api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_AI_API_KEY")
+        if not self._api_key:
+            raise ValueError(
+                "Gemini API key is required. Set GEMINI_API_KEY (or legacy GOOGLE_AI_API_KEY) environment variable."
+            )
+
+        self._client = genai.Client(api_key=self._api_key)
+        self._model = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 
     def search_articles(self, query: ArticleSearchQuery) -> Result[ArticleSearchResult]:
         """
@@ -52,36 +54,43 @@ class GeminiArticleSearchProvider(IArticleSearchProvider):
         """
         try:
             prompt = self._build_search_prompt(query.question, query.max_results)
-
-            # Configure the model to use Google search
-            generation_config = genai.GenerationConfig(
-                temperature=0.1,  # Lower temperature for more consistent results
+            contents = [
+                genai_types.Content(
+                    role="user",
+                    parts=[genai_types.Part.from_text(text=prompt)],
+                )
+            ]
+            tools = [genai_types.Tool(googleSearch=genai_types.GoogleSearch())]
+            generate_content_config = genai_types.GenerateContentConfig(
+                temperature=0.1,
                 top_p=0.8,
                 top_k=40,
-                max_output_tokens=8192,
+                max_output_tokens=4096,
+                response_mime_type="application/json",
+                tools=tools,
             )
 
-            # Generate response with search grounding
-            response = self._model.generate_content(
-                prompt,
-                generation_config=generation_config,
-                tools=[
-                    genai_types.Tool(
-                        google_search_retrieval=genai_types.protos.GoogleSearchRetrieval()
-                    )
-                ],
+            response = self._client.models.generate_content(
+                model=self._model,
+                contents=contents,
+                config=generate_content_config,
             )
 
-            if not response.text:
+            response_text = self._extract_response_text(response)
+            if not response_text:
                 return Result.failure("No response received from Gemini")
 
-            # Parse the JSON response
-            try:
-                response_data = json.loads(response.text)
-                article_result = ArticleSearchResult.from_dict(response_data)
-                return Result.success(article_result)
-            except json.JSONDecodeError as e:
-                return Result.failure(f"Failed to parse response as JSON: {str(e)}")
+            response_json = self._load_json_payload(response_text)
+            if response_json is None:
+                return Result.failure("Failed to parse response as JSON")
+
+            article_result = ArticleSearchResult.from_dict(response_json)
+            if len(article_result.articles) > query.max_results:
+                article_result = ArticleSearchResult(
+                    articles=article_result.articles[: query.max_results]
+                )
+
+            return Result.success(article_result)
 
         except Exception as e:
             return Result.failure(f"Gemini API error: {str(e)}")
@@ -125,3 +134,48 @@ class GeminiArticleSearchProvider(IArticleSearchProvider):
 ```
 
 Important: Return ONLY the JSON object, no additional text or formatting."""
+
+    def _extract_response_text(self, response: Any) -> Optional[str]:
+        """Extract plain text from a Gemini response object."""
+        text = getattr(response, "text", None)
+        if text:
+            return text
+
+        parts: List[str] = []
+        for candidate in getattr(response, "candidates", []) or []:
+            content = getattr(candidate, "content", None)
+            if not content:
+                continue
+            for part in getattr(content, "parts", []) or []:
+                part_text = getattr(part, "text", None)
+                if part_text:
+                    parts.append(part_text)
+
+        return "".join(parts) if parts else None
+
+    def _clean_json_response(self, response_text: str) -> str:
+        """Strip Markdown code fences that occasionally wrap model output."""
+        text = response_text.strip()
+        if text.startswith("```") and text.endswith("```"):
+            lines = text.splitlines()
+            if lines:
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            text = "\n".join(lines).strip()
+        return text
+
+    def _load_json_payload(self, response_text: str) -> Optional[dict]:
+        """Attempt to load JSON payload from Gemini output with light cleanup."""
+        cleaned = self._clean_json_response(response_text)
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            start = cleaned.find("{")
+            end = cleaned.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                try:
+                    return json.loads(cleaned[start : end + 1])
+                except json.JSONDecodeError:
+                    return None
+        return None
