@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discovery - Research Notebook</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-book-open"></i>
+                    <h1>Discovery</h1>
+                </div>
+                <div class="header-actions">
+                    <button id="newNotebookBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Notebook
+                    </button>
+                    <button id="searchToggleBtn" class="btn btn-secondary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Global Search Panel -->
+        <div id="searchPanel" class="search-panel hidden">
+            <div class="search-container">
+                <input type="text" id="globalSearchInput" placeholder="Search across all notebooks and sources..." class="search-input">
+                <button id="globalSearchBtn" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <button id="closeSearchBtn" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="searchResults" class="search-results"></div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Notebooks</h2>
+                    <div class="sidebar-actions">
+                        <select id="sortSelect" class="sort-select">
+                            <option value="updated_at">Last Modified</option>
+                            <option value="name">Name</option>
+                            <option value="created_at">Date Created</option>
+                            <option value="source_count">Source Count</option>
+                        </select>
+                        <button id="refreshNotebooksBtn" class="btn btn-icon" title="Refresh">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="notebooks-filter">
+                    <input type="text" id="notebooksFilter" placeholder="Filter notebooks..." class="filter-input">
+                </div>
+                <div id="notebooksList" class="notebooks-list">
+                    <div class="loading">Loading notebooks...</div>
+                </div>
+            </aside>
+
+            <!-- Content Area -->
+            <section class="content-area">
+                <!-- Welcome Screen -->
+                <div id="welcomeScreen" class="welcome-screen">
+                    <div class="welcome-content">
+                        <i class="fas fa-book-open welcome-icon"></i>
+                        <h2>Welcome to Discovery</h2>
+                        <p>Your local research companion. Create notebooks, import sources, and generate insights.</p>
+                        <button id="createFirstNotebookBtn" class="btn btn-primary btn-large">
+                            <i class="fas fa-plus"></i> Create Your First Notebook
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notebook View -->
+                <div id="notebookView" class="notebook-view hidden">
+                    <!-- Notebook Header -->
+                    <div class="notebook-header">
+                        <div class="notebook-info">
+                            <h2 id="notebookTitle" class="notebook-title">Notebook Name</h2>
+                            <p id="notebookDescription" class="notebook-description">Description</p>
+                            <div id="notebookTags" class="notebook-tags"></div>
+                            <div class="notebook-stats">
+                                <span id="sourceCount">0 sources</span>
+                                <span id="lastModified">Last modified: Never</span>
+                            </div>
+                        </div>
+                        <div class="notebook-actions">
+                            <button id="editNotebookBtn" class="btn btn-secondary">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button id="deleteNotebookBtn" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <div class="dropdown">
+                                <button id="moreActionsBtn" class="btn btn-secondary dropdown-toggle">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <button id="ingestNotebookBtn" class="dropdown-item">
+                                        <i class="fas fa-database"></i> Ingest to Vector DB
+                                    </button>
+                                    <button id="searchSimilarBtn" class="dropdown-item">
+                                        <i class="fas fa-search-plus"></i> Semantic Search
+                                    </button>
+                                    <button id="generateOutputBtn" class="dropdown-item">
+                                        <i class="fas fa-file-alt"></i> Generate Summary
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sources Section -->
+                    <div class="sources-section">
+                        <div class="sources-header">
+                            <h3>Sources</h3>
+                            <div class="sources-actions">
+                                <button id="addFileSourceBtn" class="btn btn-primary">
+                                    <i class="fas fa-file-upload"></i> Add File
+                                </button>
+                                <button id="addUrlSourceBtn" class="btn btn-primary">
+                                    <i class="fas fa-link"></i> Add URL
+                                </button>
+                            </div>
+                        </div>
+                        <div class="sources-filter">
+                            <input type="text" id="sourcesFilter" placeholder="Filter sources..." class="filter-input">
+                            <select id="sourceTypeFilter" class="filter-select">
+                                <option value="">All Types</option>
+                                <option value="file">Files</option>
+                                <option value="url">URLs</option>
+                            </select>
+                        </div>
+                        <div id="sourcesList" class="sources-list">
+                            <div class="no-sources">
+                                <i class="fas fa-folder-open"></i>
+                                <p>No sources yet. Add files or URLs to get started.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Create/Edit Notebook Modal -->
+    <div id="notebookModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="notebookModalTitle">Create New Notebook</h3>
+                <button class="modal-close" data-modal="notebookModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="notebookForm">
+                    <div class="form-group">
+                        <label for="notebookName">Name *</label>
+                        <input type="text" id="notebookName" name="name" required maxlength="255" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="notebookDescriptionInput">Description</label>
+                        <textarea id="notebookDescriptionInput" name="description" maxlength="2000" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="notebookTagsInput">Tags (comma-separated)</label>
+                        <input type="text" id="notebookTagsInput" name="tags" class="form-input" placeholder="research, ai, technology">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal="notebookModal">Cancel</button>
+                <button type="submit" form="notebookForm" id="saveNotebookBtn" class="btn btn-primary">Create Notebook</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add File Source Modal -->
+    <div id="fileSourceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add File Source</h3>
+                <button class="modal-close" data-modal="fileSourceModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="fileSourceForm">
+                    <div class="form-group">
+                        <label for="sourceFile">File *</label>
+                        <input type="file" id="sourceFile" name="file" accept=".pdf,.txt,.md,.doc,.docx" required class="form-input">
+                        <small class="form-help">Supported formats: PDF, TXT, MD, DOC, DOCX</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="sourceFileName">Name *</label>
+                        <input type="text" id="sourceFileName" name="name" required maxlength="500" class="form-input">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal="fileSourceModal">Cancel</button>
+                <button type="submit" form="fileSourceForm" id="saveFileSourceBtn" class="btn btn-primary">Add Source</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add URL Source Modal -->
+    <div id="urlSourceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add URL Source</h3>
+                <button class="modal-close" data-modal="urlSourceModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="urlSourceForm">
+                    <div class="form-group">
+                        <label for="sourceUrl">URL *</label>
+                        <input type="url" id="sourceUrl" name="url" required class="form-input" placeholder="https://example.com/article">
+                    </div>
+                    <div class="form-group">
+                        <label for="sourceUrlTitle">Title (optional)</label>
+                        <input type="text" id="sourceUrlTitle" name="title" maxlength="500" class="form-input" placeholder="Leave empty to extract from page">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal="urlSourceModal">Cancel</button>
+                <button type="submit" form="urlSourceForm" id="saveUrlSourceBtn" class="btn btn-primary">Add Source</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Source Viewer Modal -->
+    <div id="sourceViewerModal" class="modal modal-large">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="sourceViewerTitle">Source Content</h3>
+                <div class="modal-header-actions">
+                    <button id="downloadSourceBtn" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                    <button class="modal-close" data-modal="sourceViewerModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="source-viewer-content">
+                    <div id="sourceContentLoader" class="loading">Loading content...</div>
+                    <div id="sourceContent" class="source-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Semantic Search Modal -->
+    <div id="semanticSearchModal" class="modal modal-large">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Semantic Search</h3>
+                <button class="modal-close" data-modal="semanticSearchModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="semanticSearchQuery">Search Query</label>
+                    <textarea id="semanticSearchQuery" class="form-textarea" rows="3" placeholder="Enter your search query here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="searchResultLimit">Results Limit</label>
+                    <select id="searchResultLimit" class="form-select">
+                        <option value="5">5 results</option>
+                        <option value="10" selected>10 results</option>
+                        <option value="20">20 results</option>
+                        <option value="50">50 results</option>
+                    </select>
+                </div>
+                <button id="executeSemanticSearchBtn" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <div id="semanticSearchResults" class="search-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="confirmationTitle">Confirm Action</h3>
+                <button class="modal-close" data-modal="confirmationModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmationMessage">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal="confirmationModal">Cancel</button>
+                <button type="button" id="confirmActionBtn" class="btn btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p id="loadingMessage">Loading...</p>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
