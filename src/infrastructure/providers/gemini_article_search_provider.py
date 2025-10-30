@@ -7,12 +7,16 @@ from ...core.interfaces.providers.i_article_search_provider import IArticleSearc
 from ...core.queries.article_search_queries import ArticleSearchQuery, ArticleSearchResult
 from ...core.results.result import Result
 
+# import environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 try:
     from google import genai
-    from google.genai import types as genai_types
+    from google.genai import types
 except ImportError:  # pragma: no cover - surfaced through explicit error handling
     genai = None
-    genai_types = None
+    types = None
 
 
 class GeminiArticleSearchProvider(IArticleSearchProvider):
@@ -30,7 +34,7 @@ class GeminiArticleSearchProvider(IArticleSearchProvider):
         Args:
             api_key: Gemini API key. Falls back to GEMINI_API_KEY or GOOGLE_AI_API_KEY env vars
         """
-        if genai is None or genai_types is None:
+        if genai is None or types is None:
             raise ImportError("google-genai package is required. Install it with: pip install google-genai")
 
         self._api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_AI_API_KEY")
@@ -39,8 +43,9 @@ class GeminiArticleSearchProvider(IArticleSearchProvider):
                 "Gemini API key is required. Set GEMINI_API_KEY (or legacy GOOGLE_AI_API_KEY) environment variable."
             )
 
+        # Initialize the client using the new API
         self._client = genai.Client(api_key=self._api_key)
-        self._model = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
+        self._model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
     def search_articles(self, query: ArticleSearchQuery) -> Result[ArticleSearchResult]:
         """
@@ -54,26 +59,21 @@ class GeminiArticleSearchProvider(IArticleSearchProvider):
         """
         try:
             prompt = self._build_search_prompt(query.question, query.max_results)
-            contents = [
-                genai_types.Content(
-                    role="user",
-                    parts=[genai_types.Part.from_text(text=prompt)],
-                )
-            ]
-            tools = [genai_types.Tool(googleSearch=genai_types.GoogleSearch())]
-            generate_content_config = genai_types.GenerateContentConfig(
+            
+            # Configure Google search tool using the new API
+            config = types.GenerateContentConfig(
                 temperature=0.1,
                 top_p=0.8,
                 top_k=40,
                 max_output_tokens=4096,
                 response_mime_type="application/json",
-                tools=tools,
+                tools=[{"google_search": {}}]
             )
 
             response = self._client.models.generate_content(
                 model=self._model,
-                contents=contents,
-                config=generate_content_config,
+                contents=prompt,
+                config=config
             )
 
             response_text = self._extract_response_text(response)
@@ -83,6 +83,10 @@ class GeminiArticleSearchProvider(IArticleSearchProvider):
             response_json = self._load_json_payload(response_text)
             if response_json is None:
                 return Result.failure("Failed to parse response as JSON")
+
+            # The Gemini response with grounding may have a different structure
+            if 'robust_articles' not in response_json and 'articles' in response_json:
+                response_json['robust_articles'] = response_json.pop('articles')
 
             article_result = ArticleSearchResult.from_dict(response_json)
             if len(article_result.articles) > query.max_results:
@@ -137,33 +141,38 @@ Important: Return ONLY the JSON object, no additional text or formatting."""
 
     def _extract_response_text(self, response: Any) -> Optional[str]:
         """Extract plain text from a Gemini response object."""
-        text = getattr(response, "text", None)
-        if text:
-            return text
-
-        parts: List[str] = []
-        for candidate in getattr(response, "candidates", []) or []:
-            content = getattr(candidate, "content", None)
-            if not content:
-                continue
-            for part in getattr(content, "parts", []) or []:
-                part_text = getattr(part, "text", None)
-                if part_text:
-                    parts.append(part_text)
-
-        return "".join(parts) if parts else None
+        try:
+            # Try to get text directly
+            if hasattr(response, 'text'):
+                return response.text
+        except (ValueError, AttributeError):
+            pass
+        
+        # Fallback to extracting from candidates structure
+        try:
+            if hasattr(response, 'candidates') and response.candidates:
+                candidate = response.candidates[0]
+                if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                    for part in candidate.content.parts:
+                        if hasattr(part, 'text') and part.text:
+                            return part.text
+        except (AttributeError, IndexError):
+            pass
+            
+        return None
 
     def _clean_json_response(self, response_text: str) -> str:
         """Strip Markdown code fences that occasionally wrap model output."""
         text = response_text.strip()
-        if text.startswith("```") and text.endswith("```"):
-            lines = text.splitlines()
-            if lines:
-                lines = lines[1:]
-            if lines and lines[-1].startswith("```"):
-                lines = lines[:-1]
-            text = "\n".join(lines).strip()
-        return text
+        if text.startswith("```json"):
+            text = text[7:]
+        elif text.startswith("```"):
+            text = text[3:]
+        
+        if text.endswith("```"):
+            text = text[:-3]
+            
+        return text.strip()
 
     def _load_json_payload(self, response_text: str) -> Optional[dict]:
         """Attempt to load JSON payload from Gemini output with light cleanup."""
