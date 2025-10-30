@@ -3,8 +3,10 @@ from typing import List, Optional
 from uuid import UUID
 import base64
 from fastapi import APIRouter, HTTPException, status, Depends
+from pydantic import BaseModel, Field
 
 from ..core.services.source_ingestion_service import SourceIngestionService
+from ..core.services.article_search_service import ArticleSearchService
 from ..core.commands.source_commands import (
     ImportFileSourceCommand,
     ImportUrlSourceCommand,
@@ -18,6 +20,7 @@ from ..core.queries.source_queries import (
     ListSourcesQuery,
     GetSourceCountQuery
 )
+from ..core.queries.article_search_queries import ArticleSearchQuery
 from ..core.value_objects.enums import SourceType, FileType, SortOption, SortOrder
 from .dtos import (
     ImportFileSourceRequest,
@@ -27,6 +30,9 @@ from .dtos import (
     SourceResponse,
     SourceListResponse,
     SourcePreviewResponse,
+    AddSourcesBySearchRequest,
+    AddSourcesBySearchResult,
+    AddSourcesBySearchResponse,
     ErrorResponse,
     ValidationErrorResponse,
     ValidationErrorDetail
@@ -707,4 +713,116 @@ def get_source_preview(
         name=source.name,
         preview=preview,
         full_text_length=len(source.extracted_text)
+    )
+
+
+def get_article_search_service() -> ArticleSearchService:
+    """Dependency injection for ArticleSearchService."""
+    try:
+        from ..infrastructure.providers.gemini_article_search_provider import GeminiArticleSearchProvider
+        gemini_provider = GeminiArticleSearchProvider()
+        return ArticleSearchService(gemini_provider)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to initialize article search service: {str(e)}"
+        )
+
+
+@router.post(
+    "/search-and-add",
+    response_model=AddSourcesBySearchResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        400: {"model": ValidationErrorResponse, "description": "Validation error"},
+        404: {"model": ErrorResponse, "description": "Notebook not found"},
+        500: {"model": ErrorResponse, "description": "Search or import failed"}
+    }
+)
+def add_sources_by_search(
+    request: AddSourcesBySearchRequest,
+    source_service: SourceIngestionService = Depends(get_source_service),
+    article_service: ArticleSearchService = Depends(get_article_search_service)
+):
+    """
+    Add sources to a notebook by searching for relevant articles.
+
+    This endpoint searches for articles based on a search phrase/question,
+    then attempts to add each found article as a URL source to the notebook.
+
+    Args:
+        request: Search phrase and notebook information
+        source_service: Injected source ingestion service
+        article_service: Injected article search service
+
+    Returns:
+        Results of the search and source addition process
+
+    Raises:
+        HTTPException: 400 for validation errors, 404 if notebook not found, 500 for search failures
+    """
+    # First, search for articles
+    search_query = ArticleSearchQuery(
+        question=request.search_phrase,
+        max_results=request.max_results
+    )
+
+    search_result = article_service.search_articles(search_query)
+
+    if search_result.is_failure:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": f"Article search failed: {search_result.error}"}
+        )
+
+    articles = search_result.value.articles
+    results = []
+    total_added = 0
+
+    # Try to add each article as a URL source
+    for article in articles:
+        try:
+            # Create command to import URL source
+            import_command = ImportUrlSourceCommand(
+                notebook_id=request.notebook_id,
+                title=article.title,
+                url=article.link
+            )
+
+            # Attempt to import the URL source
+            import_result = source_service.import_url_source(import_command)
+
+            if import_result.is_success:
+                results.append(AddSourcesBySearchResult(
+                    title=article.title,
+                    url=article.link,
+                    source_id=import_result.value.id,
+                    success=True,
+                    error=None
+                ))
+                total_added += 1
+            else:
+                results.append(AddSourcesBySearchResult(
+                    title=article.title,
+                    url=article.link,
+                    source_id=None,
+                    success=False,
+                    error=import_result.error
+                ))
+
+        except Exception as e:
+            results.append(AddSourcesBySearchResult(
+                title=article.title,
+                url=article.link,
+                source_id=None,
+                success=False,
+                error=str(e)
+            ))
+
+    return AddSourcesBySearchResponse(
+        notebook_id=request.notebook_id,
+        search_phrase=request.search_phrase,
+        results=results,
+        total_found=len(articles),
+        total_added=total_added
     )

@@ -847,6 +847,71 @@ body {
     display: block;
 }
 
+/* Search Source Results */
+.search-source-results {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e1e5e9;
+}
+
+.search-source-results h4 {
+    color: #2d3748;
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+}
+
+.search-source-result-item {
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #f8f9fa;
+}
+
+.search-source-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.search-source-result-title {
+    font-weight: 600;
+    color: #2d3748;
+    flex: 1;
+    margin-right: 1rem;
+}
+
+.search-source-result-status {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.search-source-result-status.success {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.search-source-result-status.error {
+    background: #fed7d7;
+    color: #742a2a;
+}
+
+.search-source-result-url {
+    font-size: 0.875rem;
+    color: #667eea;
+    word-break: break-all;
+    margin-bottom: 0.5rem;
+}
+
+.search-source-result-error {
+    font-size: 0.875rem;
+    color: #e53e3e;
+    margin-top: 0.5rem;
+}
+
 /* Utility Classes */
 .hidden {
     display: none !important;

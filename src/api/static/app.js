@@ -46,6 +46,7 @@ class DiscoveryApp {
         // Source actions
         document.getElementById('addFileSourceBtn').addEventListener('click', () => this.showAddFileSourceModal());
         document.getElementById('addUrlSourceBtn').addEventListener('click', () => this.showAddUrlSourceModal());
+        document.getElementById('addBySearchBtn').addEventListener('click', () => this.showSearchSourceModal());
         document.getElementById('sourcesFilter').addEventListener('input', () => this.filterSources());
         document.getElementById('sourceTypeFilter').addEventListener('change', () => this.filterSources());
         
@@ -53,6 +54,7 @@ class DiscoveryApp {
         document.getElementById('notebookForm').addEventListener('submit', (e) => this.handleNotebookSubmit(e));
         document.getElementById('fileSourceForm').addEventListener('submit', (e) => this.handleFileSourceSubmit(e));
         document.getElementById('urlSourceForm').addEventListener('submit', (e) => this.handleUrlSourceSubmit(e));
+        document.getElementById('searchSourceForm').addEventListener('submit', (e) => this.handleSearchSourceSubmit(e));
         
         // File input auto-name
         document.getElementById('sourceFile').addEventListener('change', () => this.autoFillFileName());
@@ -478,6 +480,163 @@ class DiscoveryApp {
         } finally {
             this.hideLoading();
         }
+    }
+
+    showSearchSourceModal() {
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'Please select a notebook first', 'error');
+            return;
+        }
+        
+        document.getElementById('searchSourceForm').reset();
+        document.getElementById('searchSourceResults').classList.add('hidden');
+        document.getElementById('searchSourceResultsList').innerHTML = '';
+        this.showModal('searchSourceModal');
+    }
+
+    async handleSearchSourceSubmit(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const searchPhrase = formData.get('searchPhrase').trim();
+        const maxResults = parseInt(formData.get('maxArticles'));
+        
+        if (!searchPhrase) {
+            this.showToast('Error', 'Please enter a search phrase', 'error');
+            return;
+        }
+        
+        try {
+            this.showLoading('Searching for articles and adding sources...');
+            
+            const data = {
+                notebook_id: this.currentNotebook.id,
+                search_phrase: searchPhrase,
+                max_results: maxResults
+            };
+            
+            const response = await this.apiCall('/sources/search-and-add', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            
+            this.displaySearchSourceResults(response);
+            this.showToast('Success', `Added ${response.total_added} of ${response.total_found} sources`, 'success');
+            
+            // Refresh sources and notebooks list
+            await this.loadSources();
+            await this.loadNotebooks();
+        } catch (error) {
+            console.error('Failed to search and add sources:', error);
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    displaySearchSourceResults(response) {
+        const resultsContainer = document.getElementById('searchSourceResults');
+        const resultsList = document.getElementById('searchSourceResultsList');
+        
+        resultsContainer.classList.remove('hidden');
+        
+        if (response.results.length === 0) {
+            resultsList.innerHTML = '<p class="text-muted">No articles found.</p>';
+            return;
+        }
+        
+        resultsList.innerHTML = response.results.map(result => `
+            <div class="search-source-result-item">
+                <div class="search-source-result-header">
+                    <div class="search-source-result-title">${this.escapeHtml(result.title)}</div>
+                    <span class="search-source-result-status ${result.success ? 'success' : 'error'}">
+                        ${result.success ? '✓ Added' : '✗ Failed'}
+                    </span>
+                </div>
+                <div class="search-source-result-url">
+                    <a href="${result.url}" target="_blank">${this.escapeHtml(result.url)}</a>
+                </div>
+                ${result.error ? `<div class="search-source-result-error">Error: ${this.escapeHtml(result.error)}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    showSearchSourceModal() {
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'Please select a notebook first', 'error');
+            return;
+        }
+        
+        document.getElementById('searchSourceForm').reset();
+        document.getElementById('searchSourceResults').classList.add('hidden');
+        document.getElementById('searchSourceResultsList').innerHTML = '';
+        this.showModal('searchSourceModal');
+    }
+
+    async handleSearchSourceSubmit(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const searchPhrase = formData.get('searchPhrase').trim();
+        const maxResults = parseInt(formData.get('maxArticles'));
+        
+        if (!searchPhrase) {
+            this.showToast('Error', 'Please provide a search phrase', 'error');
+            return;
+        }
+        
+        try {
+            this.showLoading('Searching for articles and adding sources...');
+            
+            const data = {
+                notebook_id: this.currentNotebook.id,
+                search_phrase: searchPhrase,
+                max_results: maxResults
+            };
+            
+            const response = await this.apiCall('/sources/search-and-add', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            
+            this.displaySearchSourceResults(response);
+            
+            if (response.total_added > 0) {
+                this.showToast('Success', `Added ${response.total_added} of ${response.total_found} sources successfully`, 'success');
+                await this.loadSources();
+                await this.loadNotebooks(); // Refresh to update source count
+            } else {
+                this.showToast('Warning', 'No sources could be added. Check the results for details.', 'warning');
+            }
+        } catch (error) {
+            console.error('Failed to search and add sources:', error);
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    displaySearchSourceResults(response) {
+        const resultsContainer = document.getElementById('searchSourceResults');
+        const resultsList = document.getElementById('searchSourceResultsList');
+        
+        resultsContainer.classList.remove('hidden');
+        
+        if (response.results.length === 0) {
+            resultsList.innerHTML = '<div class="text-center text-muted">No articles found for your search.</div>';
+            return;
+        }
+        
+        resultsList.innerHTML = response.results.map(result => `
+            <div class="search-source-result-item">
+                <div class="search-source-result-header">
+                    <div class="search-source-result-title">${this.escapeHtml(result.title)}</div>
+                    <div class="search-source-result-status ${result.success ? 'success' : 'error'}">
+                        ${result.success ? 'Added' : 'Failed'}
+                    </div>
+                </div>
+                <div class="search-source-result-url">${this.escapeHtml(result.url)}</div>
+                ${result.error ? `<div class="search-source-result-error">Error: ${this.escapeHtml(result.error)}</div>` : ''}
+            </div>
+        `).join('');
     }
 
     async viewSource(sourceId) {

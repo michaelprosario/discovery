@@ -131,6 +131,9 @@
                                 <button id="addUrlSourceBtn" class="btn btn-primary">
                                     <i class="fas fa-link"></i> Add URL
                                 </button>
+                                <button id="addBySearchBtn" class="btn btn-secondary">
+                                    <i class="fas fa-search"></i> Search & Add
+                                </button>
                             </div>
                         </div>
                         <div class="sources-filter">
@@ -239,6 +242,48 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-modal="urlSourceModal">Cancel</button>
                 <button type="submit" form="urlSourceForm" id="saveUrlSourceBtn" class="btn btn-primary">Add Source</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Sources by Search Modal -->
+    <div id="searchSourceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Search & Add Sources</h3>
+                <button class="modal-close" data-modal="searchSourceModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="searchSourceForm">
+                    <div class="form-group">
+                        <label for="searchPhrase">Search Phrase or Question *</label>
+                        <textarea id="searchPhrase" name="searchPhrase" required class="form-textarea" rows="3" 
+                                placeholder="Enter a search phrase or question to find relevant articles..."></textarea>
+                        <small class="form-help">Example: "machine learning best practices" or "How does blockchain work?"</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="maxArticles">Maximum Articles</label>
+                        <select id="maxArticles" name="maxArticles" class="form-select">
+                            <option value="3">3 articles</option>
+                            <option value="5" selected>5 articles</option>
+                            <option value="7">7 articles</option>
+                            <option value="10">10 articles</option>
+                        </select>
+                        <small class="form-help">The system will search for and attempt to add this many relevant articles</small>
+                    </div>
+                </form>
+                <div id="searchSourceResults" class="search-source-results hidden">
+                    <h4>Search Results</h4>
+                    <div id="searchSourceResultsList"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal="searchSourceModal">Cancel</button>
+                <button type="submit" form="searchSourceForm" id="executeSearchSourceBtn" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Search & Add
+                </button>
             </div>
         </div>
     </div>
