@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .notebooks_router import router as notebooks_router
 from .sources_router import router as sources_router
 from .vector_search_router import router as vector_search_router
+from .article_search_router import router as article_search_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -28,6 +29,7 @@ app.add_middleware(
 app.include_router(notebooks_router)
 app.include_router(sources_router)
 app.include_router(vector_search_router)
+app.include_router(article_search_router)
 
 
 @app.on_event("startup")
