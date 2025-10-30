@@ -61,12 +61,12 @@ class GeminiArticleSearchProvider(IArticleSearchProvider):
             prompt = self._build_search_prompt(query.question, query.max_results)
             
             # Configure Google search tool using the new API
+            # Note: response_mime_type cannot be used with tools
             config = types.GenerateContentConfig(
                 temperature=0.1,
                 top_p=0.8,
                 top_k=40,
                 max_output_tokens=4096,
-                response_mime_type="application/json",
                 tools=[{"google_search": {}}]
             )
 
