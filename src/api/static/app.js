@@ -521,11 +521,24 @@ class DiscoveryApp {
             });
             
             this.displaySearchSourceResults(response);
-            this.showToast('Success', `Added ${response.total_added} of ${response.total_found} sources`, 'success');
+            
+            // Show success message with details
+            if (response.total_added === response.total_found) {
+                this.showToast('Success', `Successfully added all ${response.total_added} sources!`, 'success');
+            } else if (response.total_added > 0) {
+                this.showToast('Partial Success', `Added ${response.total_added} of ${response.total_found} sources`, 'warning');
+            } else {
+                this.showToast('Warning', 'No sources were added. Check the results for details.', 'warning');
+            }
             
             // Refresh sources and notebooks list
             await this.loadSources();
             await this.loadNotebooks();
+            
+            // Close modal after delay to let users see the results
+            setTimeout(() => {
+                this.closeModal('searchSourceModal');
+            }, 3000);
         } catch (error) {
             console.error('Failed to search and add sources:', error);
         } finally {
@@ -544,7 +557,9 @@ class DiscoveryApp {
             return;
         }
         
-        resultsList.innerHTML = response.results.map(result => `
+        const summary = `<div class="mb-2"><strong>Summary:</strong> ${response.total_added} of ${response.total_found} sources added successfully</div>`;
+        
+        resultsList.innerHTML = summary + response.results.map(result => `
             <div class="search-source-result-item">
                 <div class="search-source-result-header">
                     <div class="search-source-result-title">${this.escapeHtml(result.title)}</div>
@@ -553,7 +568,7 @@ class DiscoveryApp {
                     </span>
                 </div>
                 <div class="search-source-result-url">
-                    <a href="${result.url}" target="_blank">${this.escapeHtml(result.url)}</a>
+                    <a href="${result.url}" target="_blank" rel="noopener noreferrer">${this.escapeHtml(result.url)}</a>
                 </div>
                 ${result.error ? `<div class="search-source-result-error">Error: ${this.escapeHtml(result.error)}</div>` : ''}
             </div>
