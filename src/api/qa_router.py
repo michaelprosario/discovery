@@ -7,7 +7,12 @@ from pydantic import BaseModel, Field
 from ..core.services.qa_rag_service import QaRagService
 from ..core.commands.qa_commands import AskQuestionCommand
 from ..core.interfaces.providers.i_llm_provider import LlmGenerationParameters
+from ..infrastructure.database.connection import get_db
+from ..infrastructure.repositories.postgres_notebook_repository import PostgresNotebookRepository
+from ..infrastructure.providers.weaviate_vector_database_provider import WeaviateVectorDatabaseProvider
+from ..infrastructure.providers.gemini_llm_provider import GeminiLlmProvider
 from .dtos import ErrorResponse
+import os
 
 router = APIRouter(prefix="/api/notebooks", tags=["qa-rag"])
 
@@ -17,7 +22,6 @@ class AskQuestionRequest(BaseModel):
     """Request to ask a question about notebook content."""
     question: str = Field(..., min_length=1, max_length=10000, description="Question to ask about the notebook content")
     max_sources: int = Field(default=5, ge=1, le=20, description="Maximum number of source chunks to retrieve")
-    collection_name: str = Field(default="discovery_content", description="Vector collection name")
     temperature: float = Field(default=0.3, ge=0.0, le=2.0, description="LLM temperature for response generation")
     max_tokens: int = Field(default=1500, ge=100, le=4000, description="Maximum tokens for LLM response")
 
@@ -49,46 +53,48 @@ class QaHealthResponse(BaseModel):
     vector_db_status: str
 
 
-# Dependency injection
-def get_qa_rag_service() -> QaRagService:
-    """
-    Dependency injection for QaRagService.
+# Dependency injection functions
+def get_notebook_repository(db = Depends(get_db)):
+    return PostgresNotebookRepository(db)
 
-    Creates service with required dependencies.
-    """
-    from ..infrastructure.database.connection import get_db
-    from ..infrastructure.repositories.postgres_notebook_repository import PostgresNotebookRepository
-    from ..infrastructure.providers.weaviate_vector_database_provider import WeaviateVectorDatabaseProvider
-    from ..infrastructure.providers.gemini_llm_provider import GeminiLlmProvider
-    import os
-
-    # Get database session
-    db = next(get_db())
-
-    # Create repositories and providers
-    notebook_repository = PostgresNotebookRepository(db)
-    
-    # Vector database provider
+def get_vector_db_provider():
     weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
     weaviate_key = os.getenv("WEAVIATE_KEY")
-    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
-    
-    # LLM provider
-    llm_provider = GeminiLlmProvider()
+    return WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
 
-    # Create and return service
-    service = QaRagService(
+def get_llm_provider():
+    return GeminiLlmProvider()
+
+def get_qa_rag_service(
+    notebook_repository = Depends(get_notebook_repository),
+    vector_db_provider = Depends(get_vector_db_provider),
+    llm_provider = Depends(get_llm_provider)
+):
+    return QaRagService(
         notebook_repository=notebook_repository,
         vector_db_provider=vector_db_provider,
         llm_provider=llm_provider
     )
 
-    try:
-        yield service
-    finally:
-        vector_db_provider.close()
-        llm_provider.close()
-        db.close()
+
+def get_collection_name(notebook_id: UUID) -> str:
+    """
+    Helper to get collection name for a notebook.
+    
+    Weaviate collection names must:
+    - Start with uppercase letter
+    - Contain only alphanumeric characters (no hyphens, underscores, etc.)
+    - Be a valid class name
+    
+    Args:
+        notebook_id: UUID of the notebook
+        
+    Returns:
+        Valid Weaviate collection name in format: Notebook{uuid_without_hyphens}
+    """
+    # Remove hyphens from UUID and ensure it starts with uppercase
+    clean_uuid = str(notebook_id).replace("-", "")
+    return f"Notebook{clean_uuid}"
 
 
 # Endpoints
@@ -126,6 +132,9 @@ def ask_question(
     Raises:
         HTTPException: 404 if notebook not found, 400 for invalid input, 500 for operation failure
     """
+    # Generate collection name for this notebook
+    collection_name = get_collection_name(notebook_id)
+    
     # Create LLM parameters
     llm_parameters = LlmGenerationParameters(
         temperature=request.temperature,
@@ -138,7 +147,7 @@ def ask_question(
         notebook_id=notebook_id,
         question=request.question,
         max_sources=request.max_sources,
-        collection_name=request.collection_name,
+        collection_name=collection_name,
         llm_parameters=llm_parameters
     )
 
@@ -215,14 +224,10 @@ def get_qa_health(
         # Check vector database (simple health check)
         vector_status = "connected"
         try:
-            # Try a simple operation to check connectivity
-            test_result = service._vector_db_provider.query_similarity(
-                collection_name="discovery_content",
-                query_text="test",
-                limit=1
-            )
-            if test_result.is_failure:
-                vector_status = "error"
+            # Try a simple operation to check connectivity - just check if we can connect
+            client = service._vector_db_provider._get_client()
+            collections = client.collections.list_all()
+            vector_status = "connected"
         except:
             vector_status = "disconnected"
 
