@@ -11,7 +11,6 @@ class ImportFileSourceCommand:
     """Command to import a file source into a notebook."""
 
     notebook_id: UUID
-    file_path: str
     file_name: str
     file_type: FileType
     file_content: bytes  # Raw file content for storage and hash calculation

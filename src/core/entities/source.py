@@ -52,7 +52,6 @@ class Source:
     def create_file_source(
         notebook_id: UUID,
         name: str,
-        file_path: str,
         file_type: FileType,
         file_size: int,
         content: bytes,
@@ -64,7 +63,6 @@ class Source:
         Args:
             notebook_id: Parent notebook UUID
             name: Display name for the source
-            file_path: Local file path
             file_type: Type of file (PDF, DOCX, etc.)
             file_size: Size in bytes
             content: File content for hash calculation
@@ -88,14 +86,6 @@ class Source:
                 field="name",
                 message=f"Name cannot exceed {Source.MAX_NAME_LENGTH} characters",
                 code="MAX_LENGTH"
-            ))
-
-        # Validate file_path
-        if not file_path or not file_path.strip():
-            errors.append(ValidationError(
-                field="file_path",
-                message="File path is required for file sources",
-                code="REQUIRED"
             ))
 
         # Validate file_size
@@ -124,7 +114,6 @@ class Source:
             name=name,
             source_type=SourceType.FILE,
             file_type=file_type,
-            file_path=file_path,
             file_size=file_size,
             content_hash=content_hash,
             metadata=metadata or {}

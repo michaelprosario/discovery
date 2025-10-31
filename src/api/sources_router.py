@@ -166,18 +166,16 @@ def summary_to_source_response(summary) -> SourceResponse:
 )
 def import_file_source(
     request: ImportFileSourceRequest,
-    service: SourceIngestionService = Depends(get_source_service),
-    content_extraction_provider = Depends(get_content_extraction_provider)
+    service: SourceIngestionService = Depends(get_source_service)
 ):
     """
     Import a file source into a notebook.
 
-    The content will be automatically extracted from the file using the appropriate extraction method.
+    The content is sent as a base64 encoded string.
 
     Args:
-        request: File source import data (name, file_path, file_type, notebook_id)
+        request: File source import data (name, file_content, file_type, notebook_id)
         service: Injected source service
-        content_extraction_provider: Injected content extraction provider
 
     Returns:
         Created source
@@ -194,40 +192,22 @@ def import_file_source(
             detail={"error": f"Unsupported file type: {request.file_type}"}
         )
 
-    # Extract content from file
-    extraction_result = content_extraction_provider.extract_text(request.file_path, file_type_enum)
-
-    if extraction_result.is_failure:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": f"Failed to extract content from file: {extraction_result.error}"}
-        )
-
-    extracted_text = extraction_result.value
-
-    # Get file size
-    import os
+    # Decode base64 content
     try:
-        file_size = os.path.getsize(request.file_path)
+        content_bytes = base64.b64decode(request.file_content)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": f"Failed to get file size: {str(e)}"}
+            detail={"error": f"Invalid base64 content: {str(e)}"}
         )
-
-    # Convert extracted text to bytes for hash calculation
-    content_bytes = extracted_text.encode('utf-8')
 
     # Build metadata
     metadata = {
-        "original_file_name": os.path.basename(request.file_path),
-        "file_extension": os.path.splitext(request.file_path)[1],
-        "file_size": file_size,
+        "file_size": len(content_bytes),
     }
 
     command = ImportFileSourceCommand(
         notebook_id=request.notebook_id,
-        file_path=request.file_path,
         file_name=request.name,
         file_type=file_type_enum,
         file_content=content_bytes,

@@ -418,14 +418,13 @@ class DiscoveryApp {
         try {
             this.showLoading('Uploading and processing file...');
             
-            // For demo purposes, we'll simulate file upload
-            // In real implementation, you'd upload the file to a server endpoint
+            const fileContent = await this.readFileAsBase64(file);
             const fileType = file.name.split('.').pop().toLowerCase();
             
             const data = {
                 notebook_id: this.currentNotebook.id,
                 name: name,
-                file_path: `/uploads/${file.name}`, // Simulated path
+                file_content: fileContent,
                 file_type: fileType
             };
             
@@ -443,6 +442,20 @@ class DiscoveryApp {
         } finally {
             this.hideLoading();
         }
+    }
+
+    readFileAsBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64String = reader.result.split(',')[1];
+                resolve(base64String);
+            };
+            reader.onerror = (error) => {
+                reject(error);
+            };
+            reader.readAsDataURL(file);
+        });
     }
 
     async handleUrlSourceSubmit(e) {

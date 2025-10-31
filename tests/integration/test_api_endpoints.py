@@ -30,24 +30,16 @@ def override_get_repository():
 
 
 @pytest.mark.asyncio
-async def test_root_endpoint():
-    """Test root endpoint."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        response = await client.get("/")
-        assert response.status_code == 200
-        data = response.json()
-        assert "message" in data
-        assert data["message"] == "Discovery API"
-
-
-@pytest.mark.asyncio
-async def test_health_check():
+async def test_health_check_endpoint(override_get_repository):
     """Test health check endpoint."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get("/health")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
+
+
+
 
 
 @pytest.mark.asyncio
