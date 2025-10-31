@@ -6,5 +6,8 @@ bugs
 - sometimes - adding source via url fails
 - renaming of source causes for 402 error
 
+ideas
+- Google Custom Search JSON API
+
 done
 - adding source via text file fails
