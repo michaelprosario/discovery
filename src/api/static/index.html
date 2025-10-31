@@ -115,6 +115,9 @@
                                     <button id="generateOutputBtn" class="dropdown-item">
                                         <i class="fas fa-file-alt"></i> Generate Summary
                                     </button>
+                                    <button id="qaToggleBtn" class="dropdown-item">
+                                        <i class="fas fa-question-circle"></i> Ask Questions
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -148,6 +151,49 @@
                             <div class="no-sources">
                                 <i class="fas fa-folder-open"></i>
                                 <p>No sources yet. Add files or URLs to get started.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QA Section -->
+                    <div id="qaSection" class="qa-section hidden">
+                        <div class="qa-header">
+                            <h3>Ask Questions</h3>
+                            <button id="closeQaBtn" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Close
+                            </button>
+                        </div>
+                        <div class="qa-input-section">
+                            <div class="form-group">
+                                <textarea id="questionInput" class="form-textarea" rows="3" 
+                                        placeholder="Ask a question about your notebook content..." 
+                                        maxlength="10000"></textarea>
+                            </div>
+                            <div class="qa-controls">
+                                <div class="qa-settings">
+                                    <label for="qaMaxSources">Sources:</label>
+                                    <select id="qaMaxSources" class="form-select">
+                                        <option value="3">3</option>
+                                        <option value="5" selected>5</option>
+                                        <option value="10">10</option>
+                                        <option value="15">15</option>
+                                    </select>
+                                    <label for="qaTemperature">Creativity:</label>
+                                    <select id="qaTemperature" class="form-select">
+                                        <option value="0.1">Factual</option>
+                                        <option value="0.3" selected>Balanced</option>
+                                        <option value="0.7">Creative</option>
+                                    </select>
+                                </div>
+                                <button id="askQuestionBtn" class="btn btn-primary" disabled>
+                                    <i class="fas fa-paper-plane"></i> Ask Question
+                                </button>
+                            </div>
+                        </div>
+                        <div id="qaConversation" class="qa-conversation">
+                            <div class="qa-welcome">
+                                <i class="fas fa-question-circle"></i>
+                                <p>Ask questions about your notebook content. I'll search through your sources and provide answers with citations.</p>
                             </div>
                         </div>
                     </div>

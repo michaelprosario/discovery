@@ -1,0 +1,5 @@
+- follow /workspaces/discovery/specs/clean_architecture.md
+- implement question and answer agent on a notebook based on data ingested
+- implement RAG agent using content similarity services
+- using GEMINI flash LLM as LLM provider at infra
+- Please make ux for this.

@@ -59,6 +59,18 @@ class DiscoveryApp {
         // File input auto-name
         document.getElementById('sourceFile').addEventListener('change', () => this.autoFillFileName());
         
+        // QA actions
+        document.getElementById('qaToggleBtn').addEventListener('click', () => this.toggleQaSection());
+        document.getElementById('closeQaBtn').addEventListener('click', () => this.closeQaSection());
+        document.getElementById('askQuestionBtn').addEventListener('click', () => this.askQuestion());
+        document.getElementById('questionInput').addEventListener('input', () => this.updateAskButtonState());
+        document.getElementById('questionInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                this.askQuestion();
+            }
+        });
+        
         // Semantic search
         document.getElementById('executeSemanticSearchBtn').addEventListener('click', () => this.executeSemanticSearch());
         
@@ -945,6 +957,288 @@ class DiscoveryApp {
                 toast.parentNode.removeChild(toast);
             }
         }, 300);
+    }
+
+    // QA Methods
+    toggleQaSection() {
+        const qaSection = document.getElementById('qaSection');
+        const sourcesSection = document.querySelector('.sources-section');
+        
+        if (qaSection.classList.contains('hidden')) {
+            this.showQaSection();
+        } else {
+            this.closeQaSection();
+        }
+    }
+
+    showQaSection() {
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'Please select a notebook first', 'error');
+            return;
+        }
+
+        const qaSection = document.getElementById('qaSection');
+        const sourcesSection = document.querySelector('.sources-section');
+        
+        qaSection.classList.remove('hidden');
+        sourcesSection.style.marginBottom = '0';
+        
+        // Clear previous conversation
+        this.clearQaConversation();
+        
+        // Focus on question input
+        document.getElementById('questionInput').focus();
+        
+        // Scroll to QA section
+        qaSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    closeQaSection() {
+        const qaSection = document.getElementById('qaSection');
+        qaSection.classList.add('hidden');
+    }
+
+    clearQaConversation() {
+        const conversation = document.getElementById('qaConversation');
+        conversation.innerHTML = `
+            <div class="qa-welcome">
+                <i class="fas fa-question-circle"></i>
+                <p>Ask questions about your notebook content. I'll search through your sources and provide answers with citations.</p>
+            </div>
+        `;
+    }
+
+    updateAskButtonState() {
+        const questionInput = document.getElementById('questionInput');
+        const askButton = document.getElementById('askQuestionBtn');
+        
+        askButton.disabled = !questionInput.value.trim();
+    }
+
+    async askQuestion() {
+        const questionInput = document.getElementById('questionInput');
+        const question = questionInput.value.trim();
+        
+        if (!question) {
+            this.showToast('Error', 'Please enter a question', 'error');
+            return;
+        }
+
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'No notebook selected', 'error');
+            return;
+        }
+
+        // Get QA parameters
+        const maxSources = document.getElementById('qaMaxSources').value;
+        const temperature = parseFloat(document.getElementById('qaTemperature').value);
+
+        // Add question to conversation
+        this.addQuestionToConversation(question);
+        
+        // Clear input
+        questionInput.value = '';
+        this.updateAskButtonState();
+
+        // Show loading state
+        this.addLoadingToConversation();
+
+        try {
+            const response = await this.apiCall(`/notebooks/${this.currentNotebook.id}/qa`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    question: question,
+                    max_sources: parseInt(maxSources),
+                    temperature: temperature,
+                    max_tokens: 1500
+                })
+            });
+
+            // Remove loading
+            this.removeLoadingFromConversation();
+            
+            // Add answer to conversation
+            this.addAnswerToConversation(response);
+
+        } catch (error) {
+            console.error('QA Error:', error);
+            this.removeLoadingFromConversation();
+            this.addErrorToConversation(error.message);
+        }
+    }
+
+    addQuestionToConversation(question) {
+        const conversation = document.getElementById('qaConversation');
+        
+        // Remove welcome message if present
+        const welcome = conversation.querySelector('.qa-welcome');
+        if (welcome) {
+            welcome.remove();
+        }
+
+        const timestamp = new Date().toLocaleTimeString();
+        
+        const questionHtml = `
+            <div class="qa-item">
+                <div class="qa-question">
+                    <div class="qa-question-text">${this.escapeHtml(question)}</div>
+                    <div class="qa-question-meta">
+                        <span><i class="fas fa-user"></i> You</span>
+                        <span>${timestamp}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        conversation.insertAdjacentHTML('beforeend', questionHtml);
+        this.scrollToBottom(conversation);
+    }
+
+    addLoadingToConversation() {
+        const conversation = document.getElementById('qaConversation');
+        const lastItem = conversation.querySelector('.qa-item:last-child');
+        
+        const loadingHtml = `
+            <div class="qa-loading" id="qaLoadingIndicator">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Searching sources and generating answer...</span>
+            </div>
+        `;
+        
+        if (lastItem) {
+            lastItem.insertAdjacentHTML('beforeend', loadingHtml);
+        } else {
+            conversation.insertAdjacentHTML('beforeend', loadingHtml);
+        }
+        
+        this.scrollToBottom(conversation);
+    }
+
+    removeLoadingFromConversation() {
+        const loading = document.getElementById('qaLoadingIndicator');
+        if (loading) {
+            loading.remove();
+        }
+    }
+
+    addAnswerToConversation(response) {
+        const conversation = document.getElementById('qaConversation');
+        const lastItem = conversation.querySelector('.qa-item:last-child');
+        
+        // Format answer content (convert markdown-like formatting)
+        const formattedAnswer = this.formatAnswerContent(response.answer);
+        
+        // Calculate confidence percentage
+        const confidencePercent = response.confidence_score ? Math.round(response.confidence_score * 100) : 0;
+        
+        const answerHtml = `
+            <div class="qa-answer">
+                <div class="qa-answer-content">${formattedAnswer}</div>
+                <div class="qa-answer-meta">
+                    <div class="qa-confidence">
+                        <span>Confidence:</span>
+                        <div class="qa-confidence-bar">
+                            <div class="qa-confidence-fill" style="width: ${confidencePercent}%"></div>
+                        </div>
+                        <span>${confidencePercent}%</span>
+                    </div>
+                    <span><i class="fas fa-clock"></i> ${response.processing_time_ms}ms</span>
+                </div>
+                ${this.renderQaSources(response.sources)}
+            </div>
+        `;
+        
+        if (lastItem) {
+            lastItem.insertAdjacentHTML('beforeend', answerHtml);
+        } else {
+            conversation.insertAdjacentHTML('beforeend', answerHtml);
+        }
+        
+        this.scrollToBottom(conversation);
+    }
+
+    addErrorToConversation(errorMessage) {
+        const conversation = document.getElementById('qaConversation');
+        const lastItem = conversation.querySelector('.qa-item:last-child');
+        
+        const errorHtml = `
+            <div class="qa-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                Sorry, I couldn't answer your question: ${this.escapeHtml(errorMessage)}
+            </div>
+        `;
+        
+        if (lastItem) {
+            lastItem.insertAdjacentHTML('beforeend', errorHtml);
+        } else {
+            conversation.insertAdjacentHTML('beforeend', errorHtml);
+        }
+        
+        this.scrollToBottom(conversation);
+    }
+
+    formatAnswerContent(content) {
+        // Basic markdown-like formatting
+        return content
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>')
+            .replace(/^/, '<p>')
+            .replace(/$/, '</p>')
+            .replace(/<p><\/p>/g, '');
+    }
+
+    renderQaSources(sources) {
+        if (!sources || sources.length === 0) {
+            return '';
+        }
+
+        const sourcesHtml = sources.map(source => {
+            const score = Math.round(source.relevance_score * 100);
+            const preview = source.text.length > 100 ? 
+                source.text.substring(0, 100) + '...' : 
+                source.text;
+            
+            return `
+                <div class="qa-source-item" onclick="app.viewQaSource('${source.source_id}', ${source.chunk_index})">
+                    <div class="qa-source-item-header">
+                        <span class="qa-source-name">${source.source_name || 'Unknown Source'}</span>
+                        <span class="qa-source-score">${score}%</span>
+                    </div>
+                    <div class="qa-source-preview">${this.escapeHtml(preview)}</div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="qa-sources">
+                <div class="qa-sources-title">
+                    <i class="fas fa-book"></i>
+                    <span>Sources (${sources.length})</span>
+                </div>
+                <div class="qa-sources-list">
+                    ${sourcesHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    viewQaSource(sourceId, chunkIndex) {
+        if (!sourceId) return;
+        
+        // Find and view the source
+        const source = this.sources.find(s => s.id === sourceId);
+        if (source) {
+            this.viewSource(source);
+        }
+    }
+
+    scrollToBottom(element) {
+        setTimeout(() => {
+            element.scrollTop = element.scrollHeight;
+        }, 100);
     }
 
     // Utility Methods
