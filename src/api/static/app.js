@@ -41,7 +41,7 @@ class DiscoveryApp {
         document.getElementById('moreActionsBtn').addEventListener('click', () => this.toggleDropdown('moreActionsBtn'));
         document.getElementById('ingestNotebookBtn').addEventListener('click', () => this.ingestNotebook());
         document.getElementById('searchSimilarBtn').addEventListener('click', () => this.showSemanticSearchModal());
-        document.getElementById('generateOutputBtn').addEventListener('click', () => this.generateOutput());
+        
         
         // Source actions
         document.getElementById('addFileSourceBtn').addEventListener('click', () => this.showAddFileSourceModal());
@@ -1230,8 +1230,13 @@ class DiscoveryApp {
                 `;
             } else {
                 return `
-                    <div class="qa-source-item" onclick="app.viewQaSource('${source.source_id}')">
-                        ${sourceItemContent}
+                    <div class="qa-source-item">
+                        <div onclick="app.viewQaSource('${source.source_id}')" style="cursor: pointer; flex-grow: 1;">
+                            ${sourceItemContent}
+                        </div>
+                        <button class="btn btn-icon btn-sm qa-source-view-btn" onclick="app.viewQaSource('${source.source_id}')" title="View Content">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
                 `;
             }
@@ -1239,11 +1244,14 @@ class DiscoveryApp {
 
         return `
             <div class="qa-sources">
-                <div class="qa-sources-title">
+                <div class="qa-sources-title" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.qa-sources-toggle i').classList.toggle('fa-chevron-down'); this.querySelector('.qa-sources-toggle i').classList.toggle('fa-chevron-up');">
                     <i class="fas fa-book"></i>
                     <span>Sources (${sources.length})</span>
+                    <button class="btn btn-icon btn-sm qa-sources-toggle">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
                 </div>
-                <div class="qa-sources-list">
+                <div class="qa-sources-list hidden">
                     ${sourcesHtml}
                 </div>
             </div>
