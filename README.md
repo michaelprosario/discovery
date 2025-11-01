@@ -1,10 +1,26 @@
-# Discovery API
+# Discovery
 
-A local NotebookLM-like research application following Clean Architecture principles.
+A local NotebookLM-like research application that helps you organize, analyze, and generate insights from your research materials. Built with Clean Architecture principles for maintainability and testability.
+
+## Purpose & Vision
+
+Discovery empowers researchers, students, and knowledge workers to build comprehensive research notebooks by collecting sources from various formats (PDFs, documents, web articles) and generating intelligent summaries and insights. Think of it as your personal research assistant that:
+
+- **Organizes** your research materials into focused notebooks
+- **Ingests** content from files (PDF, DOCX, TXT, MD) and web URLs  
+- **Analyzes** your sources using vector-based semantic search
+- **Generates** summaries, blog posts, and research outputs using AI
+- **Maintains** full data privacy with local-first storage
+
+### Future Roadmap
+
+- **Pluggable Infrastructure**: Support for offline LLMs and embedding models for complete data sovereignty
+- **Output Modules**: Generate specialized research artifacts like comparative analyses, executive briefings, and research reports
+- **Enhanced Collaboration**: Export and share research notebooks while maintaining privacy controls
 
 ## Overview
 
-This project is a FastAPI-based application that allows users to create notebooks, add sources (files and URLs), and generate summaries and other outputs from the sources in a notebook. The architecture is based on the Clean Architecture principles, with a clear separation between the Core domain logic, the infrastructure concerns, and the API layer.
+This FastAPI-based application follows Clean Architecture principles, ensuring clear separation between business logic, infrastructure concerns, and API layers. All your data stays local while leveraging the power of modern AI for content analysis and generation.
 
 ### Core Concepts
 
@@ -13,92 +29,126 @@ This project is a FastAPI-based application that allows users to create notebook
 - **Outputs**: Generated content, such as summaries or blog posts, created from the sources in a notebook.
 - **Vector Search**: Semantic similarity search powered by Weaviate vector database for finding relevant content chunks within notebooks.
 
-## Getting Started
+## Getting Started for Developers
 
 ### Prerequisites
 
-- Python 3.12+
-- Docker
-- `uv` (recommended, for python environment and package management)
+- **Python 3.12+** - Modern Python runtime
+- **Docker** - For running PostgreSQL and Weaviate services  
+- **uv** - Fast Python package manager (recommended)
 
-### Setup
+### Quick Setup
 
-1.  **Clone the repository:**
+1. **Clone and navigate to the repository:**
+   ```bash
+   git clone <repository-url>
+   cd discovery
+   ```
 
-    ```bash
-    git clone <repository-url>
-    cd discovery
-    ```
+2. **Install uv (if not already installed):**
+   ```bash
+   # Unix/macOS/Linux
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Or using pip
+   pip install uv
+   ```
 
-2.  **Create and activate the virtual environment:**
+3. **Set up the Python environment:**
+   ```bash
+   # Creates virtual environment and installs all dependencies
+   uv sync
+   
+   # Activate the environment  
+   source .venv/bin/activate  # Unix/macOS
+   # or
+   .venv\Scripts\activate     # Windows
+   ```
 
-    ```bash
-    uv venv
-    source .venv/bin/activate
-    ```
+### Environment Variables
 
-3.  **Install dependencies:**
-
-    ```bash
-    uv pip install -e .
-    ```
-
-### Database Setup
-
-This project uses PostgreSQL as its database. A Docker Compose setup is provided for convenience.
-
-1.  **Start the PostgreSQL container:**
-
-    ```bash
-    docker-compose -f pgDockerCompose/docker-compose.yaml up -d
-    ```
-
-2.  **Run database migrations:**
-
-    The project uses Alembic for database migrations. To apply the latest migrations, run:
-
-    ```bash
-    alembic upgrade head
-    ```
-
-### Vector Database Setup (Weaviate)
-
-The project includes vector search capabilities powered by Weaviate for semantic similarity search.
-
-1.  **Start the Weaviate container:**
-
-    ```bash
-    docker-compose -f docker-compose.weaviate.yml up -d
-    ```
-
-    This will start:
-    - Weaviate vector database on port 8080
-    - Text-to-vector transformer service for generating embeddings
-
-2.  **Set environment variable (optional):**
-
-    By default, the API connects to Weaviate at `http://localhost:8080`. To use a different URL:
-
-    ```bash
-    export WEAVIATE_URL="http://your-weaviate-host:8080"
-    ```
-
-### Running the Application
-
-To run the FastAPI application, use the following command:
+Create a `.env` file in the project root with these required variables:
 
 ```bash
-./scripts/dev.sh
+# Database Configuration
+DATABASE_URL="postgresql://postgres:Foobar321@localhost:5432/postgres"
+
+# AI Services
+GEMINI_API_KEY="your_gemini_api_key_here"        # For Google Gemini LLM
+
+# Google Search Services
+GOOGLE_CUSTOM_SEARCH_API_KEY="your_google_search_api_key"     # For web search features
+GOOGLE_CUSTOM_SEARCH_ENGINE_ID="your_search_engine_id"        # Custom search engine ID
+
+# Vector Database (optional - defaults to localhost)
+WEAVIATE_URL="http://localhost:8080"             # Local Weaviate instance
+WEAVIATE_API_KEY="your_weaviate_cloud_key"       # Only for cloud instances
 ```
 
-The API will be available at `http://localhost:8000`.
+**Environment Variable Details:**
 
-### Running Tests
+| Variable | Purpose | Required | Default |
+|----------|---------|----------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Yes | None |
+| `GEMINI_API_KEY` | Google Gemini API access for AI features | Yes | None |
+| `GOOGLE_CUSTOM_SEARCH_API_KEY` | Google Custom Search API for web search features | Yes | None |
+| `GOOGLE_CUSTOM_SEARCH_ENGINE_ID` | Custom search engine identifier for Google search | Yes | None |
+| `WEAVIATE_URL` | Weaviate vector database URL | No | `http://localhost:8080` |
+| `WEAVIATE_API_KEY` | Weaviate cloud authentication | No | None |
 
-To run the test suite, use the following command:
+### Starting Your Discovery Instance
+
+#### 1. Database Setup
+
+Start the PostgreSQL database using Docker:
 
 ```bash
+# Start PostgreSQL container
+docker-compose -f pgDockerCompose/docker-compose.yaml up -d
+
+# Apply database migrations
+alembic upgrade head
+```
+
+#### 2. Vector Database Setup (Optional but Recommended)
+
+For semantic search capabilities, start Weaviate:
+
+```bash
+# Start Weaviate vector database
+docker-compose -f weaviateDockerCompose/docker-compose.yaml up -d
+```
+
+This provides:
+- Weaviate vector database on port 8080
+- Text-to-vector transformer for generating embeddings
+
+#### 3. Launch the Application
+
+```bash
+# Start the FastAPI server
+./scripts/dev.sh
+
+# Or manually:
+uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+#### 4. Verify Installation
+
+- **API Documentation**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
+- **Create your first notebook**: Use the interactive docs or API endpoints
+
+#### 5. Run the Test Suite
+
+Verify everything works correctly:
+
+```bash
+# Run all tests (should pass ~42 tests)
 ./scripts/test.sh
+
+# Or using uv directly
+uv run pytest tests/ -v
 ```
 
 ### Vector Search Demo
@@ -118,30 +168,161 @@ This script will:
 
 Make sure both the API server and Weaviate are running before executing the demo.
 
-## Project Structure
+## Architecture & Clean Code Principles
 
-The project follows the Clean Architecture principles, with the following structure:
+Discovery follows **Clean Architecture** principles as advocated by Robert C. Martin and Steve Smith (Ardalis), ensuring maintainable, testable, and framework-independent code.
 
--   `src/api`: Contains the FastAPI application, including routers and data transfer objects (DTOs).
--   `src/core`: Contains the core business logic, including entities, services, repositories interfaces, and provider interfaces.
-    -   `interfaces/providers/i_vector_database_provider.py`: Interface for vector database operations
-    -   `interfaces/providers/i_content_segmenter.py`: Interface for content segmentation
-    -   `services/vector_ingestion_service.py`: Service for ingesting content into vector database
-    -   `services/content_similarity_service.py`: Service for similarity search
--   `src/infrastructure`: Contains the implementation of the repositories and providers defined in the Core layer, as well as database models and migrations.
-    -   `providers/weaviate_vector_database_provider.py`: Weaviate implementation of vector database
-    -   `providers/simple_content_segmenter.py`: Content segmentation implementation
--   `tests`: Contains the unit and integration tests.
--   `specs`: Contains the project specifications, including the domain model and user stories.
--   `scripts`: Contains utility scripts including the vector search demo.
+### Core Principles
 
-## Vector Search API Endpoints
+- **Dependency Inversion**: Dependencies point inward toward the Core business logic
+- **Framework Independence**: Core business logic has zero dependencies on external frameworks
+- **Interface-Driven Design**: Inner layers define interfaces; outer layers implement them
+- **Separation of Concerns**: Clear boundaries between business logic, infrastructure, and presentation
 
-The following vector search endpoints are available:
+### Architecture Layers
 
--   `POST /api/notebooks/{notebook_id}/ingest`: Ingest notebook content into vector database
--   `GET /api/notebooks/{notebook_id}/similar`: Search for similar content using semantic search
--   `GET /api/notebooks/{notebook_id}/vectors/count`: Get count of vectors stored for a notebook
--   `DELETE /api/notebooks/{notebook_id}/vectors`: Delete all vectors for a notebook
+```
+┌─────────────────┐
+│   API Layer     │  ← FastAPI, Routes, DTOs
+│   (src/api/)    │
+└────────┬────────┘
+         │ depends on
+┌────────▼────────┐
+│   Core Layer    │  ← Entities, Services, Interfaces  
+│   (src/core/)   │     (Framework Independent)
+└────────┬────────┘
+         │ implements
+┌────────▼────────┐
+│Infrastructure   │  ← Repositories, Providers, Database
+│(src/infrastructure/)│
+└─────────────────┘
+```
 
-See `/docs` for interactive API documentation.
+### Clean Architecture Rules Applied
+
+| Rule | Implementation |
+|------|----------------|
+| **Core Independence** | `src/core/` has minimal dependencies - only domain logic |
+| **Interface Definition** | Core defines `INotebookRepository`, Infrastructure implements `SqlNotebookRepository` |
+| **Dependency Direction** | API → Core ← Infrastructure (never Core → Infrastructure) |
+| **Command/Query Pattern** | Services use structured command/query objects as inputs |
+| **Result Pattern** | All services return `Result<T>` objects for consistent error handling |
+| **Unit Testing** | Core services are easily testable without external dependencies |
+
+### Project Structure
+
+The project is organized into three main layers:
+
+**Core Layer** (`src/core/`):
+- `entities/`: Domain entities (Notebook, Source, etc.)
+- `services/`: Business logic services
+- `interfaces/`: Abstract interfaces for repositories and providers
+- `commands/` & `queries/`: Structured input objects
+- `results/`: Standardized result types
+
+**Infrastructure Layer** (`src/infrastructure/`):
+- `repositories/`: Database access implementations
+- `providers/`: External service implementations (LLM, Vector DB)
+- `database/`: Database models and migrations
+
+**API Layer** (`src/api/`):
+- `main.py`: FastAPI application setup
+- `*_router.py`: Route definitions
+- `dtos.py`: Data transfer objects for API serialization
+
+## API Features & Endpoints
+
+### Core Functionality
+
+**Notebook Management:**
+- `POST /api/notebooks` - Create new research notebook
+- `GET /api/notebooks` - List all notebooks with metadata
+- `GET /api/notebooks/{id}` - Get specific notebook details
+- `PUT /api/notebooks/{id}` - Update notebook properties
+- `DELETE /api/notebooks/{id}` - Delete notebook and all sources
+
+**Source Management:**
+- `POST /api/notebooks/{id}/sources/file` - Upload file source (PDF, DOCX, TXT, MD)
+- `POST /api/notebooks/{id}/sources/url` - Add web URL as source
+- `GET /api/notebooks/{id}/sources` - List all sources in notebook
+- `DELETE /api/sources/{id}` - Remove source from notebook
+
+**Content Generation:**
+- `POST /api/notebooks/{id}/generate-summary` - Generate AI summary from selected sources
+- `POST /api/notebooks/{id}/generate-output` - Create structured outputs (blog posts, briefs)
+
+### Vector Search API
+
+Enable semantic search across your research materials:
+
+- `POST /api/notebooks/{id}/ingest` - Ingest content into vector database
+- `GET /api/notebooks/{id}/similar` - Semantic similarity search
+- `GET /api/notebooks/{id}/vectors/count` - Get vector count for notebook
+- `DELETE /api/notebooks/{id}/vectors` - Clear all vectors for notebook
+
+### Interactive Documentation
+
+Access the full API documentation at: **http://localhost:8000/docs**
+
+### Demo & Testing
+
+Try the vector search capabilities:
+
+```bash
+# Run the Wikipedia demo (creates notebook with sample content)
+python src/apps/ingest_notebook_into_vectordb.py
+
+# This demonstrates:
+# 1. Creating a notebook
+# 2. Adding Wikipedia articles as sources  
+# 3. Ingesting content for semantic search
+# 4. Performing similarity queries
+```
+
+## Development & Testing
+
+### Running Tests
+
+The project includes comprehensive test coverage:
+
+```bash
+# Run all tests (~42 tests should pass)
+./scripts/test.sh
+
+# Or using uv directly  
+uv run pytest tests/ -v
+
+# Run specific test suites
+uv run pytest tests/unit/ -v      # Unit tests (38 tests)
+uv run pytest tests/integration/ -v  # Integration tests (4 tests)
+```
+
+### Development Workflow
+
+```bash
+# Start development environment
+./scripts/dev.sh
+
+# Or activate environment manually
+source .venv/bin/activate
+uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Contributing
+
+1. Follow Clean Architecture principles
+2. Write unit tests for all core business logic
+3. Use command/query objects for service inputs
+4. Return Result objects from services
+5. Keep core layer framework-independent
+
+## Additional Resources
+
+- **User Stories**: `specs/core_stories.md` - Detailed feature requirements
+- **Domain Model**: `specs/domain_model.md` - Entity relationships and design
+- **Clean Architecture**: `specs/clean_architecture.md` - Architecture guidelines
+- **Quick Start**: `QUICK_START.md` - Minimal setup guide
+
+## License
+
+This project is open source. See the repository for license details.

@@ -1,0 +1,8 @@
+Update the following documentation.
+
+- Talk about the purpose of the project using /workspaces/discovery/specs/core_stories.md
+- In the future, we may include a pluggable infrastructure so that the system can use more "offline" LLMs and embedders
+- In the next phases of development, we plan to make output modules to generate insightful assets from your notebook sources
+- Talk about how to start your own instance of discovery.  Write for a early stage developer
+- Provide an overview of the required .env variables
+- Talk about clean architecture standards
