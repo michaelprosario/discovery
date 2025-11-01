@@ -28,7 +28,7 @@ This FastAPI-based application follows Clean Architecture principles, ensuring c
 
 ### Ask questions of your sources
 
-![Discovery QA](discovery-question-answer.png)
+![Discovery QA](discover-question-answer.png)
 
 ### Core Concepts
 
