@@ -149,3 +149,54 @@ async def test_import_file_source(mock_getsize, override_dependencies):
 
         # Clean up the temporary file
         os.remove(tmp_file_path)
+
+
+@pytest.mark.asyncio
+@patch("os.path.getsize", return_value=100)
+async def test_rename_source(mock_getsize, override_dependencies):
+    """Test renaming a source."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. Create a notebook
+        create_notebook_response = await client.post(
+            "/api/notebooks",
+            json={"name": "Test Notebook for Source Rename"}
+        )
+        assert create_notebook_response.status_code == 201
+        notebook_id = create_notebook_response.json()["id"]
+
+        # 2. Create a file source
+        file_content = b"This is a test file for renaming."
+        import base64
+        encoded_content = base64.b64encode(file_content).decode('utf-8')
+
+        import_response = await client.post(
+            "/api/sources/file",
+            json={
+                "notebook_id": notebook_id,
+                "name": "Original Source Name",
+                "file_content": encoded_content,
+                "file_type": "txt"
+            }
+        )
+        assert import_response.status_code == 201
+        source_data = import_response.json()
+        source_id = source_data["id"]
+
+        # 3. Rename the source
+        rename_response = await client.patch(
+            f"/api/sources/{source_id}/rename",
+            json={"new_name": "Renamed Source"}
+        )
+
+        # 4. Assertions
+        assert rename_response.status_code == 200
+        renamed_data = rename_response.json()
+        assert renamed_data["id"] == source_id
+        assert renamed_data["name"] == "Renamed Source"
+        assert renamed_data["notebook_id"] == notebook_id
+
+        # 5. Verify the source was actually renamed by getting it again
+        get_response = await client.get(f"/api/sources/{source_id}")
+        assert get_response.status_code == 200
+        get_data = get_response.json()
+        assert get_data["name"] == "Renamed Source"

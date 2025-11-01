@@ -1,0 +1,21 @@
+given
+- a notebook exists
+- I click rename source on the notebook
+- I enter a new name for the source
+
+when 
+- I click "ok"
+
+then
+
+The following error happens:
+
+{
+    "detail": {
+        "error": "Source does not belong to notebook 00000000-0000-0000-0000-000000000000"
+    }
+}
+
+I receive a 404 error.
+
+fix bug here.
