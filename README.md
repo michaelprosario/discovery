@@ -22,6 +22,14 @@ Discovery empowers researchers, students, and knowledge workers to build compreh
 
 This FastAPI-based application follows Clean Architecture principles, ensuring clear separation between business logic, infrastructure concerns, and API layers. All your data stays local while leveraging the power of modern AI for content analysis and generation.
 
+### Notebook and sources
+
+![Discovery notebooks](discovery-notebooks.png)
+
+### Ask questions of your sources
+
+![Discovery QA](discovery-question-answer.png)
+
 ### Core Concepts
 
 - **Notebooks**: A collection of related sources for a specific project or topic.
