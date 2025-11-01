@@ -1,10 +1,19 @@
 """Main FastAPI application."""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from .notebooks_router import router as notebooks_router
 from .sources_router import router as sources_router
 from .vector_search_router import router as vector_search_router
+from .article_search_router import router as article_search_router
+from .qa_router import router as qa_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -24,10 +33,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
 # Include routers
 app.include_router(notebooks_router)
 app.include_router(sources_router)
 app.include_router(vector_search_router)
+app.include_router(article_search_router)
+app.include_router(qa_router)
 
 
 @app.on_event("startup")
@@ -44,12 +59,14 @@ async def startup_event():
 
 @app.get("/")
 def root():
-    """Root endpoint."""
-    return {
-        "message": "Discovery API",
-        "version": "0.1.0",
-        "docs": "/docs"
-    }
+    """Serve the main UI."""
+    return FileResponse(os.path.join(static_dir, "index.html"))
+
+
+@app.get("/app")
+def app_redirect():
+    """Alternative route to the main UI."""
+    return FileResponse(os.path.join(static_dir, "index.html"))
 
 
 @app.get("/health")

@@ -361,6 +361,11 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
         """
         try:
             client = self._get_client()
+            
+            # Check if collection exists first
+            if not client.collections.exists(collection_name):
+                return Result.success(0)
+            
             collection = client.collections.get(collection_name)
 
             if filters:
@@ -372,20 +377,66 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
                         Filter.by_property(key).equal(value)
                     )
 
-                combined = filter_conditions[0]
-                for condition in filter_conditions[1:]:
-                    combined = combined & condition
+                if len(filter_conditions) == 1:
+                    combined = filter_conditions[0]
+                else:
+                    combined = filter_conditions[0]
+                    for condition in filter_conditions[1:]:
+                        combined = combined & condition
 
-                # Use aggregate with filter
-                result = collection.aggregate.over_all(
-                    where=combined,
-                    total_count=True
-                )
-                count = result.total_count if hasattr(result, 'total_count') else 0
+                # Use a simple query approach that works across Weaviate client versions
+                try:
+                    # Try the newer API first
+                    response = collection.query.fetch_objects(
+                        where=combined,
+                        limit=10000  # Reasonable limit for counting
+                    )
+                    count = len(response.objects)
+                except (AttributeError, TypeError) as e:
+                    # Fall back to counting via near_text with empty query
+                    try:
+                        response = collection.query.near_text(
+                            query="test",  # Use a simple query instead of empty
+                            where=combined,
+                            limit=10000
+                        )
+                        count = len(response.objects)
+                    except Exception as e2:
+                        # Debug: try to fetch all and filter manually
+                        try:
+                            all_response = collection.query.fetch_objects(limit=10000)
+                            count = 0
+                            for obj in all_response.objects:
+                                match = True
+                                for key, value in filters.items():
+                                    if str(obj.properties.get(key, "")) != str(value):
+                                        match = False
+                                        break
+                                if match:
+                                    count += 1
+                        except Exception:
+                            count = 0
+                    
             else:
-                # Get total count without filter
-                result = collection.aggregate.over_all(total_count=True)
-                count = result.total_count if hasattr(result, 'total_count') else 0
+                # Get total count without filter using aggregate
+                try:
+                    result = collection.aggregate.over_all(total_count=True)
+                    count = result.total_count if hasattr(result, 'total_count') else 0
+                except Exception:
+                    # If aggregate fails, try to get objects and count them
+                    try:
+                        response = collection.query.fetch_objects(limit=10000)
+                        count = len(response.objects)
+                    except (AttributeError, TypeError):
+                        # Final fallback
+                        try:
+                            response = collection.query.near_text(
+                                query="",
+                                limit=10000
+                            )
+                            count = len(response.objects)
+                        except Exception:
+                            count = 0
 
             return Result.success(count)
 

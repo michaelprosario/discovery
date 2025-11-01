@@ -1,3 +1,4 @@
 
 from .i_vector_database_provider import IVectorDatabaseProvider
 from .i_content_segmenter import IContentSegmenter
+from .i_llm_provider import ILlmProvider, LlmGenerationParameters

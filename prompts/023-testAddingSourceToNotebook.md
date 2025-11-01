@@ -1,0 +1,8 @@
+- inspect /workspaces/discovery/openapi.json
+- assume that the fastapi server is active and running
+- edit /workspaces/discovery/tests/integration/test_api_regression.py
+- write an integration test using requests library that uses an active instance of the fastapi
+    - make a new notebook
+    - add a source to the notebook ingesting the web page https://en.wikipedia.org/wiki/Walt_Disney
+    - ensure that source has been added properly to the notebook
+- make sure /workspaces/discovery/tests/integration/test_api_regression.py can pass

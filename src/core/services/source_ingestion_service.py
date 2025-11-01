@@ -101,7 +101,6 @@ class SourceIngestionService:
         create_result = Source.create_file_source(
             notebook_id=command.notebook_id,
             name=command.file_name,
-            file_path=command.file_path,
             file_type=command.file_type,
             file_size=file_size,
             content=command.file_content,

@@ -117,23 +117,28 @@ async def test_import_file_source(mock_getsize, override_dependencies):
         assert create_notebook_response.status_code == 201
         notebook_id = create_notebook_response.json()["id"]
 
-        # 2. Create a temporary file
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as tmp_file:
-            tmp_file.write("This is a test file.")
+        # 2. Create a temporary file and read its content
+        file_content = b"This is a test file."
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False, suffix=".txt") as tmp_file:
+            tmp_file.write(file_content)
             tmp_file_path = tmp_file.name
 
-        # 3. Import the file source
+        # 3. Encode the content in base64
+        import base64
+        encoded_content = base64.b64encode(file_content).decode('utf-8')
+
+        # 4. Import the file source
         import_response = await client.post(
             "/api/sources/file",
             json={
                 "notebook_id": notebook_id,
                 "name": "Test File Source",
-                "file_path": tmp_file_path,
+                "file_content": encoded_content,
                 "file_type": "txt"
             }
         )
 
-        # 4. Assertions
+        # 5. Assertions
         assert import_response.status_code == 201
         data = import_response.json()
         assert data["name"] == "Test File Source"

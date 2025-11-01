@@ -99,7 +99,6 @@ class TestImportFileSource:
         """Test successful file source import."""
         command = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/test.pdf",
             file_name="Test Document.pdf",
             file_type=FileType.PDF,
             file_content=b"PDF content here",
@@ -119,7 +118,6 @@ class TestImportFileSource:
         """Test importing to non-existent notebook fails."""
         command = ImportFileSourceCommand(
             notebook_id=uuid4(),
-            file_path="/tmp/test.pdf",
             file_name="Test.pdf",
             file_type=FileType.PDF,
             file_content=b"content"
@@ -137,7 +135,6 @@ class TestImportFileSource:
 
         command = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/large.pdf",
             file_name="Large File.pdf",
             file_type=FileType.PDF,
             file_content=large_content
@@ -154,7 +151,6 @@ class TestImportFileSource:
         content = b"Same content"
         command1 = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/file1.txt",
             file_name="File 1.txt",
             file_type=FileType.TXT,
             file_content=content
@@ -167,7 +163,6 @@ class TestImportFileSource:
         # Second import with same content should fail
         command2 = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/file2.txt",
             file_name="File 2.txt",
             file_type=FileType.TXT,
             file_content=content
@@ -181,7 +176,6 @@ class TestImportFileSource:
         """Test importing with empty name fails."""
         command = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/test.pdf",
             file_name="",
             file_type=FileType.PDF,
             file_content=b"content"
@@ -280,7 +274,6 @@ class TestDeleteSource:
         # Create a source first
         import_cmd = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/test.txt",
             file_name="Test.txt",
             file_type=FileType.TXT,
             file_content=b"content"
@@ -327,7 +320,6 @@ class TestDeleteSource:
         # Create source in first notebook
         import_cmd = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/test.txt",
             file_name="Test.txt",
             file_type=FileType.TXT,
             file_content=b"content"
@@ -351,10 +343,8 @@ class TestRestoreSource:
 
     def test_restore_source_success(self, service, test_notebook):
         """Test successful source restoration."""
-        # Create and delete a source
         import_cmd = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/test.txt",
             file_name="Test.txt",
             file_type=FileType.TXT,
             file_content=b"content"
@@ -384,7 +374,6 @@ class TestRestoreSource:
         # Create a source (not deleted)
         import_cmd = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/test.txt",
             file_name="Test.txt",
             file_type=FileType.TXT,
             file_content=b"content"
@@ -411,7 +400,6 @@ class TestRenameSource:
         # Create a source
         import_cmd = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/test.txt",
             file_name="Original Name.txt",
             file_type=FileType.TXT,
             file_content=b"content"
@@ -435,7 +423,6 @@ class TestRenameSource:
         # Create a source
         import_cmd = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/test.txt",
             file_name="Test.txt",
             file_type=FileType.TXT,
             file_content=b"content"
@@ -459,10 +446,8 @@ class TestExtractContent:
 
     def test_extract_content_success(self, service, test_notebook):
         """Test successful content extraction."""
-        # Create a source
         import_cmd = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/test.pdf",
             file_name="Test.pdf",
             file_type=FileType.PDF,
             file_content=b"content"
@@ -485,7 +470,6 @@ class TestExtractContent:
         # Create a source (auto-extracts on import)
         import_cmd = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/test.pdf",
             file_name="Test.pdf",
             file_type=FileType.PDF,
             file_content=b"content"
@@ -521,7 +505,6 @@ class TestListSources:
         for i in range(3):
             cmd = ImportFileSourceCommand(
                 notebook_id=test_notebook.id,
-                file_path=f"/tmp/file{i}.txt",
                 file_name=f"File {i}.txt",
                 file_type=FileType.TXT,
                 file_content=f"content{i}".encode()
@@ -541,7 +524,6 @@ class TestListSources:
         for name in names:
             cmd = ImportFileSourceCommand(
                 notebook_id=test_notebook.id,
-                file_path=f"/tmp/{name}.txt",
                 file_name=f"{name}.txt",
                 file_type=FileType.TXT,
                 file_content=name.encode()
@@ -564,7 +546,6 @@ class TestListSources:
         # Import sources
         cmd1 = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/file1.txt",
             file_name="File 1.txt",
             file_type=FileType.TXT,
             file_content=b"content1"
@@ -573,7 +554,6 @@ class TestListSources:
 
         cmd2 = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/file2.txt",
             file_name="File 2.txt",
             file_type=FileType.TXT,
             file_content=b"content2"
@@ -604,7 +584,6 @@ class TestCheckOperations:
         # Create a source
         import_cmd = ImportFileSourceCommand(
             notebook_id=test_notebook.id,
-            file_path="/tmp/test.txt",
             file_name="Test.txt",
             file_type=FileType.TXT,
             file_content=b"content"
@@ -632,7 +611,6 @@ class TestCheckOperations:
         for i in range(3):
             cmd = ImportFileSourceCommand(
                 notebook_id=test_notebook.id,
-                file_path=f"/tmp/file{i}.txt",
                 file_name=f"File {i}.txt",
                 file_type=FileType.TXT,
                 file_content=f"content{i}".encode()

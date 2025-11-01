@@ -343,15 +343,40 @@ class PostgresNotebookRepository(INotebookRepository):
         except SQLAlchemyError as e:
             return Result.failure(f"Database error: {str(e)}")
 
-    def count(self) -> Result[int]:
+    def count(self, query: Optional[ListNotebooksQuery] = None) -> Result[int]:
         """
-        Get the total count of notebooks.
+        Get the total count of notebooks, with optional filtering.
+
+        Args:
+            query: Optional query parameters for filtering
 
         Returns:
             Result[int]: Success with count or failure
         """
         try:
-            count = self._session.query(NotebookModel).count()
+            db_query = self._session.query(NotebookModel)
+
+            if query:
+                # Filter by tags
+                if query.tags:
+                    from sqlalchemy import or_
+                    tag_filters = []
+                    for tag in query.tags:
+                        if self._session.bind.dialect.name == 'postgresql':
+                            tag_filters.append(NotebookModel.tags.any(tag))
+                        else:
+                            tag_filters.append(NotebookModel.tags.contains(tag))
+                    if tag_filters:
+                        db_query = db_query.filter(or_(*tag_filters))
+
+                # Filter by date range
+                if query.date_from:
+                    db_query = db_query.filter(NotebookModel.created_at >= query.date_from)
+
+                if query.date_to:
+                    db_query = db_query.filter(NotebookModel.created_at <= query.date_to)
+
+            count = db_query.count()
             return Result.success(count)
 
         except SQLAlchemyError as e:

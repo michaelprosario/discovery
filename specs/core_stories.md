@@ -18,7 +18,7 @@ Here are elaborated user stories for your local, NotebookLM-like application:
 - System prevents duplicate notebook names or provides warning
 
 **Technical Considerations:**
-- Store notebooks in local filesystem or SQLite database
+- Store notebooks in local filesystem or database
 - Implement notebook metadata schema (id, name, description, created_at, updated_at, tags)
 - Handle character limits and special characters in names
 
@@ -30,10 +30,10 @@ Here are elaborated user stories for your local, NotebookLM-like application:
 ---
 
 #### Story 2: Import Different Source File Types
-**As a user, I want to import different source file types (e.g., PDF, DOC, plain text)** into a notebook so that I can consolidate my research materials in one place.
+**As a user, I want to import different source file types (e.g., PDF, plain text)** into a notebook so that I can consolidate my research materials in one place.
 
 **Acceptance Criteria:**
-- Support for PDF, TXT, DOC, DOCX, MD (Markdown) file formats
+- Support for PDF, TXT,  MD (Markdown) file formats
 - Drag-and-drop interface for file upload
 - File browser dialog for selecting files
 - Multi-file upload capability (batch import)
@@ -44,7 +44,7 @@ Here are elaborated user stories for your local, NotebookLM-like application:
 - Error handling for unsupported or corrupted files
 
 **Technical Considerations:**
-- Use libraries: PyPDF2/pdfplumber for PDF, python-docx for DOC/DOCX
+- Use libraries: PyPDF2/pdfplumber for PDF,
 - Extract text content and store separately for search/analysis
 - Store original files and extracted text
 - Implement file type validation
@@ -143,7 +143,6 @@ Here are elaborated user stories for your local, NotebookLM-like application:
 - Built-in viewer for all supported file types
 - Text content displayed with formatting preserved
 - PDF viewer with zoom, page navigation
-- DOC/DOCX rendered with basic formatting
 - Markdown rendered with formatting
 - Search within source content
 - Copy text from viewer

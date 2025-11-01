@@ -1,0 +1,7 @@
+- inspect /workspaces/discovery/openapi.json
+- assume that the fastapi server is active and running
+- edit /workspaces/discovery/tests/integration/test_api_regression.py
+- write an integration test using requests library that uses an active instance of the fastapi
+    - make a new notebook
+    - ensure that new record shows up in the list end point for notebooks
+- make sure /workspaces/discovery/tests/integration/test_api_regression.py can pass

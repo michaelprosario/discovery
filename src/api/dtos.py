@@ -116,7 +116,7 @@ class ImportFileSourceRequest(BaseModel):
 
     notebook_id: UUID = Field(..., description="UUID of the parent notebook")
     name: str = Field(..., min_length=1, max_length=500, description="Source name")
-    file_path: str = Field(..., min_length=1, description="Path to the file (content will be extracted automatically)")
+    file_content: str = Field(..., description="Base64 encoded file content")
     file_type: str = Field(..., description="File type (pdf, docx, doc, txt, md)")
 
     @field_validator('name')
@@ -212,3 +212,29 @@ class SourcePreviewResponse(BaseModel):
     name: str
     preview: str
     full_text_length: int
+
+
+# DTOs for search-based source addition
+class AddSourcesBySearchRequest(BaseModel):
+    """Request model for adding sources by search phrase."""
+    notebook_id: UUID = Field(..., description="UUID of the parent notebook")
+    search_phrase: str = Field(..., description="Search phrase or question to find relevant articles", min_length=1)
+    max_results: int = Field(5, description="Maximum number of articles to add as sources", ge=1, le=10)
+
+
+class AddSourcesBySearchResult(BaseModel):
+    """Result for a single source addition."""
+    title: str = Field(..., description="Article title")
+    url: str = Field(..., description="Article URL")
+    source_id: Optional[UUID] = Field(None, description="Created source ID (if successful)")
+    success: bool = Field(..., description="Whether the source was added successfully")
+    error: Optional[str] = Field(None, description="Error message if failed")
+
+
+class AddSourcesBySearchResponse(BaseModel):
+    """Response model for adding sources by search phrase."""
+    notebook_id: UUID = Field(..., description="Notebook ID")
+    search_phrase: str = Field(..., description="Search phrase used")
+    results: List[AddSourcesBySearchResult] = Field(..., description="Results for each found article")
+    total_found: int = Field(..., description="Total articles found")
+    total_added: int = Field(..., description="Total sources successfully added")
