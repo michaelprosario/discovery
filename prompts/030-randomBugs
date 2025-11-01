@@ -1,0 +1,34 @@
+Given 
+- I am using the "ask questions" ux
+- I have asked a question
+- I am reviewing an answer with sources
+
+When
+- I click on a source
+
+Then
+- If the source is a url source, it should open the url in a new window
+- Otherwise, the system should do nothing.
+====
+
+Given 
+- I am reviewing an existing notebook
+- The notebook has several url sources
+
+When
+- I click on the link icon for the url source
+- The system should load the URL into a new window
+====
+
+
+Given 
+- I am using the "ask questions" ux
+- I have asked a question
+- I am reviewing an answer with sources
+
+When
+- I click on a source that's not a url source
+
+Then
+- The system currently returns a error.
+- Edit the ux so that these items are not clickable

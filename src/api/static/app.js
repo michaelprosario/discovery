@@ -344,6 +344,11 @@ class DiscoveryApp {
                     <div class="source-item-header">
                         <div class="source-item-name">${this.escapeHtml(source.name)}</div>
                         <div class="source-item-actions">
+                            ${source.source_type === 'url' && source.url ? `
+                            <a href="${source.url}" target="_blank" class="btn btn-icon btn-sm" title="Open URL">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            ` : ''}
                             <button class="btn btn-icon btn-sm" onclick="app.viewSource('${source.id}')" title="View Content">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -1201,15 +1206,35 @@ class DiscoveryApp {
                 source.text.substring(0, 100) + '...' : 
                 source.text;
             
-            return `
-                <div class="qa-source-item" onclick="app.viewQaSource('${source.source_id}', ${source.chunk_index})">
-                    <div class="qa-source-item-header">
-                        <span class="qa-source-name">${source.source_name || 'Unknown Source'}</span>
-                        <span class="qa-source-score">${score}%</span>
-                    </div>
-                    <div class="qa-source-preview">${this.escapeHtml(preview)}</div>
+            const fullSource = this.sources.find(s => s.id === source.source_id);
+            const isUrlSource = fullSource && fullSource.source_type === 'url' && fullSource.url;
+
+            const sourceItemContent = `
+                <div class="qa-source-item-header">
+                    <span class="qa-source-name">${source.source_name || 'Unknown Source'}</span>
+                    <span class="qa-source-score">${score}%</span>
                 </div>
+                <div class="qa-source-preview">${this.escapeHtml(preview)}</div>
             `;
+
+            if (isUrlSource) {
+                return `
+                    <div class="qa-source-item">
+                        <a href="${fullSource.url}" target="_blank" rel="noopener noreferrer" class="qa-source-link">
+                            ${sourceItemContent}
+                        </a>
+                        <button class="btn btn-icon btn-sm qa-source-view-btn" onclick="app.viewQaSource('${source.source_id}')" title="View Content">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="qa-source-item" onclick="app.viewQaSource('${source.source_id}')">
+                        ${sourceItemContent}
+                    </div>
+                `;
+            }
         }).join('');
 
         return `
