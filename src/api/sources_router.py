@@ -483,9 +483,24 @@ def rename_source(
     Raises:
         HTTPException: 400 for validation errors, 404 if not found
     """
+    # First get the source to retrieve its notebook_id
+    from ..core.queries.source_queries import GetSourceByIdQuery
+    
+    get_query = GetSourceByIdQuery(source_id=source_id, include_deleted=False)
+    get_result = service.get_source_by_id(get_query)
+    
+    if get_result.is_failure:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": get_result.error}
+        )
+    
+    source = get_result.value
+    
+    # Now use the actual notebook_id from the source
     command = RenameSourceCommand(
         source_id=source_id,
-        notebook_id=UUID('00000000-0000-0000-0000-000000000000'),  # Placeholder - not used in validation
+        notebook_id=source.notebook_id,
         new_name=request.new_name
     )
 
@@ -633,9 +648,24 @@ def extract_content(
     Raises:
         HTTPException: 404 if source not found
     """
+    # First get the source to retrieve its notebook_id
+    from ..core.queries.source_queries import GetSourceByIdQuery
+    
+    get_query = GetSourceByIdQuery(source_id=source_id, include_deleted=False)
+    get_result = service.get_source_by_id(get_query)
+    
+    if get_result.is_failure:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": get_result.error}
+        )
+    
+    source = get_result.value
+    
+    # Now use the actual notebook_id from the source
     command = ExtractContentCommand(
         source_id=source_id,
-        notebook_id=UUID('00000000-0000-0000-0000-000000000000'),  # Placeholder - service doesn't validate this
+        notebook_id=source.notebook_id,
         force_reextract=request.force
     )
 

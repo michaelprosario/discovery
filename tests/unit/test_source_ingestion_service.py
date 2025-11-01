@@ -463,7 +463,8 @@ class TestExtractContent:
         result = service.extract_content(extract_cmd)
 
         assert result.is_success
-        assert len(result.value) > 0
+        assert result.value.id == source_id
+        assert len(result.value.extracted_text) > 0
 
     def test_extract_content_already_extracted(self, service, test_notebook):
         """Test that already extracted content is returned without re-extraction."""
@@ -486,6 +487,7 @@ class TestExtractContent:
         result = service.extract_content(extract_cmd)
 
         assert result.is_success
+        assert result.value.id == source_id
 
 
 class TestListSources:

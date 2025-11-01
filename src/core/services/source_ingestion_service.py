@@ -385,7 +385,7 @@ class SourceIngestionService:
 
         return Result.success(update_result.value)
 
-    def extract_content(self, command: ExtractContentCommand) -> Result[str]:
+    def extract_content(self, command: ExtractContentCommand) -> Result[Source]:
         """
         Extract content from a source.
 
@@ -400,7 +400,7 @@ class SourceIngestionService:
             command: ExtractContentCommand with source and notebook IDs
 
         Returns:
-            Result[str]: Success with extracted text or failure
+            Result[Source]: Success with updated source or failure
         """
         # Get source
         get_result = self._source_repository.get_by_id(command.source_id)
@@ -418,7 +418,7 @@ class SourceIngestionService:
 
         # Check if already extracted and not forcing re-extract
         if source.extracted_text and not command.force_reextract:
-            return Result.success(source.extracted_text)
+            return Result.success(source)
 
         # Only file sources can have content extracted
         if source.source_type.value != "file":
@@ -437,9 +437,12 @@ class SourceIngestionService:
 
         # Update source with extracted text
         source.update_extracted_text(extract_result.value)
-        self._source_repository.update(source)
+        update_result = self._source_repository.update(source)
+        
+        if update_result.is_failure:
+            return Result.failure(f"Failed to update source: {update_result.error}")
 
-        return Result.success(extract_result.value)
+        return Result.success(update_result.value)
 
     def get_source_by_id(self, query: GetSourceByIdQuery) -> Result[Source]:
         """

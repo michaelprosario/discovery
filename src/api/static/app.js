@@ -41,7 +41,7 @@ class DiscoveryApp {
         document.getElementById('moreActionsBtn').addEventListener('click', () => this.toggleDropdown('moreActionsBtn'));
         document.getElementById('ingestNotebookBtn').addEventListener('click', () => this.ingestNotebook());
         document.getElementById('searchSimilarBtn').addEventListener('click', () => this.showSemanticSearchModal());
-        document.getElementById('generateOutputBtn').addEventListener('click', () => this.generateOutput());
+        
         
         // Source actions
         document.getElementById('addFileSourceBtn').addEventListener('click', () => this.showAddFileSourceModal());
@@ -344,6 +344,11 @@ class DiscoveryApp {
                     <div class="source-item-header">
                         <div class="source-item-name">${this.escapeHtml(source.name)}</div>
                         <div class="source-item-actions">
+                            ${source.source_type === 'url' && source.url ? `
+                            <a href="${source.url}" target="_blank" class="btn btn-icon btn-sm" title="Open URL">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            ` : ''}
                             <button class="btn btn-icon btn-sm" onclick="app.viewSource('${source.id}')" title="View Content">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -1201,24 +1206,52 @@ class DiscoveryApp {
                 source.text.substring(0, 100) + '...' : 
                 source.text;
             
-            return `
-                <div class="qa-source-item" onclick="app.viewQaSource('${source.source_id}', ${source.chunk_index})">
-                    <div class="qa-source-item-header">
-                        <span class="qa-source-name">${source.source_name || 'Unknown Source'}</span>
-                        <span class="qa-source-score">${score}%</span>
-                    </div>
-                    <div class="qa-source-preview">${this.escapeHtml(preview)}</div>
+            const fullSource = this.sources.find(s => s.id === source.source_id);
+            const isUrlSource = fullSource && fullSource.source_type === 'url' && fullSource.url;
+
+            const sourceItemContent = `
+                <div class="qa-source-item-header">
+                    <span class="qa-source-name">${source.source_name || 'Unknown Source'}</span>
+                    <span class="qa-source-score">${score}%</span>
                 </div>
+                <div class="qa-source-preview">${this.escapeHtml(preview)}</div>
             `;
+
+            if (isUrlSource) {
+                return `
+                    <div class="qa-source-item">
+                        <a href="${fullSource.url}" target="_blank" rel="noopener noreferrer" class="qa-source-link">
+                            ${sourceItemContent}
+                        </a>
+                        <button class="btn btn-icon btn-sm qa-source-view-btn" onclick="app.viewQaSource('${source.source_id}')" title="View Content">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="qa-source-item">
+                        <div onclick="app.viewQaSource('${source.source_id}')" style="cursor: pointer; flex-grow: 1;">
+                            ${sourceItemContent}
+                        </div>
+                        <button class="btn btn-icon btn-sm qa-source-view-btn" onclick="app.viewQaSource('${source.source_id}')" title="View Content">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                `;
+            }
         }).join('');
 
         return `
             <div class="qa-sources">
-                <div class="qa-sources-title">
+                <div class="qa-sources-title" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.qa-sources-toggle i').classList.toggle('fa-chevron-down'); this.querySelector('.qa-sources-toggle i').classList.toggle('fa-chevron-up');">
                     <i class="fas fa-book"></i>
                     <span>Sources (${sources.length})</span>
+                    <button class="btn btn-icon btn-sm qa-sources-toggle">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
                 </div>
-                <div class="qa-sources-list">
+                <div class="qa-sources-list hidden">
                     ${sourcesHtml}
                 </div>
             </div>

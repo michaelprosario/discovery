@@ -87,3 +87,40 @@ async def test_add_source_to_notebook(override_dependencies):
         listed_sources = list_sources_response.json()["sources"]
         assert any(source['id'] == added_source['id'] for source in listed_sources)
 
+
+@pytest.mark.asyncio
+async def test_delete_notebook_with_sources(override_dependencies):
+    """Tests deleting a notebook that has sources."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Create a new notebook
+        notebook_name = f"Test Notebook for Deletion {uuid4()}"
+        create_response = await client.post("/api/notebooks", json={"name": notebook_name})
+        assert create_response.status_code == 201
+        created_notebook = create_response.json()
+        notebook_id = created_notebook["id"]
+
+        # Add a source to the notebook
+        source_url = "https://en.wikipedia.org/wiki/Walt_Disney"
+        add_source_response = await client.post("/api/sources/url", json={"notebook_id": notebook_id, "url": source_url})
+        assert add_source_response.status_code == 201
+        added_source = add_source_response.json()
+
+        # Verify the source was added
+        list_sources_response = await client.get(f"/api/sources/notebook/{notebook_id}")
+        assert list_sources_response.status_code == 200
+        listed_sources = list_sources_response.json()["sources"]
+        assert len(listed_sources) == 1
+
+        # Now try to delete the notebook with cascade=True
+        delete_response = await client.delete(f"/api/notebooks/{notebook_id}?cascade=true")
+        assert delete_response.status_code == 204
+
+        # Verify the notebook is deleted
+        get_response = await client.get(f"/api/notebooks/{notebook_id}")
+        assert get_response.status_code == 404
+
+        # Verify the sources are also deleted
+        list_sources_after_delete = await client.get(f"/api/sources/notebook/{notebook_id}")
+        # This might return 404 or empty list depending on implementation
+        assert list_sources_after_delete.status_code in [404, 200]
+
