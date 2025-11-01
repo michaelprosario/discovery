@@ -1,0 +1,367 @@
+Today on the AI Daily Brief, where startups are spending their money on AI and where you are likely to in the future.
+Before that, in the headlines, some snags on the much anticipated open AI device.
+The AI Daily Brief is a daily podcast and video about the most important news and discussions in AI.
+0:24
+All right, friends, quick notes before we dive in today.
+Firstly, thank you to today's sponsors insight wise KPMG robots and pencils.
+The notion to get an ad free version of the show, go to patreon.com/AI Daily Brief or you can find it on Apple podcast subscriptions, Spotify coming soon.
+And if you are interested in sponsoring the show, we are booking out into Q1 and you can shoot us a note at sponsors at AI Daily Brief dot AI to find out more information.
+0:48
+Now we have a big day coming up.
+It is open AI Dev day.
+So we're trying to sneak this episode in before all of those announcements come.
+So without any further ado, let's dive in.
+Welcome back to the AI Daily Brief Headlines Edition, all the daily AI news you need in around 5 minutes.
+We kick off today with reports that Open AI and Johnny I've may have hit some technical snags with their AI device.
+1:09
+So when the partnership was formed back in May, Sam Altman said that there was already a functional prototype and that they were building toward a release next year.
+The Financial Times now reports though, that engineers working on the project have been unable to solve a series of critical issues that could delay the release.
+1:24
+This project has been a leaky sieve relative to open AI standards and the reporting confirmed that the device is a quote palm sized device without a screen that can take audio and visual cues from the physical environment and respond to users requests.
+Now multiple of FT sources discuss the development struggles, which include core software, privacy, personality and compute.
+1:44
+So pretty much everything.
+Unlike Siri and Alexa, the open AI device is taking an always on approach that does away with the concept of wake words, basically that Hey Siri, which gets it to pay attention.
+Basically, they're attempting to build ambient AI, which is something that is coming up a lot more on the show recently.
+2:01
+One issue is that the device is apparently a little too eager, with sources commenting that the team is having issues with it chiming in too often or not knowing when to end the conversation.
+One person briefed on the project said the concept is that you should have a friend who's a computer who isn't your weird AI girlfriend.
+Like Siri, but better.
+2:17
+But finding this line between accessible and intrusive is apparently a little bit more difficult than they thought.
+Another person said model personality is a hard thing to balance.
+It can't be too sycophantic, not too direct, helpful, but doesn't keep talking in a feedback loop.
+Now, folks close to Open AI insisted that these are normal problems, what they would have expected with this, and part and parcel of this sort of design process, especially given that this is a new category product.
+2:42
+Some pointed out that hardware has a higher burden and so of course they're going to take more time to figure it out.
+Rights prints, hardware is just like open source models, can't be rolled back once it's been released into the wild.
+I think they'll iterate on this one for a while.
+Not too surprising that the release date seems to be slipping.
+2:58
+Others point out that for this group in particular, the stakes are high.
+Right, John Mayer?
+Either Johnny, I've designed an AI device that people use, or this entire category of device dies.
+Between this and ChatGPT Pulse, it is very clear that Open AI has a very particular and apparently deeply held belief about the future being always on Ambient AII continue to be a skeptic in that paradigm in a pretty fundamental way.
+3:22
+But maybe that is just me becoming an AI boomer.
+Next up, a little update on Sora.
+First of all, the application has surged all the way up to #1 in the App Store.
+It's apparently getting around 200,000 downloads per day.
+Olivia Moore from A16Z though points out that there is a very specific arc of a new social app and that Sora is absolutely following it.
+3:43
+Step one is the flood of users because everyone wants in.
+This is especially the case when the app is restricted.
+Step 2 is the inflated posting activity of the first few days.
+Energy is high, everyone has ideas.
+Basically, people dump all the things that are interesting that they can think of to do and see what sticks.
+3:59
+Step 3 is that the platform starts to settle a little.
+Users figure out if there's a compelling status game to hook them.
+Step 4, If the answer is yes, the platform keeps growing and if no, many users churn and platform remains the domain of enthusiasts.
+Olivia believes that we are in the middle of Step 3 where users are figuring out if there is a compelling status game to hook them.
+4:18
+And I think that that's just a dead on analysis of exactly where we are right now when it comes to actual usage.
+Now the caveat with that is that I still think that the usage base is pretty highly restricted to tech insiders right now, who wouldn't necessarily be my first choice for creative content generators.
+4:36
+And so I'm willing to let this Stage 3 settle a little bit longer than I might otherwise.
+There are also a ton of updates coming out of Open AI around Sora itself.
+Bill Peebles, the head of Sora, on Sunday announced that there were some new restrictions on Cameo, which is, of course, the big feature that they're betting on, where you can give people permission to use your likeness in videos, Bill writes.
+4:56
+Starting today, you can now give instructions to SORA that restrict the type of generations that others can make with your Cameo.
+For example, you can say things like don't put me in videos that involve political commentary or don't let me say this word.
+This seems like a super sensible update that makes that feature much more highly usable.
+5:11
+So I think that's a great one.
+They also note that they're working on changes with the watermark, and they're trying to figure out the balance of moderation versus over moderation.
+Bill writes.
+We're tweaking our stack to reduce false negatives and catch loopholes.
+We know over moderation is super frustrating, and we're working on that too, but we think it's important to be conservative here while the world is still adjusting to this new technology.
+5:31
+Importantly, they also fixed the issue where deleting Sora would also require you to delete your ChatGPT account.
+That one was a little insane, and so I'm glad they figured that one out, but they're also changing a little bit how they deal with copyright.
+Now you might remember that the whole approach seemed to be asking rights holders to opt out rather than assuming that they're opt out by default.
+5:49
+Sam Altman in a blog post announced that now they will quote give rights holders more granular control over generation of characters, similar to the opt in model for likeness, but with additional controls.
+Now, Sam does also say we're hearing from a lot of rights holders who are very excited for this new kind of interactive fan fiction and think this new kind of engagement will accrue a lot of value to them, but want the ability to specify how their characters can be used, including not at all.
+6:13
+Look, I think it's obvious that companies are going to want this sort of control, but the smart ones are absolutely, beyond a shadow of a doubt, going to figure out ways to let people do stuff in Sora, which Jacob eating jokingly or not so jokingly wrote.
+Sora is reminding us once again that the best thing about the Internet was always copyright infringement.
+6:31
+And Kevin Verse, I think, makes the important point.
+All the copyrighted content on Sora was the thing that made it cool.
+It wasn't a bug, it was a feature.
+Tighter guardrail should not be how to iterate.
+Just license it all and it will be a permanent differentiator to other platforms.
+Now, of course, I think Open AI would say that the cameo and integrate yourself into video is hopefully the thing that'll make it cool, but it's pretty undeniable that things like putting Pikachu in every movie have been a huge driver of early consumption on the platform.
+6:58
+In that same blog post, Sam Altman said, second, we're going to have to somehow make money for video generation.
+People are generating much more than we expected per user, and a lot of videos are being generated for very small audiences.
+We're going to try sharing some of this revenue with rights holders who want their characters generated by users.
+7:14
+The exact model will take some trial and error to figure out, but we plan to start very soon.
+Our hope is that the new kind of engagement is even more valuable than the revenue share, But of course we want both to be valuable.
+Look, man, just say that you're doing ads.
+I don't know why we have this whole cloak and dagger thing like, Oh my goodness, we just somehow realized that this thing we built an entire application around is going to be popular.
+7:37
+Treat people like adults.
+Obviously you have huge costs with this.
+You have to pay for it somehow.
+Some people are going to be upset that you put ads into these experiences.
+They're going to have all sorts of specific grievances if they do.
+They're going to have different ways that they want you to implement it.
+7:52
+There's going to be privacy considerations that relate to their other existing chats.
+But none of those things change the fact that it is inevitable that ads are going to come to these platforms.
+Just take the time to articulate your vision for that and don't treat us like idiots.
+Whoever from Open AI communications is listening to this this.
+8:10
+Aw shucks we can't believe people are using it and I guess we're going to have to do ads now is the opposite of the strategy.
+Rant over.
+Still very much looking forward to see what Open AI drops today.
+One of the things that I think might come is better platform controls or even maybe a discovery that the Sora 2 we've been using inside Sora is not the pro model but is maybe a more fast generation model.
+8:32
+In any case, I got to move on to one last story today before we get to the main episode.
+AI chip making startup Cerebrus has withdrawn their IPO registration.
+Their prospectus was filed more than a year ago in that they disclosed heavy reliance on a single customer, UAE Investment funds G42, which is also an investor in the company.
+8:49
+This LED some to question whether the company had viable outside revenues.
+An SEC filing on Friday was brief, merely saying that Cerebrus did not intend IPO at this time.
+Now, some jumped on this as indication that we had gone past peak froth in the public markets when it came to the AI theme.
+9:06
+Others took it as a chance to be specifically critical of Cerebrus's business.
+But Cerebrus, for their part, very much tried to frame it as their oldest one, just having become stale and as they put it, no longer reflecting the current state of our business.
+Over the weekend, they tweeted.
+Our business and financial position have evolved significantly for the better since our initial filing in 2024.
+9:26
+They also pointed out that they had just raised a $1.1 billion round at a valuation of 8.1 billion, which double S evaluation from their last round back in 2021.
+Obviously for our parts, the thing that I'm most interested in is whether the market interprets this as being about more than just cerebrous or whether it really is just about the company themselves, something to keep an eye on.
+9:47
+But for now that is going to do it for today's headlines.
+Next up, the main episode.
+As a consultant, responding to proposals can often feel like playing tennis against a wall.
+You're serving against yourself, trying to guess what the client really wants.
+That all changes with the Insight Wise Proposals platform.
+10:04
+Now you've got an AI coach that thinks just like your client.
+It returns to the brief time and time again identifying opportunities, showcasing your track record, and making recommendations to improve your pitch.
+Suddenly you're on center court, but this time you got a secret weapon.
+Insight Wise does away with all the time consuming manual work so you can focus on winning more business more often.
+10:23
+Generate reports, pull insights from your own data, build competitive advantage, and go to sleep before 2:00 AM.
+When it comes to proposals, you only get one shot with Insight Wise.
+Make yours an ace.
+Go to Insight Wise dot AI to start your free trial today.
+What if AI wasn't just a buzzword, but a business imperative?
+10:42
+On You Can With AI, we take you inside the boardrooms and strategy sessions of the world's most forward thinking enterprises, hosted by me with Daniel Whittemore on.
+Powered by KPMG, the seven part series delivers real world insights from leaders who are scaling AI with purpose, from aligning culture and leadership to building trust, data readiness, and deploying AI agents.
+11:02
+Whether you're AC suite, executive, strategist or innovator, this podcast is your front row seat to the future of enterprise AI.
+So go check it out at www.kpmg.us slash AI podcasts or search you can with AI on Spotify, Apple Podcasts, or wherever you get your podcasts.
+11:20
+Today's episode is brought to you by robots and pencils.
+When competitive advantage lasts mere moments, speed to value wins the AI race.
+While big consultancies bury progress under layers of process, robots and pencils builds impact at AI speed.
+They partner with clients to enhance human potential through AI, modernizing apps, strengthening data pipelines, and accelerating cloud transformation.
+11:42
+With AWS certified teams across US, Canada, Europe, and Latin America, clients get local expertise and global scale.
+And with a laser focus on real outcomes, their solutions help organizers work smarter and serve customers better.
+They're your nimble, high service alternative to big integrators.
+Turn your AI vision into value fast.
+11:59
+Stay ahead with a partner built for progresspartnerwithrobotsandpencils@robotsandpencils.com/AI Daily Brief Chat bots are great, but they can only take you so far.
+I've recently been testing Notions new AI agents and they are a very different type of experience.
+12:16
+These are agents that actually complete entire workflows for you in your style, and best of all, they work in a channel that you already know and love because they are purpose built Notion super users.
+Notion's new AI agents completely expands the range of what Notion can do.
+It can now build documents from your entire company's knowledge base, organize scattered information into organize reports, basically do tasks that used to take days and get them complete in minutes.
+12:40
+These agents don't just help with work, they finish it.
+Getting started with building on Notion is easier than ever.
+Notion agents are now your very own super user to help you on board.
+In minutes, your AI teammates are ready to work.
+Try Notion AI for free at the link in our show notes.
+Welcome back to the AI Daily brief.
+12:56
+Today we are talking about the top 50 AI for work applications that you might not have tried yet, but that you probably will.
+And technically that's not the name of the report.
+The report that we're looking at is Andreessen Horowitz recent AI application spending report.
+To generate this report, a 16Z worked with Mercury, which is one of the big fintech banks out there.
+13:16
+It's really them and Breck's.
+We are customers of both of them, by the way, who tons and tons of startups work with to analyze spending across their customer set.
+Mercury has over 200,000 customers, which, like I said, are highly concentrated in the startup sector, and the researchers looked at data from June, July, and August of this year.
+13:34
+From there, they identify the top 50 AI application providers, which is different, mind you, from infrastructure providers who do things like compute and model development.
+This, as a 16Z puts it, shows where AI is actually being applied in products and work flows.
+In other words, they say it gives us a signal of what early stage startups are buying in AI, what tools they're using.
+13:55
+Now, why I think this is interesting for this particular audience.
+Broadly speaking, the majority of you guys fall into one of two categories.
+Not exclusively, but big chunks of you are either one thinking about and using AI at work in the context of a small business, a mid market company, or something huge.
+14:12
+Another pocket of you are much more individual.
+You're thinking about how to use AI for your entrepreneurial endeavors, for your solo business, or even if you do work inside a big company.
+You're thinking about where you can get an edge by doing things, of course reasonably and without implicating your company's data outside of the standard set of work tools.
+14:29
+And that differential between the tools that are available at work for most enterprises and what these startups are using is exactly why I think this is a relevant conversation to have for so many big enterprises.
+Their choice in AI tools is effectively some combination of Microsoft, Amazon, Salesforce, Google, and maybe now Open AI and Anthropic.
+14:51
+Maybe a couple others have just started to poke their heads in, but there certainly is not the voracious experimentation that you see with these startups.
+So what's interesting is to see what part of that voracious experimentation is now rising to the surface to become more of an important integrated part of what startups are doing in an ongoing way.
+15:08
+Because those are the apps that are most likely to rise up and become enterprise grade and the type of thing that big companies are going to have access to in the future.
+So you can see here the full list.
+Unsurprisingly, Open AI and Anthropic are right there at the top, and there's a bunch of others that you probably recognize.
+15:24
+You've got Replit, Cursor, 11 Labs, Notion, Canva, Lovable, Glean, Mid Journey, Grammarly, etcetera.
+But what we're going to do today is try to group these into categories and then try to understand the implications and the patterns.
+Now before we do, one quick note about adoption patterns.
+15:40
+There is a very clear pattern here, which makes sense but is still worth noting.
+Andreessen Horowitz notes that basically 70% of the companies on this list follow a sort of bottoms up adoption pattern where they can be initially used by individuals and then brought into teams.
+15:55
+In other words, they don't require enterprise licenses to get started.
+In fact, they note that 12 of the companies on here also show up in a 16 ZS Top 100 Gen.
+AI consumer apps, which is a measure of web usage and mobile usage, not revenue.
+But still, the fact that more than 20% of this list shows up on both shows that there is this clear pattern from consumer to prosumer to enterprise.
+16:15
+What's more, 11 of the companies actually started entirely as individual products and then moved over in the enterprise.
+A big blinking take away for me is that if you are trying to be a forward thinking enterprise, no matter how big you are, trying to understand the consumer tools that your employees are using is a really good place to look to understand what opportunities the organization as a whole might have.
+16:42
+But now with that, let's get back to our grouping of the different categories of these companies.
+I think broadly speaking, they fit into 11:00-ish categories, foundation models and general assistance, which frankly could be two different categories, but we're going to put them together because they all represent very core foundational type technologies.
+16:59
+Group 2 will call enterprise Knowledge and AI search.
+Group 3 which is one of the biggest categories in terms of the number of companies there is meeting notes and comms capture.
+Group 4.
+The other sort of definitive biggest is creative and content.
+Group 5 is sales and go to market automation.
+Group 6 is customer support, Group 7 legal tech, Group 8HR and recruiting.
+17:20
+Group 9 dev tools and vibe coding.
+Group 10, IT, OPS, finance and compliance and Group 11, believe it or not, real time meeting, coaching, speaking just very quickly to that last group because it's the only one with a single entrant.
+Despite some people thinking that they are just a flashy launch video and a loud founder, the quote UN quote cheating app clearly is up there at #26.
+17:40
+Now this very much makes me want to understand what that is actually being used for and how it fits inside of work, but it's there.
+It's a real thing.
+Overall, I think this broadly reflects kind of what I might have thought.
+Of course, you're going to have foundational models in here.
+17:57
+Of course there was going to be a ton of meeting notes and comms capture and creative and content.
+Now one thing that I might know in those two categories is that it still feels very clearly open and like there isn't 1 definitive winner in those categories yet.
+A lot of the functionality of these tools is overlapping.
+18:13
+For example, in that creative and content category, Free Pick, Canva, Photo Room all have similar functionality.
+And of course, in the meeting notes and COM capture, again, there is not necessarily one definitive leader, a couple that do stand out as a little more singular in those categories.
+18:29
+Descriptive 31 seems to be the leading full scale video editing suite.
+And Gamma at 24 has clearly emerged as the singular AI presentation tool for now.
+Although I certainly don't think that that means that those companies have things all locked up.
+The same with 11 labs and #5 from a voice and audio perspective.
+18:47
+But let's broad it out a little bit and talk more generally about some of the interesting implications from this.
+The first is that at the moment, horizontal beats niche at least slightly.
+Right now the spend makes skews about 6040 towards horizontal apps as opposed to highly vertical applications.
+19:04
+This was one of a 16Z's conclusions as well.
+The way that they divide horizontal and vertical is horizontal tools are those that can be used by anyone across the company, whereas vertical tools target specific roles within the horizontal application side.
+There are of course the ones that you recognize.
+Open AI and Tropic perplexity.
+19:20
+Notion.
+Manus.
+Glean.
+Then of course all of the note taking tools all tend to be generalist and horizontal as well, like Fixer, Happy, Scribe, and Otter.
+Now where it gets interesting is that the line between horizontal and vertical is actually getting blurrier because of AI.
+19:36
+The way that A16Z puts it is that while they might previously have looked at creative tools and vibe coding tools as vertical in the sense that they were focused on particular subsections of the companies, the fact that they are as usable and that they can do as much as they can actually makes them definitionally horizontal.
+19:53
+In other words, creative tools are no longer just for design and marketing.
+They can be used by anyone across the company.
+Same of course with vibe coding.
+We're going to talk about vibe coding a lot during this episode.
+Vibe Coding tools have very much jumped out of the ranks of just software developers into product folks, designers, even people across the company who are using it for a variety of different reasons.
+20:14
+Honestly, vibe coding is one of the big themes from this as well.
+In the agentic coding section we had replic, cursor, lovable, emergent, and cognition all showing up.
+So a full 10% of these applications were touching code in some way.
+And one interesting comparison as different from the general consumer apps, Lovable was up ahead of Replit when it came to consumer use.
+20:34
+Replit was 41 in A16Z's latest top 50.
+But in this one, Replit was meaningfully ahead of Lovable.
+In fact, it was #3 even ahead of Cursor.
+Now I think what this speaks to is the idea that even if applications follow this consumer to prosumer to enterprise kind of flow, there are going to need to be a different set of tools, controls, integrations, etcetera to make things work in an enterprise context.
+20:59
+And at least for now, Replit really seems to have that above it's other competitors.
+Basically the closer to production you get, the more startups are willing to pay.
+One of the things that we see here that I think mirrors larger enterprises is that distribution and integration into existing tools does still provide value even if this is the subset of companies that are the most willing to experiment with totally net new platforms.
+21:21
+So for example, you have Glean, which sits on top of existing SAS with permission aware search.
+You've got Notion, of course, where AI is happening, where company documents already live and Notion is up in the top ten.
+Basically, even when it comes to startups, there is still value in having existing distribution inside those companies and existing integrations with their data as it operates now.
+21:42
+Another interesting pattern is that there are a number of companies that follow a pattern of integration and bring your own model.
+This should say reduces friction.
+Apologies for moving fast here.
+Cursor is maybe the best example of this where you have a lot of control over the coding models you use as well as your enterprise controls.
+21:58
+Retail plugs into existing telephony systems.
+Customer IO and Crisp both connect the teams across multiple channels.
+Basically, it does seem like in certain cases, startups are rewarding flexibility when it comes to how a particular tool gets implemented in ways that can be customized to their existing systems.
+22:15
+Now #5 On the one hand, we only see the one generalist agent, Manus at #33 But if you're following the show closely, you know that there just aren't all that many other competing generalist agents yet.
+It's just still really early in that space.
+It is notable, I guess, that Genspark isn't on here, but that does not mean that the agentic modality isn't represented.
+22:36
+In fact, I think that you can argue that AI employees are moving from hype to actual line items.
+There was a small but very important set of tools on here that have the potential to go way farther than just augmenting existing roles.
+So companies I might put in this category are 11X, which is an SDR or sales agent, Servo, which is an IT help desk type agent, Crosby which helps with legal, and Almo, which helps with immigration.
+23:04
+And then you can kind of put cognition in here.
+It gets a little blurry when it comes to where augmented developers versus wholly agentic developers live, but certainly Cognition is pushing farther into the background.
+Agent coding agents working for you as opposed to just augmenting your own code.
+23:20
+Then do some of the other coding platforms like Lovable and Replit.
+This is in some ways the meta category that I'm most interested in watching to see how it evolves over time, and the one that I would expect to grow significantly.
+But I think what we're seeing already here is that if platforms can actually deliver results against measurable outcomes, be it meetings booked or tickets resolved or whatever it is, startups are excited and ready to pay.
+23:44
+Now, in terms of where agents are showing up, certainly compliance and IT seems to be an early target, that makes sense.
+These are areas that are must haves but aren't going to change the outcome of a startup one way or another.
+So the more that they can do to automate that and get it off their plate and get it out of their mind space, the better.
+23:59
+You've got Delve, which does sock 2 and HIPAA evidence gathering Servo, which we just talked about combinely, which is for accounting workflows.
+It makes sense to me that this and in general back office stuff is an area where companies are looking to automate as soon as they can.
+And relatedly, there's also a pattern I think where channels that have clearer and harder ROI are going to get more of the budget initially.
+24:21
+This is I think why you can see so many tools in the sales and marketing area.
+Those tools directly increase pipeline and then especially when it comes to sales, directly help convert that pipeline, meaning that you understand the output in really clear ways.
+And that's part of why I think there are so many that show up on this list.
+24:40
+Now, part of that is, of course, also that there are just a preponderance of these tools and that AI is really good at this stuff.
+But I do think that when it comes to a startup spend perspective, there also is actually an ROI calculus here.
+Couple more small implications to close this out.
+One, it does appear for companies that China is an option.
+24:58
+It's not all over here, but you do have cling and cap cut both showing up.
+And #9 there is one tiny little indication that maybe, if done right, that hardware has a place.
+I'm looking specifically at plot here at #38 plot is a note taking brand.
+25:15
+And what's interesting is that they actually make hardware.
+It's designed for in person usage, and apparently is making the bet that an unobtrusive device is better and less jarring and less destabilizing than just having your phone out on the table recording things.
+And apparently some founders agree.
+25:31
+So if you are Johnny, Ivan, Sam Altman, thinking about the future of AI hardware devices, maybe there is an enterprise play here that the initial wave of not so successful launches is underselling the potential of.
+So really interesting stuff here.
+And in addition to just seeing how it evolves, the last note that I wanted to share is that this came out alongside A broader report that Mercury had done around startups in general.
+25:52
+You can tell that when it comes to startups right now, there is a lot of anxiety. 89% said that they're worried about general economic uncertainty. 83% said they were worried about tariffs. 80% said that they're worried about stock market volatility.
+It is not necessarily a jubilant time, however, they found pretty dramatically that the companies that reported significant AI use had much higher confidence levels than those that didn't.
+26:18
+When asked how their confidence in their own financial prospects had improved, between 24 and 2542% of the AI adopter companies said that it had significantly improved as opposed to 28% of the non AI adopters.
+So if you need another reason to dig in and try out more AI tools, maybe the confidence boost alone is worth it.
+26:38
+Anyways, hope that this gives you some ideas of new platforms to try and check out.
+For now, that is going to do it for today's AI Daily Brief.
+Appreciate you listening as always.
+Until next time, peace.

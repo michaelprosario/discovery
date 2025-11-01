@@ -4,7 +4,7 @@ from uuid import UUID
 import json
 from sqlalchemy import Column, String, DateTime, Integer, Text, TypeDecorator, ForeignKey, BigInteger
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ARRAY, JSON as PG_JSON
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, backref
 
 Base = declarative_base()
 
@@ -117,7 +117,8 @@ class SourceModel(Base):
     deleted_at = Column(DateTime, nullable=True, index=True)
 
     # Relationship to notebook (optional, for SQLAlchemy ORM queries)
-    notebook = relationship("NotebookModel", backref="sources")
+    # Use passive_deletes='all' to let database CASCADE handle deletion
+    notebook = relationship("NotebookModel", backref=backref("sources", passive_deletes="all"))
 
     def __repr__(self):
         return f"<SourceModel(id={self.id}, name='{self.name}', type='{self.source_type}')>"

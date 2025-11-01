@@ -235,7 +235,7 @@ class NotebookManagementService:
         Business Logic:
         - Validates notebook exists
         - Checks if notebook has sources/outputs
-        - If cascade flag set: soft delete all children (to be implemented)
+        - If cascade flag set: allow deletion (database CASCADE will handle sources)
         - If not cascade: return failure if has children
         - Deletes notebook
 
@@ -269,10 +269,8 @@ class NotebookManagementService:
                 )
             ])
 
-        # TODO: If cascade is True, delete all sources and outputs first
-        # This would require source and output repositories
-
-        # Delete notebook
+        # Delete notebook - database CASCADE will handle sources and outputs automatically
+        # The CASCADE constraint in the database schema ensures referential integrity
         delete_result = self._notebook_repository.delete(command.notebook_id)
         if delete_result.is_failure:
             return Result.failure(f"Failed to delete notebook: {delete_result.error}")
