@@ -200,3 +200,58 @@ async def test_rename_source(mock_getsize, override_dependencies):
         assert get_response.status_code == 200
         get_data = get_response.json()
         assert get_data["name"] == "Renamed Source"
+
+
+@pytest.mark.asyncio
+@patch("os.path.getsize", return_value=100)
+async def test_extract_content(mock_getsize, override_dependencies):
+    """Test extracting content from a source."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. Create a notebook
+        create_notebook_response = await client.post(
+            "/api/notebooks",
+            json={"name": "Test Notebook for Content Extraction"}
+        )
+        assert create_notebook_response.status_code == 201
+        notebook_id = create_notebook_response.json()["id"]
+
+        # 2. Create a file source
+        file_content = b"This is a test file for content extraction."
+        import base64
+        encoded_content = base64.b64encode(file_content).decode('utf-8')
+
+        import_response = await client.post(
+            "/api/sources/file",
+            json={
+                "notebook_id": notebook_id,
+                "name": "Test File for Extraction",
+                "file_content": encoded_content,
+                "file_type": "txt"
+            }
+        )
+        assert import_response.status_code == 201
+        source_data = import_response.json()
+        source_id = source_data["id"]
+
+        # 3. Extract content (should work since content is already extracted during import)
+        extract_response = await client.post(
+            f"/api/sources/{source_id}/extract",
+            json={"force": False}
+        )
+
+        # 4. Assertions
+        assert extract_response.status_code == 200
+        extracted_data = extract_response.json()
+        assert extracted_data["id"] == source_id
+        assert extracted_data["notebook_id"] == notebook_id
+        assert "This is a test file" in extracted_data["extracted_text"]
+
+        # 5. Test force re-extraction
+        force_extract_response = await client.post(
+            f"/api/sources/{source_id}/extract",
+            json={"force": True}
+        )
+        assert force_extract_response.status_code == 200
+        force_data = force_extract_response.json()
+        assert force_data["id"] == source_id
+        assert "This is a test file" in force_data["extracted_text"]

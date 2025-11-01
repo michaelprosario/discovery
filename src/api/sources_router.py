@@ -677,17 +677,7 @@ def extract_content(
             detail={"error": result.error}
         )
 
-    # After extraction, get the updated source to return
-    updated_query = GetSourceByIdQuery(source_id=source_id, include_deleted=False)
-    updated_result = service.get_source_by_id(updated_query)
-    
-    if updated_result.is_failure:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": updated_result.error}
-        )
-
-    return to_source_response(updated_result.value)
+    return to_source_response(result.value)
 
 
 @router.get(
