@@ -238,3 +238,114 @@ class AddSourcesBySearchResponse(BaseModel):
     results: List[AddSourcesBySearchResult] = Field(..., description="Results for each found article")
     total_found: int = Field(..., description="Total articles found")
     total_added: int = Field(..., description="Total sources successfully added")
+
+
+# Output DTOs
+
+class GenerateBlogPostRequest(BaseModel):
+    """Request model for generating a blog post."""
+
+    title: str = Field(..., min_length=1, max_length=500, description="Blog post title")
+    prompt: Optional[str] = Field(None, max_length=5000, description="Custom prompt for generation")
+    template_name: Optional[str] = Field(None, max_length=100, description="Template name to use")
+    target_word_count: int = Field(550, ge=100, le=2000, description="Target word count (500-600 recommended)")
+    tone: str = Field("informative", description="Tone of the blog post (informative, casual, formal, etc.)")
+    include_references: bool = Field(True, description="Include reference links at the bottom")
+
+    @field_validator('title')
+    @classmethod
+    def title_not_empty(cls, v: str) -> str:
+        """Validate title is not just whitespace."""
+        if not v.strip():
+            raise ValueError('Title cannot be empty or whitespace only')
+        return v.strip()
+
+
+class CreateOutputRequest(BaseModel):
+    """Request model for creating a new output."""
+
+    title: str = Field(..., min_length=1, max_length=500, description="Output title")
+    output_type: str = Field("blog_post", description="Type of output")
+    prompt: Optional[str] = Field(None, max_length=5000, description="Custom prompt used")
+    template_name: Optional[str] = Field(None, max_length=100, description="Template name used")
+
+    @field_validator('title')
+    @classmethod
+    def title_not_empty(cls, v: str) -> str:
+        """Validate title is not just whitespace."""
+        if not v.strip():
+            raise ValueError('Title cannot be empty or whitespace only')
+        return v.strip()
+
+
+class UpdateOutputRequest(BaseModel):
+    """Request model for updating an output."""
+
+    title: Optional[str] = Field(None, min_length=1, max_length=500, description="New output title")
+    content: Optional[str] = Field(None, max_length=50000, description="New output content")
+
+    @field_validator('title')
+    @classmethod
+    def title_not_empty(cls, v: Optional[str]) -> Optional[str]:
+        """Validate title is not just whitespace if provided."""
+        if v is not None and not v.strip():
+            raise ValueError('Title cannot be empty or whitespace only')
+        return v.strip() if v else None
+
+
+class OutputResponse(BaseModel):
+    """Response model for an output."""
+
+    id: UUID
+    notebook_id: UUID
+    title: str
+    content: str
+    output_type: str
+    status: str
+    prompt: Optional[str]
+    template_name: Optional[str]
+    metadata: dict
+    source_references: List[str]
+    word_count: int
+    created_at: datetime
+    updated_at: datetime
+    completed_at: Optional[datetime]
+
+    class Config:
+        """Pydantic configuration."""
+        from_attributes = True
+
+
+class OutputSummaryResponse(BaseModel):
+    """Response model for output summary."""
+
+    id: UUID
+    notebook_id: UUID
+    title: str
+    output_type: str
+    status: str
+    word_count: int
+    created_at: datetime
+    updated_at: datetime
+    completed_at: Optional[datetime]
+
+    class Config:
+        """Pydantic configuration."""
+        from_attributes = True
+
+
+class OutputListResponse(BaseModel):
+    """Response model for a list of outputs."""
+
+    outputs: List[OutputSummaryResponse]
+    total: int
+
+
+class OutputPreviewResponse(BaseModel):
+    """Response model for output content preview."""
+
+    id: UUID
+    title: str
+    preview: str
+    full_content_length: int
+    word_count: int

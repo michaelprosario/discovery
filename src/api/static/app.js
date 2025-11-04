@@ -71,6 +71,14 @@ class DiscoveryApp {
             }
         });
         
+        // Blog post generation
+        document.getElementById('generateBlogPostBtn').addEventListener('click', () => this.showBlogPostModal());
+        document.getElementById('blogPostForm').addEventListener('submit', (e) => this.handleBlogPostSubmit(e));
+        document.getElementById('copyBlogPostBtn').addEventListener('click', () => this.copyBlogPost());
+        document.getElementById('downloadBlogPostBtn').addEventListener('click', () => this.downloadBlogPost());
+        document.getElementById('editBlogPostBtn').addEventListener('click', () => this.editBlogPost());
+        document.getElementById('saveBlogPostBtn').addEventListener('click', () => this.saveBlogPost());
+        
         // Semantic search
         document.getElementById('executeSemanticSearchBtn').addEventListener('click', () => this.executeSemanticSearch());
         
@@ -1272,6 +1280,315 @@ class DiscoveryApp {
         setTimeout(() => {
             element.scrollTop = element.scrollHeight;
         }, 100);
+    }
+
+    // Blog Post Generation Methods
+    showBlogPostModal() {
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'No notebook selected', 'error');
+            return;
+        }
+
+        if (!this.sources || this.sources.length === 0) {
+            this.showToast('Warning', 'This notebook has no sources. Add some sources to generate a meaningful blog post.', 'warning');
+        }
+
+        // Reset modal state
+        this.resetBlogPostModal();
+        
+        // Set default title based on notebook
+        document.getElementById('blogPostTitle').value = `${this.currentNotebook.name} - Insights and Analysis`;
+        
+        this.showModal('blogPostModal');
+    }
+
+    resetBlogPostModal() {
+        // Reset form
+        document.getElementById('blogPostForm').reset();
+        
+        // Hide progress and result sections
+        document.getElementById('blogPostProgress').classList.add('hidden');
+        document.getElementById('blogPostResult').classList.add('hidden');
+        
+        // Reset progress state
+        document.querySelectorAll('.progress-step').forEach(step => {
+            step.classList.remove('active', 'completed');
+        });
+        document.querySelector('.progress-fill').style.width = '0%';
+        
+        // Reset buttons
+        document.getElementById('generateBlogPostSubmitBtn').classList.remove('hidden');
+        document.getElementById('saveBlogPostBtn').classList.add('hidden');
+        
+        // Reset default values
+        document.getElementById('blogPostTone').value = 'informative';
+        document.getElementById('blogPostWordCount').value = '550';
+        document.getElementById('includeReferences').checked = true;
+    }
+
+    async handleBlogPostSubmit(event) {
+        event.preventDefault();
+        
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'No notebook selected', 'error');
+            return;
+        }
+
+        const formData = new FormData(event.target);
+        const blogPostData = {
+            title: formData.get('title').trim(),
+            prompt: formData.get('prompt')?.trim() || null,
+            tone: formData.get('tone'),
+            target_word_count: parseInt(formData.get('wordCount')),
+            template: formData.get('template') || null,
+            include_references: formData.get('includeReferences') === 'on'
+        };
+
+        if (!blogPostData.title) {
+            this.showToast('Error', 'Please enter a title', 'error');
+            return;
+        }
+
+        try {
+            await this.generateBlogPost(blogPostData);
+        } catch (error) {
+            console.error('Blog post generation error:', error);
+            this.showToast('Error', 'Failed to generate blog post', 'error');
+            this.resetBlogPostGenerationUI();
+        }
+    }
+
+    async generateBlogPost(blogPostData) {
+        // Show progress section
+        document.getElementById('blogPostProgress').classList.remove('hidden');
+        document.getElementById('generateBlogPostSubmitBtn').classList.add('hidden');
+        
+        const startTime = Date.now();
+        
+        try {
+            // Step 1: Extract content
+            this.updateGenerationProgress('extract', 'active');
+            await this.delay(500); // Visual feedback
+            
+            // Step 2: Generate content
+            this.updateGenerationProgress('extract', 'completed');
+            this.updateGenerationProgress('generate', 'active');
+            this.updateProgressBar(40);
+            
+            // Make API call
+            const response = await this.apiCall(`/notebooks/${this.currentNotebook.id}/generate-blog-post`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(blogPostData)
+            });
+
+            this.updateProgressBar(80);
+            
+            // Step 3: Complete
+            this.updateGenerationProgress('generate', 'completed');
+            this.updateGenerationProgress('complete', 'active');
+            await this.delay(300);
+            
+            this.updateGenerationProgress('complete', 'completed');
+            this.updateProgressBar(100);
+            
+            const endTime = Date.now();
+            const generationTime = Math.round((endTime - startTime) / 1000);
+            
+            // Show result
+            this.displayBlogPostResult(response, generationTime);
+            
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    updateGenerationProgress(step, status) {
+        const stepElement = document.querySelector(`[data-step="${step}"]`);
+        if (stepElement) {
+            stepElement.classList.remove('active', 'completed');
+            if (status) {
+                stepElement.classList.add(status);
+            }
+        }
+    }
+
+    updateProgressBar(percentage) {
+        const progressFill = document.querySelector('.progress-fill');
+        if (progressFill) {
+            progressFill.style.width = `${percentage}%`;
+        }
+    }
+
+    displayBlogPostResult(blogPost, generationTime) {
+        // Hide progress, show result
+        document.getElementById('blogPostProgress').classList.add('hidden');
+        document.getElementById('blogPostResult').classList.remove('hidden');
+        
+        // Set content
+        const contentDiv = document.getElementById('blogPostContent');
+        contentDiv.innerHTML = this.formatBlogPostContent(blogPost.content);
+        
+        // Update stats
+        const wordCount = this.countWords(blogPost.content);
+        document.getElementById('blogPostWordCountDisplay').textContent = `${wordCount} words`;
+        document.getElementById('blogPostGenTime').textContent = `Generated in ${generationTime}s`;
+        
+        // Store for later actions
+        this.currentBlogPost = blogPost;
+        
+        // Show save button
+        document.getElementById('saveBlogPostBtn').classList.remove('hidden');
+    }
+
+    formatBlogPostContent(content) {
+        // Convert markdown-like formatting to HTML
+        return content
+            .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+            .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+            .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/^(.+)$/gm, '<p>$1</p>')
+            .replace(/<p><h([1-6])>/g, '<h$1>')
+            .replace(/<\/h([1-6])><\/p>/g, '</h$1>')
+            .replace(/<p><\/p>/g, '');
+    }
+
+    countWords(text) {
+        // Remove HTML tags and count words
+        const plainText = text.replace(/<[^>]*>/g, '');
+        return plainText.trim().split(/\s+/).filter(word => word.length > 0).length;
+    }
+
+    async copyBlogPost() {
+        if (!this.currentBlogPost) return;
+        
+        try {
+            // Create plain text version
+            const plainText = this.currentBlogPost.content
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"');
+            
+            await navigator.clipboard.writeText(plainText);
+            this.showToast('Success', 'Blog post copied to clipboard', 'success');
+        } catch (error) {
+            console.error('Copy error:', error);
+            this.showToast('Error', 'Failed to copy blog post', 'error');
+        }
+    }
+
+    downloadBlogPost() {
+        if (!this.currentBlogPost) return;
+        
+        try {
+            // Create plain text version
+            const plainText = this.currentBlogPost.content
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"');
+            
+            const blob = new Blob([plainText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${this.currentNotebook.name}_blog_post.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            this.showToast('Success', 'Blog post downloaded', 'success');
+        } catch (error) {
+            console.error('Download error:', error);
+            this.showToast('Error', 'Failed to download blog post', 'error');
+        }
+    }
+
+    editBlogPost() {
+        if (!this.currentBlogPost) return;
+        
+        // Make content editable
+        const contentDiv = document.getElementById('blogPostContent');
+        contentDiv.contentEditable = true;
+        contentDiv.classList.add('editing');
+        contentDiv.focus();
+        
+        // Change button to save
+        const editBtn = document.getElementById('editBlogPostBtn');
+        editBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        editBtn.onclick = () => this.saveEditedBlogPost();
+        
+        this.showToast('Info', 'Blog post is now editable. Click "Save Changes" when done.', 'info');
+    }
+
+    saveEditedBlogPost() {
+        const contentDiv = document.getElementById('blogPostContent');
+        
+        // Update current blog post content
+        this.currentBlogPost.content = contentDiv.innerHTML;
+        
+        // Make content non-editable
+        contentDiv.contentEditable = false;
+        contentDiv.classList.remove('editing');
+        
+        // Restore edit button
+        const editBtn = document.getElementById('editBlogPostBtn');
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+        editBtn.onclick = () => this.editBlogPost();
+        
+        // Update word count
+        const wordCount = this.countWords(this.currentBlogPost.content);
+        document.getElementById('blogPostWordCountDisplay').textContent = `${wordCount} words`;
+        
+        this.showToast('Success', 'Blog post changes saved', 'success');
+    }
+
+    async saveBlogPost() {
+        if (!this.currentBlogPost) return;
+        
+        try {
+            // Blog post is already saved in the database when generated
+            // This could trigger additional actions like adding to a collection
+            this.showToast('Success', 'Blog post has been saved', 'success');
+            this.closeModal('blogPostModal');
+            
+            // Optionally refresh the notebook view to show the new output
+            if (this.currentNotebook) {
+                await this.loadNotebook(this.currentNotebook.id);
+            }
+        } catch (error) {
+            console.error('Save error:', error);
+            this.showToast('Error', 'Failed to save blog post', 'error');
+        }
+    }
+
+    resetBlogPostGenerationUI() {
+        // Reset progress section
+        document.getElementById('blogPostProgress').classList.add('hidden');
+        document.getElementById('generateBlogPostSubmitBtn').classList.remove('hidden');
+        
+        // Reset progress state
+        document.querySelectorAll('.progress-step').forEach(step => {
+            step.classList.remove('active', 'completed');
+        });
+        document.querySelector('.progress-fill').style.width = '0%';
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     // Utility Methods

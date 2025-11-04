@@ -11,6 +11,7 @@ load_dotenv()
 
 from .notebooks_router import router as notebooks_router
 from .sources_router import router as sources_router
+from .outputs_router import router as outputs_router
 from .vector_search_router import router as vector_search_router
 from .article_search_router import router as article_search_router
 from .qa_router import router as qa_router
@@ -40,6 +41,7 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 # Include routers
 app.include_router(notebooks_router)
 app.include_router(sources_router)
+app.include_router(outputs_router)
 app.include_router(vector_search_router)
 app.include_router(article_search_router)
 app.include_router(qa_router)

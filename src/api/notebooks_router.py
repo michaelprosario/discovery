@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 
 from ..core.services.notebook_management_service import NotebookManagementService
+from ..core.services.blog_generation_service import BlogGenerationService
 from ..core.commands.notebook_commands import (
     CreateNotebookCommand,
     UpdateNotebookCommand,
@@ -12,6 +13,7 @@ from ..core.commands.notebook_commands import (
     AddTagsCommand,
     RemoveTagsCommand
 )
+from ..core.commands.output_commands import GenerateBlogPostCommand
 from ..core.queries.notebook_queries import (
     GetNotebookByIdQuery,
     ListNotebooksQuery
@@ -23,8 +25,10 @@ from .dtos import (
     RenameNotebookRequest,
     AddTagsRequest,
     RemoveTagsRequest,
+    GenerateBlogPostRequest,
     NotebookResponse,
     NotebookListResponse,
+    OutputResponse,
     ErrorResponse,
     ValidationErrorResponse,
     ValidationErrorDetail
@@ -59,6 +63,91 @@ def get_notebook_service(repository = Depends(get_notebook_repository)) -> Noteb
     Uses dependency injection to get the repository implementation.
     """
     return NotebookManagementService(repository)
+
+
+def get_output_repository():
+    """
+    Dependency injection for IOutputRepository.
+    """
+    from ..infrastructure.database.connection import get_db
+    from ..infrastructure.repositories.postgres_output_repository import PostgresOutputRepository
+
+    db = next(get_db())
+    try:
+        repository = PostgresOutputRepository(db)
+        yield repository
+    finally:
+        db.close()
+
+
+def get_source_repository():
+    """
+    Dependency injection for ISourceRepository.
+    """
+    from ..infrastructure.database.connection import get_db
+    from ..infrastructure.repositories.postgres_source_repository import PostgresSourceRepository
+
+    db = next(get_db())
+    try:
+        repository = PostgresSourceRepository(db)
+        yield repository
+    finally:
+        db.close()
+
+
+def get_llm_provider():
+    """
+    Dependency injection for ILlmProvider.
+    """
+    from ..infrastructure.providers.gemini_llm_provider import GeminiLlmProvider
+    return GeminiLlmProvider()
+
+
+def get_content_extraction_provider():
+    """
+    Dependency injection for IContentExtractionProvider.
+    """
+    from ..infrastructure.providers.file_content_extraction_provider import FileContentExtractionProvider
+    return FileContentExtractionProvider()
+
+
+def get_blog_generation_service(
+    notebook_repository=Depends(get_notebook_repository),
+    source_repository=Depends(get_source_repository),
+    output_repository=Depends(get_output_repository),
+    llm_provider=Depends(get_llm_provider),
+    content_extraction_provider=Depends(get_content_extraction_provider)
+) -> BlogGenerationService:
+    """
+    Dependency injection for BlogGenerationService.
+    """
+    return BlogGenerationService(
+        notebook_repository,
+        source_repository,
+        output_repository,
+        llm_provider,
+        content_extraction_provider
+    )
+
+
+def to_output_response(output) -> OutputResponse:
+    """Convert output entity to response DTO."""
+    return OutputResponse(
+        id=output.id,
+        notebook_id=output.notebook_id,
+        title=output.title,
+        content=output.content,
+        output_type=output.output_type.value,
+        status=output.status.value,
+        prompt=output.prompt,
+        template_name=output.template_name,
+        metadata=output.metadata,
+        source_references=output.source_references,
+        word_count=output.word_count,
+        created_at=output.created_at,
+        updated_at=output.updated_at,
+        completed_at=output.completed_at
+    )
 
 
 def to_notebook_response(notebook) -> NotebookResponse:
@@ -500,3 +589,86 @@ def remove_tags(
         )
 
     return to_notebook_response(result.value)
+
+
+@router.post(
+    "/{notebook_id}/generate-blog-post",
+    response_model=OutputResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        400: {"model": ValidationErrorResponse, "description": "Validation error"},
+        404: {"model": ErrorResponse, "description": "Notebook not found"},
+        409: {"model": ErrorResponse, "description": "Notebook has no sources"}
+    }
+)
+def generate_blog_post(
+    notebook_id: UUID,
+    request: GenerateBlogPostRequest,
+    service: BlogGenerationService = Depends(get_blog_generation_service)
+):
+    """
+    Generate a blog post from notebook sources.
+
+    This endpoint creates a blog post of 500-600 words based on all sources
+    in the specified notebook. The generation process includes:
+    - Extracting content from all sources in the notebook
+    - Using LLM to synthesize the content into a cohesive blog post
+    - Including reference links at the bottom if requested
+
+    Args:
+        notebook_id: UUID of the notebook containing sources
+        request: Blog post generation parameters
+        service: Injected blog generation service
+
+    Returns:
+        Generated blog post output
+
+    Raises:
+        HTTPException: 400 for validation errors, 404 if notebook not found,
+                      409 if notebook has no sources
+    """
+    command = GenerateBlogPostCommand(
+        notebook_id=notebook_id,
+        title=request.title,
+        prompt=request.prompt,
+        template_name=request.template_name,
+        target_word_count=request.target_word_count,
+        include_references=request.include_references,
+        tone=request.tone
+    )
+
+    result = service.generate_blog_post(command)
+
+    if result.is_failure:
+        if result.validation_errors:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error": result.error,
+                    "validation_errors": [
+                        ValidationErrorDetail(
+                            field=err.field,
+                            message=err.message,
+                            code=err.code
+                        ).model_dump()
+                        for err in result.validation_errors
+                    ]
+                }
+            )
+        elif "not found" in result.error.lower():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": result.error}
+            )
+        elif "no sources" in result.error.lower():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={"error": result.error}
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": result.error}
+            )
+
+    return to_output_response(result.value)
