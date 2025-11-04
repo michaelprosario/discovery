@@ -13,7 +13,7 @@ from ...core.queries.output_queries import (
     ListAllOutputsQuery,
     SearchOutputsQuery
 )
-from ...core.value_objects.enums import SortOption, SortOrder
+from ...core.value_objects.enums import SortOption, SortOrder, OutputType, OutputStatus
 from ..database.models import OutputModel
 
 
@@ -49,8 +49,8 @@ class PostgresOutputRepository(IOutputRepository):
             notebook_id=model.notebook_id,
             title=model.title,
             content=model.content,
-            output_type=model.output_type,
-            status=model.status,
+            output_type=OutputType(model.output_type),
+            status=OutputStatus(model.status),
             prompt=model.prompt,
             template_name=model.template_name,
             metadata=dict(model.output_metadata) if model.output_metadata else {},

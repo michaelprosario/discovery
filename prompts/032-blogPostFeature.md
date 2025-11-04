@@ -5,3 +5,14 @@
 === 
 
 In the menu for a notebook, add an option to generate a blog post.
+
+
+===
+
+when I do a blog post generation, I observe an error:
+
+{
+"detail": {
+"error": "Blog generation failed: 'str' object has no attribute 'value'"
+}
+}
