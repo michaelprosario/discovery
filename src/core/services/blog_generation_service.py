@@ -163,9 +163,9 @@ class BlogGenerationService:
             print(f"DEBUG: Blog content generated, length: {len(blog_content)}")
 
             # Add references if requested
-            if command.include_references and source_references:
-                blog_content = self._add_references_to_blog(blog_content, source_references)
-                print("DEBUG: References added to blog content")
+            # if command.include_references and source_references:
+            #     blog_content = self._add_references_to_blog(blog_content, source_references)
+            #     print("DEBUG: References added to blog content")
 
             # Complete the generation
             print("DEBUG: Completing generation")
