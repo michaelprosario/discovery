@@ -4,6 +4,8 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from pydantic import BaseModel, Field
 
+from src.core.interfaces.repositories.i_notebook_repository import INotebookRepository
+
 from ..core.services.vector_ingestion_service import VectorIngestionService
 from ..core.services.content_similarity_service import ContentSimilarityService
 from ..core.commands.vector_commands import (
@@ -157,7 +159,7 @@ def get_content_similarity_service() -> ContentSimilarityService:
         vector_db_provider.close()
         db.close()
 
-def get_collection_name(notebook_id: UUID) -> str:
+def get_collection_name(notebook_id: UUID, notebook_repo: INotebookRepository) -> str:
     """
     Helper to get collection name for a notebook.
     
@@ -170,11 +172,25 @@ def get_collection_name(notebook_id: UUID) -> str:
         notebook_id: UUID of the notebook
         
     Returns:
-        Valid Weaviate collection name in format: Notebook{uuid_without_hyphens}
+        Valid Weaviate collection name in format: note book name with spaces replaced by hyphens and invalid characters removed.    
     """
-    # Remove hyphens from UUID and ensure it starts with uppercase
-    clean_uuid = str(notebook_id).replace("-", "")
-    return f"Notebook{clean_uuid}"
+    
+    ## load the notebook via the id
+    notebook = notebook_repo.get_by_id(notebook_id)
+    if not notebook:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+
+    print(notebook.value)
+
+    collection_name = notebook.value.name
+
+    # convert whole name to upper case
+    collection_name = collection_name.upper()
+
+    # Remove invalid characters
+    collection_name = ''.join(char for char in collection_name if char.isalnum())
+
+    return collection_name
 
 # Endpoints
 @router.post(
@@ -208,7 +224,7 @@ def ingest_notebook(
     Raises:
         HTTPException: 404 if notebook not found, 500 if ingestion fails
     """
-    collection_name = get_collection_name(notebook_id)
+    collection_name = get_collection_name(notebook_id, service._notebook_repository)
     command = IngestNotebookCommand(
         notebook_id=notebook_id,
         collection_name=collection_name,
@@ -273,7 +289,7 @@ def search_similar_content(
     search_query = SimilaritySearchQuery(
         notebook_id=notebook_id,
         query_text=query,
-        collection_name=get_collection_name(notebook_id),
+        collection_name=get_collection_name(notebook_id, service._notebook_repository),
         limit=limit
     )
 
@@ -336,7 +352,7 @@ def get_vector_count(
     """
     query = GetVectorCountQuery(
         notebook_id=notebook_id,
-        collection_name=get_collection_name(notebook_id)
+        collection_name=get_collection_name(notebook_id, service._notebook_repository)
     )
 
     result = service.get_vector_count(query)
@@ -385,7 +401,7 @@ def delete_notebook_vectors(
     """
     command = DeleteNotebookVectorsCommand(
         notebook_id=notebook_id,
-        collection_name=get_collection_name(notebook_id)
+        collection_name=get_collection_name(notebook_id, service._notebook_repository)
     )
 
     result = service.delete_notebook_vectors(command)
@@ -461,7 +477,7 @@ def create_collection(
         db.close()
 
     # Get collection name using the existing helper function
-    collection_name = get_collection_name(notebook_id)
+    collection_name = get_collection_name(notebook_id, notebook_repository)
 
     # Create vector database provider
     weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
@@ -496,89 +512,6 @@ def create_collection(
             message=message,
             created=not already_existed
         )
-
-    finally:
-        vector_db_provider.close()
-
-
-@router.get(
-    "/{notebook_id}/collection/debug",
-    responses={
-        404: {"model": ErrorResponse, "description": "Notebook not found"},
-        500: {"model": ErrorResponse, "description": "Debug failed"}
-    }
-)
-def debug_collection(
-    notebook_id: UUID
-):
-    """
-    Debug endpoint to check collection contents and counts.
-    
-    This endpoint helps troubleshoot collection issues by showing both
-    filtered and unfiltered counts, plus sample data.
-    """
-    from ..infrastructure.providers.weaviate_vector_database_provider import WeaviateVectorDatabaseProvider
-    import os
-
-    collection_name = get_collection_name(notebook_id)
-    
-    # Create vector database provider
-    weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-    weaviate_key = os.getenv("WEAVIATE_KEY")
-    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
-
-    try:
-        # Check if collection exists
-        exists_result = vector_db_provider.collection_exists(collection_name)
-        if exists_result.is_failure or not exists_result.value:
-            return {
-                "collection_name": collection_name,
-                "exists": False,
-                "error": exists_result.error if exists_result.is_failure else "Collection does not exist"
-            }
-
-        # Get total count (no filter)
-        total_count_result = vector_db_provider.get_document_count(collection_name, None)
-        total_count = total_count_result.value if total_count_result.is_success else 0
-
-        # Get filtered count (with notebook_id filter)
-        filtered_count_result = vector_db_provider.get_document_count(
-            collection_name, 
-            {"notebook_id": str(notebook_id)}
-        )
-        filtered_count = filtered_count_result.value if filtered_count_result.is_success else 0
-
-        # Try to get a sample document to see the structure
-        client = vector_db_provider._get_client()
-        collection = client.collections.get(collection_name)
-        
-        sample_docs = []
-        try:
-            response = collection.query.fetch_objects(limit=3)
-            for obj in response.objects:
-                sample_docs.append({
-                    "id": str(obj.uuid),
-                    "properties": dict(obj.properties)
-                })
-        except:
-            try:
-                response = collection.query.near_text(query="", limit=3)
-                for obj in response.objects:
-                    sample_docs.append({
-                        "id": str(obj.uuid),
-                        "properties": dict(obj.properties)
-                    })
-            except Exception as e:
-                sample_docs = [{"error": f"Could not fetch sample: {str(e)}"}]
-
-        return {
-            "collection_name": collection_name,
-            "exists": True,
-            "total_count": total_count,
-            "filtered_count": filtered_count,
-            "filter_used": {"notebook_id": str(notebook_id)},
-            "sample_documents": sample_docs
-        }
 
     finally:
         vector_db_provider.close()
