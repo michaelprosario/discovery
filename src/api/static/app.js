@@ -74,6 +74,7 @@ class DiscoveryApp {
         // Blog post generation
         document.getElementById('generateBlogPostBtn').addEventListener('click', () => this.showBlogPostModal());
         document.getElementById('blogPostForm').addEventListener('submit', (e) => this.handleBlogPostSubmit(e));
+        document.getElementById('regenerateBlogPostBtn').addEventListener('click', () => this.regenerateBlogPost());
         document.getElementById('copyBlogPostBtn').addEventListener('click', () => this.copyBlogPost());
         document.getElementById('downloadBlogPostBtn').addEventListener('click', () => this.downloadBlogPost());
         document.getElementById('editBlogPostBtn').addEventListener('click', () => this.editBlogPost());
@@ -1585,6 +1586,63 @@ class DiscoveryApp {
             step.classList.remove('active', 'completed');
         });
         document.querySelector('.progress-fill').style.width = '0%';
+    }
+
+    async regenerateBlogPost() {
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'No notebook selected', 'error');
+            return;
+        }
+
+        // Extract current form data from the form
+        const form = document.getElementById('blogPostForm');
+        const formData = new FormData(form);
+        const blogPostData = {
+            title: formData.get('title').trim(),
+            prompt: formData.get('prompt')?.trim() || null,
+            tone: formData.get('tone'),
+            target_word_count: parseInt(formData.get('wordCount')),
+            template: formData.get('template') || null,
+            include_references: formData.get('includeReferences') === 'on'
+        };
+
+        if (!blogPostData.title) {
+            this.showToast('Error', 'Please enter a title', 'error');
+            return;
+        }
+
+        // Show confirmation without changing UI state yet
+        this.showConfirmation(
+            'Regenerate Blog Post',
+            'Are you sure you want to regenerate the blog post? This will replace the current content.',
+            async () => {
+                try {
+                    // Show a brief "starting regeneration" message
+                    this.showToast('Info', 'Starting regeneration...', 'info');
+                    
+                    // Small delay for better UX
+                    await this.delay(300);
+                    
+                    // Now hide the result section and start regeneration
+                    document.getElementById('blogPostResult').classList.add('hidden');
+                    
+                    // Reset the generation UI to show form and progress
+                    document.getElementById('generateBlogPostSubmitBtn').classList.remove('hidden');
+                    document.getElementById('saveBlogPostBtn').classList.add('hidden');
+                    
+                    // Start the generation process
+                    await this.generateBlogPost(blogPostData);
+                } catch (error) {
+                    console.error('Blog post regeneration error:', error);
+                    this.showToast('Error', 'Failed to regenerate blog post', 'error');
+                    
+                    // Restore the result section on error
+                    document.getElementById('blogPostResult').classList.remove('hidden');
+                    document.getElementById('generateBlogPostSubmitBtn').classList.add('hidden');
+                    document.getElementById('saveBlogPostBtn').classList.remove('hidden');
+                }
+            }
+        );
     }
 
     delay(ms) {

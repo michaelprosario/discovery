@@ -16,3 +16,11 @@ when I do a blog post generation, I observe an error:
 "error": "Blog generation failed: 'str' object has no attribute 'value'"
 }
 }
+
+====
+
+on the generate blog post screen, after creating a blog post.. I should still have the ability to re-generate content
+
+====
+
+On the discovery notebook screen, I  can fsee a list of outputs that have been generated for the notebook. ( blog posts and future data types)  I should be able to download the output.  I should be able to delete the output(please add confirm for delete)  I should be able to view the output

@@ -489,6 +489,24 @@ body {
     background: #e53e3e;
 }
 
+.btn-success {
+    background: #48bb78;
+    color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #38a169;
+}
+
+.btn-warning {
+    background: #ed8936;
+    color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background: #dd6b20;
+}
+
 .btn-icon {
     padding: 0.5rem;
     min-width: auto;
@@ -578,6 +596,11 @@ body {
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s;
+}
+
+/* Confirmation modal should appear above other modals */
+#confirmationModal {
+    z-index: 2100;
 }
 
 .modal.active {
