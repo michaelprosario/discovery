@@ -22,5 +22,26 @@ when I do a blog post generation, I observe an error:
 on the generate blog post screen, after creating a blog post.. I should still have the ability to re-generate content
 
 ====
+Given
+- I have opened a notebook
+- I have linked a source to the notebook with valid data
+- I have ingested the source into my vector database
+- I have started the "generate blog post" screen
+- I have filled out valid inputs
 
-On the discovery notebook screen, I  can fsee a list of outputs that have been generated for the notebook. ( blog posts and future data types)  I should be able to download the output.  I should be able to delete the output(please add confirm for delete)  I should be able to view the output
+When 
+- I click "save blog post"
+
+Then
+- I should not receive an error.
+
+app.js:1574  Save error: TypeError: this.loadNotebook is not a function
+    at DiscoveryApp.saveBlogPost (app.js:1571:28)
+    at HTMLButtonElement.<anonymous> (app.js:81:89)
+
+====
+- Explore ux files here: src/api/static
+- On the discovery notebook screen, I should see a list of outputs that have been generated for the notebook. ( blog posts and future data types)  
+    - I should be able to download the output.  (text)
+    - I should be able to delete the output(please add confirm for delete)  
+    - I should be able to view the output

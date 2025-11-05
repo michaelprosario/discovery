@@ -5,6 +5,7 @@ class DiscoveryApp {
         this.currentNotebook = null;
         this.notebooks = [];
         this.sources = [];
+        this.outputs = [];
         this.apiBase = '/api';
         
         this.init();
@@ -49,6 +50,11 @@ class DiscoveryApp {
         document.getElementById('addBySearchBtn').addEventListener('click', () => this.showSearchSourceModal());
         document.getElementById('sourcesFilter').addEventListener('input', () => this.filterSources());
         document.getElementById('sourceTypeFilter').addEventListener('change', () => this.filterSources());
+        
+        // Output actions
+        document.getElementById('refreshOutputsBtn').addEventListener('click', () => this.loadOutputs());
+        document.getElementById('downloadOutputBtn').addEventListener('click', () => this.downloadCurrentOutput());
+        document.getElementById('deleteOutputFromViewerBtn').addEventListener('click', () => this.deleteCurrentOutput());
         
         // Forms
         document.getElementById('notebookForm').addEventListener('submit', (e) => this.handleNotebookSubmit(e));
@@ -192,6 +198,7 @@ class DiscoveryApp {
             this.currentNotebook = notebook;
             this.renderNotebookView();
             await this.loadSources();
+            await this.loadOutputs();
             
             // Update active state in sidebar
             document.querySelectorAll('.notebook-item').forEach(item => {
@@ -755,6 +762,203 @@ class DiscoveryApp {
                 }
             }
         );
+    }
+
+    // Output Methods
+    async loadOutputs() {
+        if (!this.currentNotebook) return;
+        
+        try {
+            const response = await this.apiCall(`/outputs?notebook_id=${this.currentNotebook.id}`);
+            this.outputs = response.outputs || [];
+            this.renderOutputs();
+        } catch (error) {
+            console.error('Failed to load outputs:', error);
+        }
+    }
+
+    renderOutputs() {
+        const container = document.getElementById('outputsList');
+        
+        if (!this.outputs || this.outputs.length === 0) {
+            container.innerHTML = `
+                <div class="no-outputs">
+                    <i class="fas fa-file-alt"></i>
+                    <p>No outputs yet. Generate blog posts or other outputs to see them here.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = this.outputs.map(output => {
+            const icon = this.getOutputIcon(output.output_type);
+            const preview = this.getOutputPreview(output);
+            const statusBadge = this.getOutputStatusBadge(output.status);
+            
+            return `
+                <div class="output-item" data-id="${output.id}">
+                    <div class="output-item-header">
+                        <div class="output-item-title">${this.escapeHtml(output.title)}</div>
+                        <div class="output-item-actions">
+                            <button class="btn btn-icon btn-sm" onclick="app.viewOutput('${output.id}')" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-icon btn-sm" onclick="app.downloadOutput('${output.id}')" title="Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn btn-icon btn-sm" onclick="app.deleteOutput('${output.id}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="output-item-type">
+                        <i class="${icon}"></i>
+                        <span>${this.formatOutputType(output.output_type)}</span>
+                        ${statusBadge}
+                    </div>
+                    <div class="output-item-preview">${this.escapeHtml(preview)}</div>
+                    <div class="output-item-meta">
+                        <div class="output-item-stats">
+                            <span>${output.word_count || 0} words</span>
+                            <span>Created ${this.formatDate(output.created_at)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    getOutputIcon(outputType) {
+        switch (outputType) {
+            case 'blog_post': return 'fas fa-pen-fancy';
+            case 'summary': return 'fas fa-file-alt';
+            case 'report': return 'fas fa-file-contract';
+            default: return 'fas fa-file';
+        }
+    }
+
+    getOutputPreview(output) {
+        if (!output.content) return 'No content available';
+        
+        // Remove HTML tags and get first 200 characters
+        const plainText = output.content.replace(/<[^>]*>/g, '').replace(/\n/g, ' ');
+        return plainText.substring(0, 200) + (plainText.length > 200 ? '...' : '');
+    }
+
+    getOutputStatusBadge(status) {
+        const badges = {
+            'completed': '<span style="color: #48bb78;">●</span>',
+            'in_progress': '<span style="color: #ed8936;">●</span>',
+            'failed': '<span style="color: #f56565;">●</span>',
+            'draft': '<span style="color: #a0aec0;">●</span>'
+        };
+        return badges[status] || '';
+    }
+
+    formatOutputType(outputType) {
+        const types = {
+            'blog_post': 'Blog Post',
+            'summary': 'Summary',
+            'report': 'Report',
+            'analysis': 'Analysis'
+        };
+        return types[outputType] || outputType;
+    }
+
+    async viewOutput(outputId) {
+        try {
+            this.showLoading('Loading output...');
+            const output = await this.apiCall(`/outputs/${outputId}`);
+            
+            document.getElementById('outputViewerTitle').textContent = output.title;
+            document.getElementById('outputContent').innerHTML = this.formatBlogPostContent(output.content);
+            
+            // Store current output for download/delete actions
+            this.currentOutput = output;
+            
+            this.showModal('outputViewerModal');
+        } catch (error) {
+            console.error('Failed to view output:', error);
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async downloadOutput(outputId) {
+        try {
+            this.showLoading('Preparing download...');
+            const output = await this.apiCall(`/outputs/${outputId}`);
+            
+            // Create plain text version
+            const plainText = output.content
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"');
+            
+            const blob = new Blob([plainText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${output.title}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            this.showToast('Success', 'Output downloaded', 'success');
+        } catch (error) {
+            console.error('Failed to download output:', error);
+            this.showToast('Error', 'Failed to download output', 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    deleteOutput(outputId) {
+        const output = this.outputs.find(o => o.id === outputId);
+        if (!output) return;
+        
+        this.showConfirmation(
+            'Delete Output',
+            `Are you sure you want to delete "${output.title}"? This action cannot be undone.`,
+            async () => {
+                try {
+                    this.showLoading('Deleting output...');
+                    await this.apiCall(`/outputs/${outputId}`, {
+                        method: 'DELETE'
+                    });
+                    this.showToast('Success', 'Output deleted successfully', 'success');
+                    await this.loadOutputs();
+                    
+                    // Close the viewer modal if it's open
+                    if (this.currentOutput && this.currentOutput.id === outputId) {
+                        this.closeModal('outputViewerModal');
+                        this.currentOutput = null;
+                    }
+                } catch (error) {
+                    console.error('Failed to delete output:', error);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+        );
+    }
+
+    async downloadCurrentOutput() {
+        if (!this.currentOutput) return;
+        await this.downloadOutput(this.currentOutput.id);
+    }
+
+    deleteCurrentOutput() {
+        if (!this.currentOutput) return;
+        
+        // Close the modal first, then show confirmation
+        this.closeModal('outputViewerModal');
+        this.deleteOutput(this.currentOutput.id);
     }
 
     // Vector Search Methods
@@ -1442,6 +1646,9 @@ class DiscoveryApp {
         
         // Show save button
         document.getElementById('saveBlogPostBtn').classList.remove('hidden');
+        
+        // Refresh outputs list to show the new blog post
+        this.loadOutputs();
     }
 
     formatBlogPostContent(content) {
@@ -1566,10 +1773,8 @@ class DiscoveryApp {
             this.showToast('Success', 'Blog post has been saved', 'success');
             this.closeModal('blogPostModal');
             
-            // Optionally refresh the notebook view to show the new output
-            if (this.currentNotebook) {
-                await this.loadNotebook(this.currentNotebook.id);
-            }
+            // Refresh outputs to show the new blog post
+            await this.loadOutputs();
         } catch (error) {
             console.error('Save error:', error);
             this.showToast('Error', 'Failed to save blog post', 'error');

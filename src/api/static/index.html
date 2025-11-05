@@ -155,6 +155,22 @@
                         </div>
                     </div>
 
+                    <!-- Outputs Section -->
+                    <div class="outputs-section">
+                        <div class="outputs-header">
+                            <h3>Outputs</h3>
+                            <button id="refreshOutputsBtn" class="btn btn-icon" title="Refresh">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        <div id="outputsList" class="outputs-list">
+                            <div class="no-outputs">
+                                <i class="fas fa-file-alt"></i>
+                                <p>No outputs yet. Generate blog posts or other outputs to see them here.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- QA Section -->
                     <div id="qaSection" class="qa-section hidden">
                         <div class="qa-header">
@@ -384,6 +400,32 @@
                     <i class="fas fa-search"></i> Search
                 </button>
                 <div id="semanticSearchResults" class="search-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Output Viewer Modal -->
+    <div id="outputViewerModal" class="modal modal-large">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="outputViewerTitle">Output Content</h3>
+                <div class="modal-header-actions">
+                    <button id="downloadOutputBtn" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                    <button id="deleteOutputFromViewerBtn" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <button class="modal-close" data-modal="outputViewerModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="output-viewer-content">
+                    <div id="outputContentLoader" class="loading">Loading content...</div>
+                    <div id="outputContent" class="output-content"></div>
+                </div>
             </div>
         </div>
     </div>
