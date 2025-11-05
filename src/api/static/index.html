@@ -115,6 +115,9 @@
                                     <button id="qaToggleBtn" class="dropdown-item">
                                         <i class="fas fa-question-circle"></i> Ask Questions
                                     </button>
+                                    <button id="generateBlogPostBtn" class="dropdown-item">
+                                        <i class="fas fa-pen-fancy"></i> Generate Blog Post
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -148,6 +151,22 @@
                             <div class="no-sources">
                                 <i class="fas fa-folder-open"></i>
                                 <p>No sources yet. Add files or URLs to get started.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Outputs Section -->
+                    <div class="outputs-section">
+                        <div class="outputs-header">
+                            <h3>Outputs</h3>
+                            <button id="refreshOutputsBtn" class="btn btn-icon" title="Refresh">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        <div id="outputsList" class="outputs-list">
+                            <div class="no-outputs">
+                                <i class="fas fa-file-alt"></i>
+                                <p>No outputs yet. Generate blog posts or other outputs to see them here.</p>
                             </div>
                         </div>
                     </div>
@@ -385,6 +404,32 @@
         </div>
     </div>
 
+    <!-- Output Viewer Modal -->
+    <div id="outputViewerModal" class="modal modal-large">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="outputViewerTitle">Output Content</h3>
+                <div class="modal-header-actions">
+                    <button id="downloadOutputBtn" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                    <button id="deleteOutputFromViewerBtn" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <button class="modal-close" data-modal="outputViewerModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="output-viewer-content">
+                    <div id="outputContentLoader" class="loading">Loading content...</div>
+                    <div id="outputContent" class="output-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Confirmation Modal -->
     <div id="confirmationModal" class="modal">
         <div class="modal-content">
@@ -400,6 +445,131 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-modal="confirmationModal">Cancel</button>
                 <button type="button" id="confirmActionBtn" class="btn btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generate Blog Post Modal -->
+    <div id="blogPostModal" class="modal modal-large">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Generate Blog Post</h3>
+                <button class="modal-close" data-modal="blogPostModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="blogPostForm">
+                    <div class="form-group">
+                        <label for="blogPostTitle">Blog Post Title *</label>
+                        <input type="text" id="blogPostTitle" name="title" required maxlength="500" class="form-input" 
+                               placeholder="Enter a compelling title for your blog post">
+                    </div>
+                    <div class="form-group">
+                        <label for="blogPostPrompt">Custom Prompt (optional)</label>
+                        <textarea id="blogPostPrompt" name="prompt" maxlength="5000" class="form-textarea" rows="4" 
+                                placeholder="Provide specific instructions for how you want the blog post written (e.g., 'Focus on practical tips', 'Write for beginners', 'Include technical details')"></textarea>
+                        <small class="form-help">Leave empty to use the default blog post generation approach</small>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="blogPostTone">Tone</label>
+                            <select id="blogPostTone" name="tone" class="form-select">
+                                <option value="informative" selected>Informative</option>
+                                <option value="casual">Casual</option>
+                                <option value="formal">Formal</option>
+                                <option value="conversational">Conversational</option>
+                                <option value="academic">Academic</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="blogPostWordCount">Target Word Count</label>
+                            <select id="blogPostWordCount" name="wordCount" class="form-select">
+                                <option value="400">400 words</option>
+                                <option value="550" selected>550 words</option>
+                                <option value="700">700 words</option>
+                                <option value="1000">1000 words</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="blogPostTemplate">Template (optional)</label>
+                        <select id="blogPostTemplate" name="template" class="form-select">
+                            <option value="">Default Structure</option>
+                            <option value="how-to">How-To Guide</option>
+                            <option value="listicle">List Article</option>
+                            <option value="comparison">Comparison/Review</option>
+                            <option value="case-study">Case Study</option>
+                            <option value="opinion">Opinion/Editorial</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="includeReferences" name="includeReferences" checked>
+                            <span class="checkmark"></span>
+                            Include reference links at the bottom
+                        </label>
+                    </div>
+                </form>
+                <div id="blogPostProgress" class="generation-progress hidden">
+                    <div class="progress-header">
+                        <i class="fas fa-magic"></i>
+                        <h4>Generating Blog Post...</h4>
+                    </div>
+                    <div class="progress-steps">
+                        <div class="progress-step" data-step="extract">
+                            <i class="fas fa-file-text"></i>
+                            <span>Extracting content from sources</span>
+                            <div class="step-status"></div>
+                        </div>
+                        <div class="progress-step" data-step="generate">
+                            <i class="fas fa-brain"></i>
+                            <span>Generating blog post with AI</span>
+                            <div class="step-status"></div>
+                        </div>
+                        <div class="progress-step" data-step="complete">
+                            <i class="fas fa-check"></i>
+                            <span>Finalizing and adding references</span>
+                            <div class="step-status"></div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <div id="blogPostResult" class="blog-post-result hidden">
+                    <div class="result-header">
+                        <h4>Generated Blog Post</h4>
+                        <div class="result-actions">
+                            <button id="regenerateBlogPostBtn" class="btn btn-warning btn-sm">
+                                <i class="fas fa-sync-alt"></i> Regenerate
+                            </button>
+                            <button id="copyBlogPostBtn" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                            <button id="downloadBlogPostBtn" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button id="editBlogPostBtn" class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                    </div>
+                    <div id="blogPostContent" class="blog-post-content"></div>
+                    <div class="result-stats">
+                        <span id="blogPostWordCountDisplay">0 words</span>
+                        <span id="blogPostGenTime">Generated in 0s</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal="blogPostModal">Close</button>
+                <button type="submit" form="blogPostForm" id="generateBlogPostSubmitBtn" class="btn btn-primary">
+                    <i class="fas fa-magic"></i> Generate Blog Post
+                </button>
+                <button id="saveBlogPostBtn" class="btn btn-success hidden">
+                    <i class="fas fa-save"></i> Save Blog Post
+                </button>
             </div>
         </div>
     </div>

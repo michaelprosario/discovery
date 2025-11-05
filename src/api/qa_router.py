@@ -4,6 +4,8 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from pydantic import BaseModel, Field
 
+from src.core.entities.notebook import Notebook
+
 from ..core.services.qa_rag_service import QaRagService
 from ..core.commands.qa_commands import AskQuestionCommand
 from ..core.interfaces.providers.i_llm_provider import LlmGenerationParameters
@@ -77,7 +79,7 @@ def get_qa_rag_service(
     )
 
 
-def get_collection_name(notebook_id: UUID) -> str:
+def get_collection_name(notebook: Notebook) -> str:
     """
     Helper to get collection name for a notebook.
     
@@ -90,11 +92,17 @@ def get_collection_name(notebook_id: UUID) -> str:
         notebook_id: UUID of the notebook
         
     Returns:
-        Valid Weaviate collection name in format: Notebook{uuid_without_hyphens}
-    """
-    # Remove hyphens from UUID and ensure it starts with uppercase
-    clean_uuid = str(notebook_id).replace("-", "")
-    return f"Notebook{clean_uuid}"
+        Valid Weaviate collection name in format: note book name with spaces replaced by hyphens and invalid characters removed.    
+    """    
+    collection_name = notebook.name
+
+    # convert whole name to upper case
+    collection_name = collection_name.upper()
+
+    # Remove invalid characters
+    collection_name = ''.join(char for char in collection_name if char.isalnum())
+
+    return collection_name
 
 
 # Endpoints
@@ -133,7 +141,10 @@ def ask_question(
         HTTPException: 404 if notebook not found, 400 for invalid input, 500 for operation failure
     """
     # Generate collection name for this notebook
-    collection_name = get_collection_name(notebook_id)
+
+    notebook = service._notebook_repository.get_by_id(notebook_id)
+
+    collection_name = get_collection_name(notebook.value)
     
     # Create LLM parameters
     llm_parameters = LlmGenerationParameters(

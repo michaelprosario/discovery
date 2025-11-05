@@ -187,7 +187,7 @@ class QaRagService:
             citation_instruction = """
 When referencing information from the context, please cite the source using the format [1], [2], etc. to indicate which context chunk the information came from."""
 
-        prompt = f"""You are a helpful assistant that answers questions based on the provided context. Use only the information from the context to answer the question. If the context doesn't contain enough information to answer the question completely, say so.{citation_instruction}
+        prompt = f"""You are a helpful assistant that answers questions based on the provided context. Provide answers around 400 words.  Use only the information from the context to answer the question. If the context doesn't contain enough information to answer the question completely, say so.{citation_instruction}
 
 Context:
 {context_section}

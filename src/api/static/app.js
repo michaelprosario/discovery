@@ -5,6 +5,7 @@ class DiscoveryApp {
         this.currentNotebook = null;
         this.notebooks = [];
         this.sources = [];
+        this.outputs = [];
         this.apiBase = '/api';
         
         this.init();
@@ -50,6 +51,11 @@ class DiscoveryApp {
         document.getElementById('sourcesFilter').addEventListener('input', () => this.filterSources());
         document.getElementById('sourceTypeFilter').addEventListener('change', () => this.filterSources());
         
+        // Output actions
+        document.getElementById('refreshOutputsBtn').addEventListener('click', () => this.loadOutputs());
+        document.getElementById('downloadOutputBtn').addEventListener('click', () => this.downloadCurrentOutput());
+        document.getElementById('deleteOutputFromViewerBtn').addEventListener('click', () => this.deleteCurrentOutput());
+        
         // Forms
         document.getElementById('notebookForm').addEventListener('submit', (e) => this.handleNotebookSubmit(e));
         document.getElementById('fileSourceForm').addEventListener('submit', (e) => this.handleFileSourceSubmit(e));
@@ -70,6 +76,15 @@ class DiscoveryApp {
                 this.askQuestion();
             }
         });
+        
+        // Blog post generation
+        document.getElementById('generateBlogPostBtn').addEventListener('click', () => this.showBlogPostModal());
+        document.getElementById('blogPostForm').addEventListener('submit', (e) => this.handleBlogPostSubmit(e));
+        document.getElementById('regenerateBlogPostBtn').addEventListener('click', () => this.regenerateBlogPost());
+        document.getElementById('copyBlogPostBtn').addEventListener('click', () => this.copyBlogPost());
+        document.getElementById('downloadBlogPostBtn').addEventListener('click', () => this.downloadBlogPost());
+        document.getElementById('editBlogPostBtn').addEventListener('click', () => this.editBlogPost());
+        document.getElementById('saveBlogPostBtn').addEventListener('click', () => this.saveBlogPost());
         
         // Semantic search
         document.getElementById('executeSemanticSearchBtn').addEventListener('click', () => this.executeSemanticSearch());
@@ -183,6 +198,7 @@ class DiscoveryApp {
             this.currentNotebook = notebook;
             this.renderNotebookView();
             await this.loadSources();
+            await this.loadOutputs();
             
             // Update active state in sidebar
             document.querySelectorAll('.notebook-item').forEach(item => {
@@ -748,6 +764,203 @@ class DiscoveryApp {
         );
     }
 
+    // Output Methods
+    async loadOutputs() {
+        if (!this.currentNotebook) return;
+        
+        try {
+            const response = await this.apiCall(`/outputs?notebook_id=${this.currentNotebook.id}`);
+            this.outputs = response.outputs || [];
+            this.renderOutputs();
+        } catch (error) {
+            console.error('Failed to load outputs:', error);
+        }
+    }
+
+    renderOutputs() {
+        const container = document.getElementById('outputsList');
+        
+        if (!this.outputs || this.outputs.length === 0) {
+            container.innerHTML = `
+                <div class="no-outputs">
+                    <i class="fas fa-file-alt"></i>
+                    <p>No outputs yet. Generate blog posts or other outputs to see them here.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = this.outputs.map(output => {
+            const icon = this.getOutputIcon(output.output_type);
+            const preview = this.getOutputPreview(output);
+            const statusBadge = this.getOutputStatusBadge(output.status);
+            
+            return `
+                <div class="output-item" data-id="${output.id}">
+                    <div class="output-item-header">
+                        <div class="output-item-title">${this.escapeHtml(output.title)}</div>
+                        <div class="output-item-actions">
+                            <button class="btn btn-icon btn-sm" onclick="app.viewOutput('${output.id}')" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-icon btn-sm" onclick="app.downloadOutput('${output.id}')" title="Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn btn-icon btn-sm" onclick="app.deleteOutput('${output.id}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="output-item-type">
+                        <i class="${icon}"></i>
+                        <span>${this.formatOutputType(output.output_type)}</span>
+                        ${statusBadge}
+                    </div>
+                    <div class="output-item-preview">${this.escapeHtml(preview)}</div>
+                    <div class="output-item-meta">
+                        <div class="output-item-stats">
+                            <span>${output.word_count || 0} words</span>
+                            <span>Created ${this.formatDate(output.created_at)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    getOutputIcon(outputType) {
+        switch (outputType) {
+            case 'blog_post': return 'fas fa-pen-fancy';
+            case 'summary': return 'fas fa-file-alt';
+            case 'report': return 'fas fa-file-contract';
+            default: return 'fas fa-file';
+        }
+    }
+
+    getOutputPreview(output) {
+        if (!output.content) return 'No content available';
+        
+        // Remove HTML tags and get first 200 characters
+        const plainText = output.content.replace(/<[^>]*>/g, '').replace(/\n/g, ' ');
+        return plainText.substring(0, 200) + (plainText.length > 200 ? '...' : '');
+    }
+
+    getOutputStatusBadge(status) {
+        const badges = {
+            'completed': '<span style="color: #48bb78;">●</span>',
+            'in_progress': '<span style="color: #ed8936;">●</span>',
+            'failed': '<span style="color: #f56565;">●</span>',
+            'draft': '<span style="color: #a0aec0;">●</span>'
+        };
+        return badges[status] || '';
+    }
+
+    formatOutputType(outputType) {
+        const types = {
+            'blog_post': 'Blog Post',
+            'summary': 'Summary',
+            'report': 'Report',
+            'analysis': 'Analysis'
+        };
+        return types[outputType] || outputType;
+    }
+
+    async viewOutput(outputId) {
+        try {
+            this.showLoading('Loading output...');
+            const output = await this.apiCall(`/outputs/${outputId}`);
+            
+            document.getElementById('outputViewerTitle').textContent = output.title;
+            document.getElementById('outputContent').innerHTML = this.formatBlogPostContent(output.content);
+            
+            // Store current output for download/delete actions
+            this.currentOutput = output;
+            
+            this.showModal('outputViewerModal');
+        } catch (error) {
+            console.error('Failed to view output:', error);
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async downloadOutput(outputId) {
+        try {
+            this.showLoading('Preparing download...');
+            const output = await this.apiCall(`/outputs/${outputId}`);
+            
+            // Create plain text version
+            const plainText = output.content
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"');
+            
+            const blob = new Blob([plainText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${output.title}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            this.showToast('Success', 'Output downloaded', 'success');
+        } catch (error) {
+            console.error('Failed to download output:', error);
+            this.showToast('Error', 'Failed to download output', 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    deleteOutput(outputId) {
+        const output = this.outputs.find(o => o.id === outputId);
+        if (!output) return;
+        
+        this.showConfirmation(
+            'Delete Output',
+            `Are you sure you want to delete "${output.title}"? This action cannot be undone.`,
+            async () => {
+                try {
+                    this.showLoading('Deleting output...');
+                    await this.apiCall(`/outputs/${outputId}`, {
+                        method: 'DELETE'
+                    });
+                    this.showToast('Success', 'Output deleted successfully', 'success');
+                    await this.loadOutputs();
+                    
+                    // Close the viewer modal if it's open
+                    if (this.currentOutput && this.currentOutput.id === outputId) {
+                        this.closeModal('outputViewerModal');
+                        this.currentOutput = null;
+                    }
+                } catch (error) {
+                    console.error('Failed to delete output:', error);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+        );
+    }
+
+    async downloadCurrentOutput() {
+        if (!this.currentOutput) return;
+        await this.downloadOutput(this.currentOutput.id);
+    }
+
+    deleteCurrentOutput() {
+        if (!this.currentOutput) return;
+        
+        // Close the modal first, then show confirmation
+        this.closeModal('outputViewerModal');
+        this.deleteOutput(this.currentOutput.id);
+    }
+
     // Vector Search Methods
     async ingestNotebook() {
         if (!this.currentNotebook) return;
@@ -1272,6 +1485,373 @@ class DiscoveryApp {
         setTimeout(() => {
             element.scrollTop = element.scrollHeight;
         }, 100);
+    }
+
+    // Blog Post Generation Methods
+    showBlogPostModal() {
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'No notebook selected', 'error');
+            return;
+        }
+
+        if (!this.sources || this.sources.length === 0) {
+            this.showToast('Warning', 'This notebook has no sources. Add some sources to generate a meaningful blog post.', 'warning');
+        }
+
+        // Reset modal state
+        this.resetBlogPostModal();
+        
+        // Set default title based on notebook
+        document.getElementById('blogPostTitle').value = `${this.currentNotebook.name} - Insights and Analysis`;
+        
+        this.showModal('blogPostModal');
+    }
+
+    resetBlogPostModal() {
+        // Reset form
+        document.getElementById('blogPostForm').reset();
+        
+        // Hide progress and result sections
+        document.getElementById('blogPostProgress').classList.add('hidden');
+        document.getElementById('blogPostResult').classList.add('hidden');
+        
+        // Reset progress state
+        document.querySelectorAll('.progress-step').forEach(step => {
+            step.classList.remove('active', 'completed');
+        });
+        document.querySelector('.progress-fill').style.width = '0%';
+        
+        // Reset buttons
+        document.getElementById('generateBlogPostSubmitBtn').classList.remove('hidden');
+        document.getElementById('saveBlogPostBtn').classList.add('hidden');
+        
+        // Reset default values
+        document.getElementById('blogPostTone').value = 'informative';
+        document.getElementById('blogPostWordCount').value = '550';
+        document.getElementById('includeReferences').checked = true;
+    }
+
+    async handleBlogPostSubmit(event) {
+        event.preventDefault();
+        
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'No notebook selected', 'error');
+            return;
+        }
+
+        const formData = new FormData(event.target);
+        const blogPostData = {
+            title: formData.get('title').trim(),
+            prompt: formData.get('prompt')?.trim() || null,
+            tone: formData.get('tone'),
+            target_word_count: parseInt(formData.get('wordCount')),
+            template: formData.get('template') || null,
+            include_references: formData.get('includeReferences') === 'on'
+        };
+
+        if (!blogPostData.title) {
+            this.showToast('Error', 'Please enter a title', 'error');
+            return;
+        }
+
+        try {
+            await this.generateBlogPost(blogPostData);
+        } catch (error) {
+            console.error('Blog post generation error:', error);
+            this.showToast('Error', 'Failed to generate blog post', 'error');
+            this.resetBlogPostGenerationUI();
+        }
+    }
+
+    async generateBlogPost(blogPostData) {
+        // Show progress section
+        document.getElementById('blogPostProgress').classList.remove('hidden');
+        document.getElementById('generateBlogPostSubmitBtn').classList.add('hidden');
+        
+        const startTime = Date.now();
+        
+        try {
+            // Step 1: Extract content
+            this.updateGenerationProgress('extract', 'active');
+            await this.delay(500); // Visual feedback
+            
+            // Step 2: Generate content
+            this.updateGenerationProgress('extract', 'completed');
+            this.updateGenerationProgress('generate', 'active');
+            this.updateProgressBar(40);
+            
+            // Make API call
+            const response = await this.apiCall(`/notebooks/${this.currentNotebook.id}/generate-blog-post`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(blogPostData)
+            });
+
+            this.updateProgressBar(80);
+            
+            // Step 3: Complete
+            this.updateGenerationProgress('generate', 'completed');
+            this.updateGenerationProgress('complete', 'active');
+            await this.delay(300);
+            
+            this.updateGenerationProgress('complete', 'completed');
+            this.updateProgressBar(100);
+            
+            const endTime = Date.now();
+            const generationTime = Math.round((endTime - startTime) / 1000);
+            
+            // Show result
+            this.displayBlogPostResult(response, generationTime);
+            
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    updateGenerationProgress(step, status) {
+        const stepElement = document.querySelector(`[data-step="${step}"]`);
+        if (stepElement) {
+            stepElement.classList.remove('active', 'completed');
+            if (status) {
+                stepElement.classList.add(status);
+            }
+        }
+    }
+
+    updateProgressBar(percentage) {
+        const progressFill = document.querySelector('.progress-fill');
+        if (progressFill) {
+            progressFill.style.width = `${percentage}%`;
+        }
+    }
+
+    displayBlogPostResult(blogPost, generationTime) {
+        // Hide progress, show result
+        document.getElementById('blogPostProgress').classList.add('hidden');
+        document.getElementById('blogPostResult').classList.remove('hidden');
+        
+        // Set content
+        const contentDiv = document.getElementById('blogPostContent');
+        contentDiv.innerHTML = this.formatBlogPostContent(blogPost.content);
+        
+        // Update stats
+        const wordCount = this.countWords(blogPost.content);
+        document.getElementById('blogPostWordCountDisplay').textContent = `${wordCount} words`;
+        document.getElementById('blogPostGenTime').textContent = `Generated in ${generationTime}s`;
+        
+        // Store for later actions
+        this.currentBlogPost = blogPost;
+        
+        // Show save button
+        document.getElementById('saveBlogPostBtn').classList.remove('hidden');
+        
+        // Refresh outputs list to show the new blog post
+        this.loadOutputs();
+    }
+
+    formatBlogPostContent(content) {
+        // Convert markdown-like formatting to HTML
+        return content
+            .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+            .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+            .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/^(.+)$/gm, '<p>$1</p>')
+            .replace(/<p><h([1-6])>/g, '<h$1>')
+            .replace(/<\/h([1-6])><\/p>/g, '</h$1>')
+            .replace(/<p><\/p>/g, '');
+    }
+
+    countWords(text) {
+        // Remove HTML tags and count words
+        const plainText = text.replace(/<[^>]*>/g, '');
+        return plainText.trim().split(/\s+/).filter(word => word.length > 0).length;
+    }
+
+    async copyBlogPost() {
+        if (!this.currentBlogPost) return;
+        
+        try {
+            // Create plain text version
+            const plainText = this.currentBlogPost.content
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"');
+            
+            await navigator.clipboard.writeText(plainText);
+            this.showToast('Success', 'Blog post copied to clipboard', 'success');
+        } catch (error) {
+            console.error('Copy error:', error);
+            this.showToast('Error', 'Failed to copy blog post', 'error');
+        }
+    }
+
+    downloadBlogPost() {
+        if (!this.currentBlogPost) return;
+        
+        try {
+            // Create plain text version
+            const plainText = this.currentBlogPost.content
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"');
+            
+            const blob = new Blob([plainText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${this.currentNotebook.name}_blog_post.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            this.showToast('Success', 'Blog post downloaded', 'success');
+        } catch (error) {
+            console.error('Download error:', error);
+            this.showToast('Error', 'Failed to download blog post', 'error');
+        }
+    }
+
+    editBlogPost() {
+        if (!this.currentBlogPost) return;
+        
+        // Make content editable
+        const contentDiv = document.getElementById('blogPostContent');
+        contentDiv.contentEditable = true;
+        contentDiv.classList.add('editing');
+        contentDiv.focus();
+        
+        // Change button to save
+        const editBtn = document.getElementById('editBlogPostBtn');
+        editBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        editBtn.onclick = () => this.saveEditedBlogPost();
+        
+        this.showToast('Info', 'Blog post is now editable. Click "Save Changes" when done.', 'info');
+    }
+
+    saveEditedBlogPost() {
+        const contentDiv = document.getElementById('blogPostContent');
+        
+        // Update current blog post content
+        this.currentBlogPost.content = contentDiv.innerHTML;
+        
+        // Make content non-editable
+        contentDiv.contentEditable = false;
+        contentDiv.classList.remove('editing');
+        
+        // Restore edit button
+        const editBtn = document.getElementById('editBlogPostBtn');
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+        editBtn.onclick = () => this.editBlogPost();
+        
+        // Update word count
+        const wordCount = this.countWords(this.currentBlogPost.content);
+        document.getElementById('blogPostWordCountDisplay').textContent = `${wordCount} words`;
+        
+        this.showToast('Success', 'Blog post changes saved', 'success');
+    }
+
+    async saveBlogPost() {
+        if (!this.currentBlogPost) return;
+        
+        try {
+            // Blog post is already saved in the database when generated
+            // This could trigger additional actions like adding to a collection
+            this.showToast('Success', 'Blog post has been saved', 'success');
+            this.closeModal('blogPostModal');
+            
+            // Refresh outputs to show the new blog post
+            await this.loadOutputs();
+        } catch (error) {
+            console.error('Save error:', error);
+            this.showToast('Error', 'Failed to save blog post', 'error');
+        }
+    }
+
+    resetBlogPostGenerationUI() {
+        // Reset progress section
+        document.getElementById('blogPostProgress').classList.add('hidden');
+        document.getElementById('generateBlogPostSubmitBtn').classList.remove('hidden');
+        
+        // Reset progress state
+        document.querySelectorAll('.progress-step').forEach(step => {
+            step.classList.remove('active', 'completed');
+        });
+        document.querySelector('.progress-fill').style.width = '0%';
+    }
+
+    async regenerateBlogPost() {
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'No notebook selected', 'error');
+            return;
+        }
+
+        // Extract current form data from the form
+        const form = document.getElementById('blogPostForm');
+        const formData = new FormData(form);
+        const blogPostData = {
+            title: formData.get('title').trim(),
+            prompt: formData.get('prompt')?.trim() || null,
+            tone: formData.get('tone'),
+            target_word_count: parseInt(formData.get('wordCount')),
+            template: formData.get('template') || null,
+            include_references: formData.get('includeReferences') === 'on'
+        };
+
+        if (!blogPostData.title) {
+            this.showToast('Error', 'Please enter a title', 'error');
+            return;
+        }
+
+        // Show confirmation without changing UI state yet
+        this.showConfirmation(
+            'Regenerate Blog Post',
+            'Are you sure you want to regenerate the blog post? This will replace the current content.',
+            async () => {
+                try {
+                    // Show a brief "starting regeneration" message
+                    this.showToast('Info', 'Starting regeneration...', 'info');
+                    
+                    // Small delay for better UX
+                    await this.delay(300);
+                    
+                    // Now hide the result section and start regeneration
+                    document.getElementById('blogPostResult').classList.add('hidden');
+                    
+                    // Reset the generation UI to show form and progress
+                    document.getElementById('generateBlogPostSubmitBtn').classList.remove('hidden');
+                    document.getElementById('saveBlogPostBtn').classList.add('hidden');
+                    
+                    // Start the generation process
+                    await this.generateBlogPost(blogPostData);
+                } catch (error) {
+                    console.error('Blog post regeneration error:', error);
+                    this.showToast('Error', 'Failed to regenerate blog post', 'error');
+                    
+                    // Restore the result section on error
+                    document.getElementById('blogPostResult').classList.remove('hidden');
+                    document.getElementById('generateBlogPostSubmitBtn').classList.add('hidden');
+                    document.getElementById('saveBlogPostBtn').classList.remove('hidden');
+                }
+            }
+        );
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     // Utility Methods

@@ -122,3 +122,35 @@ class SourceModel(Base):
 
     def __repr__(self):
         return f"<SourceModel(id={self.id}, name='{self.name}', type='{self.source_type}')>"
+
+
+class OutputModel(Base):
+    """
+    SQLAlchemy model for Output entity.
+
+    Maps to the 'outputs' table in PostgreSQL.
+    Following clean architecture, this is an infrastructure concern.
+    """
+    __tablename__ = "outputs"
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True)
+    notebook_id = Column(PG_UUID(as_uuid=True), ForeignKey('notebooks.id', ondelete='CASCADE'), nullable=False, index=True)
+    title = Column(String(500), nullable=False)
+    content = Column(Text, nullable=False, default="")
+    output_type = Column(String(50), nullable=False, default="blog_post")
+    status = Column(String(20), nullable=False, default="draft")
+    prompt = Column(Text, nullable=True)
+    template_name = Column(String(100), nullable=True)
+    output_metadata = Column(JSONEncodedDict, nullable=False, default={})
+    source_references = Column(JSONEncodedList, nullable=False, default=[])
+    word_count = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    # Relationship to notebook (optional, for SQLAlchemy ORM queries)
+    # Use passive_deletes='all' to let database CASCADE handle deletion
+    notebook = relationship("NotebookModel", backref=backref("outputs", passive_deletes="all"))
+
+    def __repr__(self):
+        return f"<OutputModel(id={self.id}, title='{self.title}', type='{self.output_type}', status='{self.status}')>"
