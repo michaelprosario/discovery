@@ -23,7 +23,7 @@ config = context.config
 # Override sqlalchemy.url with environment variable if available
 database_url = os.getenv(
     "DATABASE_URL",
-    "postgresql://discovery_user:discovery_pass@localhost:5432/discovery_db"
+    "postgresql://postgres:Foobar321@localhost:5432/postgres"
 )
 config.set_main_option("sqlalchemy.url", database_url)
 

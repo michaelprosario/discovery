@@ -2,7 +2,6 @@
 name = "discovery"
 version = "0.1.0"
 description = "A local NotebookLM-like research application following Clean Architecture"
-readme = "README_API.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi==0.109.0",
@@ -18,7 +17,8 @@ dependencies = [
     "python-docx>=1.1.0",
     "weaviate-client>=4.16.10",
     "python-dotenv>=1.2.1",
-    "google-genai"
+    "google-genai",
+    "psycopg2>=2.9.11",
 ]
 
 [project.optional-dependencies]
