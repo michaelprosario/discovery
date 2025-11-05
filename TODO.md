@@ -7,5 +7,5 @@
 - manage prompt library
 - custom output format
 - output ideas
-- write blog post using context and prompt
+x- write blog post using context and prompt
 - write blog post outline using context and prompt
