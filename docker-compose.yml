@@ -1,22 +1,33 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: discovery_postgres
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: discovery_api
     environment:
-      POSTGRES_USER: discovery_user
-      POSTGRES_PASSWORD: discovery_pass
-      POSTGRES_DB: discovery_db
+      # Database connection
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:Foobar321@postgres:5432/postgres}
+      # Weaviate configuration
+      WEAVIATE_URL: ${WEAVIATE_URL}
+      WEAVIATE_KEY: ${WEAVIATE_KEY}
+      # API keys
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GOOGLE_CUSTOM_SEARCH_API_KEY: ${GOOGLE_CUSTOM_SEARCH_API_KEY}
+      GOOGLE_CUSTOM_SEARCH_ENGINE_ID: ${GOOGLE_CUSTOM_SEARCH_ENGINE_ID}
     ports:
-      - "5432:5432"
+      - "8000:8000"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U discovery_user -d discovery_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ./storage:/app/storage
+    networks:
+      - postgres
+    restart: unless-stopped
+
+networks:
+  postgres:
+    external: true
 
 volumes:
   postgres_data:
