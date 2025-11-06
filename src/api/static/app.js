@@ -1108,14 +1108,37 @@ class DiscoveryApp {
     // Modal Methods
     showModal(modalId) {
         const modal = document.getElementById(modalId);
+        
+        // Check if we need to compensate for scrollbar
+        const hasVerticalScrollbar = document.body.scrollHeight > window.innerHeight;
+        
+        if (hasVerticalScrollbar) {
+            document.body.classList.add('modal-open');
+        } else {
+            document.body.style.overflow = 'hidden';
+        }
+        
         modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        
+        // Focus trap - focus first focusable element
+        setTimeout(() => {
+            const focusableElements = modal.querySelectorAll('input, textarea, select, button:not([disabled])');
+            if (focusableElements.length > 0) {
+                focusableElements[0].focus();
+            }
+        }, 100);
     }
 
     closeModal(modalId) {
         const modal = document.getElementById(modalId);
         modal.classList.remove('active');
+        
+        // Reset body styles
+        document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
+        
+        // Return focus to the body
+        document.body.focus();
     }
 
     showConfirmation(title, message, onConfirm) {
