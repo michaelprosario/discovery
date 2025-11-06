@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   api:
@@ -9,7 +7,7 @@ services:
     container_name: discovery_api
     environment:
       # Database connection
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:Foobar321@postgres:5432/postgres}
+      DATABASE_URL: postgresql://postgres:Foobar321@postgres:5432/postgres
       # Weaviate configuration
       WEAVIATE_URL: ${WEAVIATE_URL}
       WEAVIATE_KEY: ${WEAVIATE_KEY}
