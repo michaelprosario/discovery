@@ -27,6 +27,16 @@ class ImportUrlSourceCommand:
 
 
 @dataclass
+class ImportTextSourceCommand:
+    """Command to import a text source into a notebook."""
+
+    notebook_id: UUID
+    title: str
+    content: str
+    metadata: Optional[Dict[str, Any]] = None
+
+
+@dataclass
 class DeleteSourceCommand:
     """Command to delete a source (soft delete)."""
 

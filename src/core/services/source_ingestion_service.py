@@ -13,6 +13,7 @@ from ..interfaces.providers.i_web_fetch_provider import IWebFetchProvider
 from ..commands.source_commands import (
     ImportFileSourceCommand,
     ImportUrlSourceCommand,
+    ImportTextSourceCommand,
     DeleteSourceCommand,
     RestoreSourceCommand,
     RenameSourceCommand,
@@ -233,6 +234,77 @@ class SourceIngestionService:
             return Result.validation_failure([
                 ValidationError(
                     field="url",
+                    message=f"A source with identical content already exists: '{duplicate_result.value.name}'",
+                    code="DUPLICATE_CONTENT"
+                )
+            ])
+
+        # Persist source
+        add_result = self._source_repository.add(source)
+        if add_result.is_failure:
+            return Result.failure(f"Failed to save source: {add_result.error}")
+
+        # Update notebook source count
+        notebook.increment_source_count()
+        self._notebook_repository.update(notebook)
+
+        return Result.success(add_result.value)
+
+    def import_text_source(self, command: ImportTextSourceCommand) -> Result[Source]:
+        """
+        Import a text source into a notebook.
+
+        Business Logic:
+        - Validates notebook exists
+        - Validates text content (not empty, within length limits)
+        - Calculates content hash
+        - Checks for duplicates (same hash in notebook)
+        - Creates Source entity with TEXT type
+        - Stores text directly in extracted_text field
+        - Persists via repository
+        - Updates notebook source count
+
+        Args:
+            command: ImportTextSourceCommand with text details
+
+        Returns:
+            Result[Source]: Success with created source or failure
+        """
+        # Validate notebook exists
+        notebook_result = self._notebook_repository.get_by_id(command.notebook_id)
+        if notebook_result.is_failure:
+            return Result.failure(f"Failed to retrieve notebook: {notebook_result.error}")
+
+        if notebook_result.value is None:
+            return Result.failure(f"Notebook with ID {command.notebook_id} not found")
+
+        notebook = notebook_result.value
+
+        # Create source entity (with validation)
+        create_result = Source.create_text_source(
+            notebook_id=command.notebook_id,
+            name=command.title,
+            content=command.content,
+            metadata=command.metadata
+        )
+
+        if create_result.is_failure:
+            return create_result
+
+        source = create_result.value
+
+        # Check for duplicates (same content hash in notebook)
+        duplicate_result = self._source_repository.get_by_content_hash(
+            command.notebook_id,
+            source.content_hash
+        )
+        if duplicate_result.is_failure:
+            return Result.failure(f"Failed to check for duplicates: {duplicate_result.error}")
+
+        if duplicate_result.value is not None:
+            return Result.validation_failure([
+                ValidationError(
+                    field="content",
                     message=f"A source with identical content already exists: '{duplicate_result.value.name}'",
                     code="DUPLICATE_CONTENT"
                 )

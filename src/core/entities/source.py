@@ -191,6 +191,74 @@ class Source:
 
         return Result.success(source)
 
+    @staticmethod
+    def create_text_source(
+        notebook_id: UUID,
+        name: str,
+        content: str,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Result['Source']:
+        """
+        Factory method to create a new text source with validation.
+
+        Args:
+            notebook_id: Parent notebook UUID
+            name: Display name for the source
+            content: Text content
+            metadata: Optional metadata dictionary
+
+        Returns:
+            Result[Source]: Success with source or failure with validation errors
+        """
+        errors = []
+
+        # Validate name
+        name = name.strip() if name else ""
+        if not name:
+            errors.append(ValidationError(
+                field="name",
+                message="Name is required and cannot be empty",
+                code="REQUIRED"
+            ))
+        elif len(name) > Source.MAX_NAME_LENGTH:
+            errors.append(ValidationError(
+                field="name",
+                message=f"Name cannot exceed {Source.MAX_NAME_LENGTH} characters",
+                code="MAX_LENGTH"
+            ))
+
+        # Validate content
+        if not content or not content.strip():
+            errors.append(ValidationError(
+                field="content",
+                message="Content is required and cannot be empty",
+                code="REQUIRED"
+            ))
+        elif len(content) > 100000:  # 100K character limit
+            errors.append(ValidationError(
+                field="content",
+                message="Content cannot exceed 100,000 characters",
+                code="MAX_LENGTH"
+            ))
+
+        if errors:
+            return Result.validation_failure(errors)
+
+        # Calculate content hash
+        content_hash = hashlib.sha256(content.encode('utf-8')).hexdigest()
+
+        # Create source with text stored in extracted_text
+        source = Source(
+            notebook_id=notebook_id,
+            name=name,
+            source_type=SourceType.TEXT,
+            content_hash=content_hash,
+            extracted_text=content.strip(),
+            metadata=metadata or {}
+        )
+
+        return Result.success(source)
+
     def rename(self, new_name: str) -> Result[None]:
         """
         Rename the source.

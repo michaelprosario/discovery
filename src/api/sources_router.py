@@ -10,6 +10,7 @@ from ..core.services.article_search_service import ArticleSearchService
 from ..core.commands.source_commands import (
     ImportFileSourceCommand,
     ImportUrlSourceCommand,
+    ImportTextSourceCommand,
     DeleteSourceCommand,
     RestoreSourceCommand,
     RenameSourceCommand,
@@ -25,6 +26,7 @@ from ..core.value_objects.enums import SourceType, FileType, SortOption, SortOrd
 from .dtos import (
     ImportFileSourceRequest,
     ImportUrlSourceRequest,
+    ImportTextSourceRequest,
     RenameSourceRequest,
     ExtractContentRequest,
     SourceResponse,
@@ -294,6 +296,80 @@ def import_url_source(
     )
 
     result = service.import_url_source(command)
+
+    if result.is_failure:
+        if result.validation_errors:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error": result.error,
+                    "validation_errors": [
+                        ValidationErrorDetail(
+                            field=err.field,
+                            message=err.message,
+                            code=err.code
+                        ).model_dump()
+                        for err in result.validation_errors
+                    ]
+                }
+            )
+        elif "not found" in result.error.lower():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": result.error}
+            )
+        elif "duplicate" in result.error.lower() or "already exists" in result.error.lower():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={"error": result.error}
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": result.error}
+            )
+
+    return to_source_response(result.value)
+
+
+@router.post(
+    "/text",
+    response_model=SourceResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        400: {"model": ValidationErrorResponse, "description": "Validation error"},
+        404: {"model": ErrorResponse, "description": "Notebook not found"},
+        409: {"model": ErrorResponse, "description": "Duplicate content"}
+    }
+)
+def import_text_source(
+    request: ImportTextSourceRequest,
+    service: SourceIngestionService = Depends(get_source_service)
+):
+    """
+    Import a text source into a notebook.
+
+    The text content is provided directly in the request.
+    This is useful for pasting text snippets or notes directly into the notebook.
+
+    Args:
+        request: Text source import data (title, content, notebook_id)
+        service: Injected source service
+
+    Returns:
+        Created source
+
+    Raises:
+        HTTPException: 400 for validation errors, 404 if notebook not found, 409 for duplicates
+    """
+    command = ImportTextSourceCommand(
+        notebook_id=request.notebook_id,
+        title=request.title,
+        content=request.content,
+        metadata={"content_length": len(request.content)}
+    )
+
+    result = service.import_text_source(command)
 
     if result.is_failure:
         if result.validation_errors:
