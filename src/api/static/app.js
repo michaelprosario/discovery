@@ -757,6 +757,7 @@ class DiscoveryApp {
             
             document.getElementById('sourceViewerTitle').textContent = source.name;
             document.getElementById('sourceContent').textContent = source.extracted_text;
+            document.getElementById('sourceContentLoader').style.display = 'none';
             
             this.showModal('sourceViewerModal');
         } catch (error) {
@@ -842,7 +843,7 @@ class DiscoveryApp {
         
         container.innerHTML = this.outputs.map(output => {
             const icon = this.getOutputIcon(output.output_type);
-            const preview = this.getOutputPreview(output);
+            const preview = "";
             const statusBadge = this.getOutputStatusBadge(output.status);
             
             return `
@@ -922,6 +923,7 @@ class DiscoveryApp {
             
             document.getElementById('outputViewerTitle').textContent = output.title;
             document.getElementById('outputContent').innerHTML = this.formatBlogPostContent(output.content);
+            document.getElementById('outputContentLoader').style.display='none';
             
             // Store current output for download/delete actions
             this.currentOutput = output;
