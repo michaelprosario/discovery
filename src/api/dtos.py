@@ -155,6 +155,30 @@ class ImportUrlSourceRequest(BaseModel):
         return v
 
 
+class ImportTextSourceRequest(BaseModel):
+    """Request model for importing a text source."""
+
+    notebook_id: UUID = Field(..., description="UUID of the parent notebook")
+    title: str = Field(..., min_length=1, max_length=500, description="Title for the text source")
+    content: str = Field(..., min_length=1, max_length=100000, description="Text content to import")
+
+    @field_validator('title')
+    @classmethod
+    def title_not_empty(cls, v: str) -> str:
+        """Validate title is not just whitespace."""
+        if not v.strip():
+            raise ValueError('Title cannot be empty or whitespace only')
+        return v.strip()
+
+    @field_validator('content')
+    @classmethod
+    def content_not_empty(cls, v: str) -> str:
+        """Validate content is not just whitespace."""
+        if not v.strip():
+            raise ValueError('Content cannot be empty or whitespace only')
+        return v.strip()
+
+
 class RenameSourceRequest(BaseModel):
     """Request model for renaming a source."""
 

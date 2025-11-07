@@ -134,6 +134,9 @@
                                 <button id="addUrlSourceBtn" class="btn btn-primary">
                                     <i class="fas fa-link"></i> Add URL
                                 </button>
+                                <button id="addTextSourceBtn" class="btn btn-primary">
+                                    <i class="fas fa-align-left"></i> Add Text
+                                </button>
                                 <button id="addBySearchBtn" class="btn btn-secondary">
                                     <i class="fas fa-search"></i> Search & Add
                                 </button>
@@ -145,6 +148,7 @@
                                 <option value="">All Types</option>
                                 <option value="file">Files</option>
                                 <option value="url">URLs</option>
+                                <option value="text">Text</option>
                             </select>
                         </div>
                         <div id="sourcesList" class="sources-list">
@@ -304,6 +308,38 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-modal="urlSourceModal">Cancel</button>
                 <button type="submit" form="urlSourceForm" id="saveUrlSourceBtn" class="btn btn-primary">Add Source</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Text Source Modal -->
+    <div id="textSourceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Text Source</h3>
+                <button class="modal-close" data-modal="textSourceModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="textSourceForm">
+                    <div class="form-group">
+                        <label for="sourceTextTitle">Title *</label>
+                        <input type="text" id="sourceTextTitle" name="title" required maxlength="500" 
+                               class="form-input" placeholder="Give your text a descriptive title">
+                    </div>
+                    <div class="form-group">
+                        <label for="sourceTextContent">Content *</label>
+                        <textarea id="sourceTextContent" name="content" required 
+                                  class="form-textarea" rows="15" maxlength="100000"
+                                  placeholder="Paste your text content here..."></textarea>
+                        <small class="form-help">Maximum 100,000 characters</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal="textSourceModal">Cancel</button>
+                <button type="submit" form="textSourceForm" id="saveTextSourceBtn" class="btn btn-primary">Add Source</button>
             </div>
         </div>
     </div>

@@ -6,6 +6,7 @@ class SourceType(str, Enum):
     """Type of source material."""
     FILE = "file"
     URL = "url"
+    TEXT = "text"
 
 
 class FileType(str, Enum):

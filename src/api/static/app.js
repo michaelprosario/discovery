@@ -47,6 +47,7 @@ class DiscoveryApp {
         // Source actions
         document.getElementById('addFileSourceBtn').addEventListener('click', () => this.showAddFileSourceModal());
         document.getElementById('addUrlSourceBtn').addEventListener('click', () => this.showAddUrlSourceModal());
+        document.getElementById('addTextSourceBtn').addEventListener('click', () => this.showAddTextSourceModal());
         document.getElementById('addBySearchBtn').addEventListener('click', () => this.showSearchSourceModal());
         document.getElementById('sourcesFilter').addEventListener('input', () => this.filterSources());
         document.getElementById('sourceTypeFilter').addEventListener('change', () => this.filterSources());
@@ -60,6 +61,7 @@ class DiscoveryApp {
         document.getElementById('notebookForm').addEventListener('submit', (e) => this.handleNotebookSubmit(e));
         document.getElementById('fileSourceForm').addEventListener('submit', (e) => this.handleFileSourceSubmit(e));
         document.getElementById('urlSourceForm').addEventListener('submit', (e) => this.handleUrlSourceSubmit(e));
+        document.getElementById('textSourceForm').addEventListener('submit', (e) => this.handleTextSourceSubmit(e));
         document.getElementById('searchSourceForm').addEventListener('submit', (e) => this.handleSearchSourceSubmit(e));
         
         // File input auto-name
@@ -378,7 +380,7 @@ class DiscoveryApp {
                     </div>
                     <div class="source-item-type">
                         <i class="${icon}"></i>
-                        <span>${source.source_type === 'file' ? source.file_type?.toUpperCase() || 'FILE' : 'URL'}</span>
+                        <span>${source.source_type === 'file' ? source.file_type?.toUpperCase() || 'FILE' : source.source_type === 'text' ? 'TEXT' : 'URL'}</span>
                         ${source.file_size ? `<span>${this.formatFileSize(source.file_size)}</span>` : ''}
                     </div>
                     <div class="source-item-preview">${this.escapeHtml(preview)}</div>
@@ -393,6 +395,7 @@ class DiscoveryApp {
 
     getSourceIcon(source) {
         if (source.source_type === 'url') return 'fas fa-link';
+        if (source.source_type === 'text') return 'fas fa-align-left';
         
         const fileType = source.file_type?.toLowerCase();
         switch (fileType) {
@@ -423,6 +426,16 @@ class DiscoveryApp {
         
         document.getElementById('urlSourceForm').reset();
         this.showModal('urlSourceModal');
+    }
+
+    showAddTextSourceModal() {
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'Please select a notebook first', 'error');
+            return;
+        }
+        
+        document.getElementById('textSourceForm').reset();
+        this.showModal('textSourceModal');
     }
 
     autoFillFileName() {
@@ -523,6 +536,43 @@ class DiscoveryApp {
             await this.loadNotebooks(); // Refresh to update source count
         } catch (error) {
             console.error('Failed to add URL source:', error);
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async handleTextSourceSubmit(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const title = formData.get('title').trim();
+        const content = formData.get('content').trim();
+        
+        if (!title || !content) {
+            this.showToast('Error', 'Please provide both title and content', 'error');
+            return;
+        }
+        
+        try {
+            this.showLoading('Adding text source...');
+            
+            const data = {
+                notebook_id: this.currentNotebook.id,
+                title: title,
+                content: content
+            };
+            
+            await this.apiCall('/sources/text', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            
+            this.showToast('Success', 'Text source added successfully', 'success');
+            this.closeModal('textSourceModal');
+            await this.loadSources();
+            await this.loadNotebooks(); // Refresh to update source count
+        } catch (error) {
+            console.error('Failed to add text source:', error);
         } finally {
             this.hideLoading();
         }
