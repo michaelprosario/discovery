@@ -1,0 +1,5 @@
+- continue to use specs/clean_architecture.md
+- read over core/interfaces/providers/i_vector_database_provider.py
+- create vector database provider implementation using chroma database
+
+- adjust fastapi to optionally configure to use chroma db inside of the weaviate provider

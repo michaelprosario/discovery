@@ -93,9 +93,8 @@ def get_vector_ingestion_service() -> VectorIngestionService:
     from ..infrastructure.database.connection import get_db
     from ..infrastructure.repositories.postgres_notebook_repository import PostgresNotebookRepository
     from ..infrastructure.repositories.postgres_source_repository import PostgresSourceRepository
-    from ..infrastructure.providers.weaviate_vector_database_provider import WeaviateVectorDatabaseProvider
+    from ..infrastructure.providers.vector_database_factory import create_vector_database_provider
     from ..infrastructure.providers.simple_content_segmenter import SimpleContentSegmenter
-    import os
 
     # Get database session
     db = next(get_db())
@@ -104,10 +103,8 @@ def get_vector_ingestion_service() -> VectorIngestionService:
     notebook_repository = PostgresNotebookRepository(db)
     source_repository = PostgresSourceRepository(db)
 
-    # Create providers
-    weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-    weaviate_key = os.getenv("WEAVIATE_KEY")
-    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
+    # Create providers using factory
+    vector_db_provider = create_vector_database_provider()
     content_segmenter = SimpleContentSegmenter()
 
     # Create and return service
@@ -133,8 +130,7 @@ def get_content_similarity_service() -> ContentSimilarityService:
     """
     from ..infrastructure.database.connection import get_db
     from ..infrastructure.repositories.postgres_notebook_repository import PostgresNotebookRepository
-    from ..infrastructure.providers.weaviate_vector_database_provider import WeaviateVectorDatabaseProvider
-    import os
+    from ..infrastructure.providers.vector_database_factory import create_vector_database_provider
 
     # Get database session
     db = next(get_db())
@@ -142,10 +138,8 @@ def get_content_similarity_service() -> ContentSimilarityService:
     # Create repository
     notebook_repository = PostgresNotebookRepository(db)
 
-    # Create provider
-    weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-    weaviate_key = os.getenv("WEAVIATE_KEY")
-    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
+    # Create provider using factory
+    vector_db_provider = create_vector_database_provider()
 
     # Create and return service
     service = ContentSimilarityService(
@@ -454,8 +448,7 @@ def create_collection(
     """
     from ..infrastructure.database.connection import get_db
     from ..infrastructure.repositories.postgres_notebook_repository import PostgresNotebookRepository
-    from ..infrastructure.providers.weaviate_vector_database_provider import WeaviateVectorDatabaseProvider
-    import os
+    from ..infrastructure.providers.vector_database_factory import create_vector_database_provider
 
     # First verify that the notebook exists
     db = next(get_db())
@@ -479,10 +472,8 @@ def create_collection(
     # Get collection name using the existing helper function
     collection_name = get_collection_name(notebook_id, notebook_repository)
 
-    # Create vector database provider
-    weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-    weaviate_key = os.getenv("WEAVIATE_KEY")
-    vector_db_provider = WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
+    # Create vector database provider using factory
+    vector_db_provider = create_vector_database_provider()
 
     try:
         # Check if collection already exists
