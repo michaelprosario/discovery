@@ -163,9 +163,9 @@ class BlogGenerationService:
             print(f"DEBUG: Blog content generated, length: {len(blog_content)}")
 
             # Add references if requested
-            # if command.include_references and source_references:
-            #     blog_content = self._add_references_to_blog(blog_content, source_references)
-            #     print("DEBUG: References added to blog content")
+            if command.include_references and source_references:
+                blog_content = self._add_references_to_blog(blog_content, source_references)
+                print("DEBUG: References added to blog content")
 
             # Complete the generation
             print("DEBUG: Completing generation")
@@ -239,7 +239,7 @@ class BlogGenerationService:
                 
                 elif source.source_type == SourceType.URL:
                     # For URL sources, use the extracted content if available
-                    content_text = source.extracted_content or f"[No content available for URL: {source.url}]"
+                    content_text = source.extracted_text or f"[No content available for URL: {source.url}]"
                 
                 else:
                     content_text = f"[Unsupported source type: {source.source_type}]"
@@ -260,7 +260,12 @@ class BlogGenerationService:
                 # Add error note and continue
                 error_section = f"## Source: {source.name}\n\n[Error extracting content: {str(e)}]\n\n"
                 content_sections.append(error_section)
-                source_references.append(f"{source.name} (content extraction failed)")
+                
+                # Include URL in reference for URL sources, even when extraction fails
+                if source.source_type == SourceType.URL and source.url:
+                    source_references.append(f"{source.name} - {source.url}")
+                else:
+                    source_references.append(f"{source.name} (content extraction failed)")
 
         # Combine all content
         aggregated_content = "\n".join(content_sections)
