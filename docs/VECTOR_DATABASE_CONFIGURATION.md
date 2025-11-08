@@ -107,8 +107,19 @@ The application automatically handles these naming conventions when creating col
 If you see import errors, install ChromaDB:
 
 ```bash
-pip install chromadb>=0.4.0
+pip install chromadb==0.4.24 "numpy<2.0.0"
 ```
+
+### NumPy 2.0 Compatibility Issue with ChromaDB 0.4.24
+
+ChromaDB 0.4.24 has a known compatibility issue with NumPy 2.0. After installing, you may need to patch the ChromaDB source:
+
+```bash
+sed -i 's/np.uint, np.int_, np.float_/np.uint64, np.int64, np.float64/' \
+  $(python -c "import chromadb; import os; print(os.path.dirname(chromadb.__file__))")/api/types.py
+```
+
+This replaces deprecated NumPy types with their NumPy 2.0 equivalents.
 
 ### Connection errors
 
