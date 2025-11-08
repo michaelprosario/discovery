@@ -11,7 +11,7 @@ from ..core.commands.qa_commands import AskQuestionCommand
 from ..core.interfaces.providers.i_llm_provider import LlmGenerationParameters
 from ..infrastructure.database.connection import get_db
 from ..infrastructure.repositories.postgres_notebook_repository import PostgresNotebookRepository
-from ..infrastructure.providers.weaviate_vector_database_provider import WeaviateVectorDatabaseProvider
+from ..infrastructure.providers.vector_database_factory import create_vector_database_provider
 from ..infrastructure.providers.gemini_llm_provider import GeminiLlmProvider
 from .dtos import ErrorResponse
 import os
@@ -60,9 +60,8 @@ def get_notebook_repository(db = Depends(get_db)):
     return PostgresNotebookRepository(db)
 
 def get_vector_db_provider():
-    weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
-    weaviate_key = os.getenv("WEAVIATE_KEY")
-    return WeaviateVectorDatabaseProvider(url=weaviate_url, api_key=weaviate_key)
+    """Get configured vector database provider using factory."""
+    return create_vector_database_provider()
 
 def get_llm_provider():
     return GeminiLlmProvider()
