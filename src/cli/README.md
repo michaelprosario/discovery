@@ -66,3 +66,17 @@ All commands respect `--profile` to target a specific configuration profile. Whe
 - Commands live under `src/cli/commands/` and share helpers (`config_store.py`, `runtime.py`, `output.py`, `utils.py`).
 - Add new command groups by creating a Typer app and registering it in `src/cli/__main__.py`.
 - Integration tests can mock the API using `httpx.MockTransport` or `respx`; see `tests/cli/` (create as needed).
+
+
+
+
+
+  
+discovery --help
+discovery notebooks --help
+discovery config init --url http://localhost:8000
+discovery notebooks list--format json
+discovery src add url --notebook 380fe8dc-73ff-4b7b-a2a2-0025905a12da --format json --url https://en.wikipedia.org/wiki/Bill_Gates
+discovery vectors ingest --notebook 380fe8dc-73ff-4b7b-a2a2-0025905a12da
+discovery qa ask --notebook 380fe8dc-73ff-4b7b-a2a2-0025905a12da --format json --question "When was bill gates born?"
+  
