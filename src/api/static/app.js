@@ -1,5 +1,95 @@
 // Discovery Research Notebook - JavaScript Application
 
+// ===== THEME MANAGEMENT =====
+class ThemeManager {
+    constructor() {
+        // Check for saved theme preference or default to system preference
+        this.theme = this.getInitialTheme();
+        this.init();
+    }
+
+    getInitialTheme() {
+        // First, check if user has a saved preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            return savedTheme;
+        }
+        
+        // If no saved preference, check system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
+        
+        // Default to light mode
+        return 'light';
+    }
+
+    init() {
+        this.applyTheme(this.theme);
+        this.setupToggleListener();
+        this.setupSystemThemeListener();
+    }
+
+    setupToggleListener() {
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => this.toggleTheme());
+        }
+    }
+
+    setupSystemThemeListener() {
+        // Listen for system theme changes
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                // Only auto-switch if user hasn't set a preference
+                if (!localStorage.getItem('theme')) {
+                    this.applyTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+        }
+    }
+
+    toggleTheme() {
+        this.theme = this.theme === 'light' ? 'dark' : 'light';
+        this.applyTheme(this.theme);
+        localStorage.setItem('theme', this.theme);
+    }
+
+    applyTheme(theme) {
+        this.theme = theme;
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        // Update toggle button icon
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            const icon = themeToggle.querySelector('i');
+            if (icon) {
+                if (theme === 'dark') {
+                    icon.className = 'fas fa-sun';
+                    themeToggle.title = 'Switch to Light Mode';
+                } else {
+                    icon.className = 'fas fa-moon';
+                    themeToggle.title = 'Switch to Dark Mode';
+                }
+            }
+        }
+    }
+
+    getTheme() {
+        return this.theme;
+    }
+}
+
+// Initialize theme manager when DOM is ready
+let themeManager;
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        themeManager = new ThemeManager();
+    });
+} else {
+    themeManager = new ThemeManager();
+}
+
 class DiscoveryApp {
     constructor() {
         this.currentNotebook = null;

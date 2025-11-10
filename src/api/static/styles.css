@@ -1,5 +1,84 @@
 /* Discovery Research Notebook - CSS Styles */
 
+/* ===== THEME VARIABLES ===== */
+:root {
+    /* Light Mode Colors */
+    --bg-primary: #f5f7fa;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f8f9fa;
+    --bg-hover: #f7fafc;
+    --bg-gradient-start: #667eea;
+    --bg-gradient-end: #764ba2;
+    
+    --text-primary: #333333;
+    --text-secondary: #718096;
+    --text-tertiary: #a0aec0;
+    --text-heading: #2d3748;
+    --text-inverted: #ffffff;
+    
+    --border-primary: #e1e5e9;
+    --border-secondary: #e9ecef;
+    --border-hover: #667eea;
+    
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,0.15);
+    --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+    
+    --overlay-bg: rgba(0, 0, 0, 0.75);
+    --loading-overlay: rgba(255,255,255,0.8);
+    
+    /* Component specific */
+    --input-bg: #ffffff;
+    --modal-bg: #ffffff;
+    --modal-header-bg: #f8f9fa;
+    --dropdown-bg: #ffffff;
+    --toast-bg: #ffffff;
+    --code-bg: #f8f9fa;
+    --qa-bg: #f8f9fc;
+    --qa-gradient-start: #4facfe;
+    --qa-gradient-end: #00f2fe;
+}
+
+/* Dark Mode Colors */
+[data-theme="dark"] {
+    --bg-primary: #1a202c;
+    --bg-secondary: #2d3748;
+    --bg-tertiary: #1e2633;
+    --bg-hover: #374151;
+    --bg-gradient-start: #5a67d8;
+    --bg-gradient-end: #6b46c1;
+    
+    --text-primary: #e2e8f0;
+    --text-secondary: #a0aec0;
+    --text-tertiary: #718096;
+    --text-heading: #f7fafc;
+    --text-inverted: #1a202c;
+    
+    --border-primary: #4a5568;
+    --border-secondary: #374151;
+    --border-hover: #5a67d8;
+    
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    
+    --overlay-bg: rgba(0, 0, 0, 0.85);
+    --loading-overlay: rgba(26, 32, 44, 0.9);
+    
+    /* Component specific */
+    --input-bg: #374151;
+    --modal-bg: #2d3748;
+    --modal-header-bg: #1e2633;
+    --dropdown-bg: #374151;
+    --toast-bg: #2d3748;
+    --code-bg: #1e2633;
+    --qa-bg: #1e2633;
+    --qa-gradient-start: #3b82f6;
+    --qa-gradient-end: #06b6d4;
+}
+
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -10,8 +89,9 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     line-height: 1.6;
-    color: #333;
-    background-color: #f5f7fa;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Layout */
@@ -23,10 +103,10 @@ body {
 
 /* Header */
 .header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    color: var(--text-inverted);
     padding: 1rem 0;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-md);
 }
 
 .header-content {
@@ -59,9 +139,34 @@ body {
     align-items: center;
 }
 
+/* Theme Toggle Button */
+.theme-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--text-inverted);
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(20deg);
+}
+
+.theme-toggle i {
+    font-size: 1.125rem;
+}
+
 /* Search Panel */
 .search-panel {
-    background: white;
+    background: var(--bg-secondary);
     border-bottom: 1px solid #e1e5e9;
     padding: 1rem 0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -108,7 +213,7 @@ body {
 /* Sidebar */
 .sidebar {
     width: 300px;
-    background: white;
+    background: var(--bg-secondary);
     border-right: 1px solid #e1e5e9;
     padding: 1.5rem;
     overflow-y: auto;
@@ -138,7 +243,7 @@ body {
     border: 1px solid #e1e5e9;
     border-radius: 6px;
     font-size: 0.875rem;
-    background: white;
+    background: var(--bg-secondary);
 }
 
 .notebooks-filter {
@@ -165,7 +270,7 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
-    background: white;
+    background: var(--bg-secondary);
 }
 
 .notebook-item:hover {
@@ -268,7 +373,7 @@ body {
     justify-content: space-between;
     align-items: flex-start;
     padding: 1.5rem;
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     margin-bottom: 1.5rem;
@@ -319,7 +424,7 @@ body {
 
 /* Sources Section */
 .sources-section {
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     padding: 1.5rem;
@@ -356,7 +461,7 @@ body {
     padding: 0.5rem;
     border: 1px solid #e1e5e9;
     border-radius: 6px;
-    background: white;
+    background: var(--bg-secondary);
     min-width: 120px;
 }
 
@@ -414,6 +519,7 @@ body {
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -444,7 +550,7 @@ body {
 
 /* Outputs Section */
 .outputs-section {
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     padding: 1.5rem;
@@ -521,6 +627,7 @@ body {
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     margin-bottom: 0.75rem;
@@ -710,7 +817,7 @@ body {
     position: absolute;
     top: 100%;
     right: 0;
-    background: white;
+    background: var(--bg-secondary);
     border: 1px solid #e1e5e9;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -794,7 +901,7 @@ body.modal-open {
 }
 
 .modal-content {
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 12px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
     width: 100%;
@@ -871,7 +978,7 @@ body.modal-open {
     padding: 2rem;
     overflow-y: auto;
     flex: 1;
-    background: white;
+    background: var(--bg-secondary);
 }
 
 .modal-footer {
@@ -947,7 +1054,7 @@ body.modal-open {
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 1rem;
-    background: white;
+    background: var(--bg-secondary);
 }
 
 .search-result-header {
@@ -992,7 +1099,7 @@ body.modal-open {
 }
 
 .toast {
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     padding: 1rem 1.5rem;
@@ -1278,7 +1385,7 @@ body.modal-open {
 
 /* QA Section Styles */
 .qa-section {
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     margin-top: 2rem;
@@ -1374,7 +1481,7 @@ body.modal-open {
 
 .qa-question-text {
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .qa-question-meta {
@@ -1387,7 +1494,7 @@ body.modal-open {
 }
 
 .qa-answer {
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 8px;
     padding: 1.5rem;
     border: 1px solid #e1e5e9;
@@ -1395,7 +1502,7 @@ body.modal-open {
 
 .qa-answer-content {
     line-height: 1.7;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 1rem;
 }
 
@@ -1486,7 +1593,7 @@ body.modal-open {
 
 .qa-sources-title {
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
@@ -1522,7 +1629,7 @@ body.modal-open {
 
 .qa-source-name {
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     font-size: 0.9rem;
 }
 
@@ -1623,7 +1730,7 @@ body.modal-open {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .form-input,
@@ -1730,7 +1837,7 @@ body.modal-open {
 
 .progress-header h4 {
     margin: 0;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .progress-steps {
@@ -1838,7 +1945,7 @@ body.modal-open {
 
 .result-header h4 {
     margin: 0;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .result-actions {
@@ -1863,7 +1970,7 @@ body.modal-open {
 .blog-post-content h3 {
     margin-top: 1.5rem;
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .blog-post-content h1:first-child,
@@ -1977,4 +2084,332 @@ body.modal-open {
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+}
+
+/* ===== DARK MODE SPECIFIC OVERRIDES ===== */
+
+[data-theme="dark"] .search-panel {
+    background: var(--bg-secondary);
+    border-bottom-color: var(--border-primary);
+}
+
+[data-theme="dark"] .search-input {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .sidebar {
+    background: var(--bg-secondary);
+    border-right-color: var(--border-primary);
+}
+
+[data-theme="dark"] .sidebar-header h2 {
+    color: var(--text-heading);
+}
+
+[data-theme="dark"] .sort-select,
+[data-theme="dark"] .filter-input,
+[data-theme="dark"] .filter-select {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .notebook-item {
+    background: var(--bg-secondary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .notebook-item.active {
+    background: var(--bg-hover);
+}
+
+[data-theme="dark"] .welcome-icon {
+    color: var(--bg-gradient-start);
+}
+
+[data-theme="dark"] .welcome-content h2 {
+    color: var(--text-heading);
+}
+
+[data-theme="dark"] .welcome-content p {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .notebook-header {
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .sources-section,
+[data-theme="dark"] .outputs-section,
+[data-theme="dark"] .qa-section {
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .source-item {
+    background: var(--bg-tertiary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .source-item:hover {
+    border-color: var(--border-hover);
+}
+
+[data-theme="dark"] .output-item {
+    background: var(--bg-tertiary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .output-item:hover {
+    border-color: var(--border-hover);
+}
+
+[data-theme="dark"] .modal {
+    background: var(--overlay-bg);
+}
+
+[data-theme="dark"] .modal-content {
+    background: var(--modal-bg);
+}
+
+[data-theme="dark"] .modal-header {
+    background: var(--modal-header-bg);
+    border-bottom-color: var(--border-primary);
+}
+
+[data-theme="dark"] .modal-body {
+    background: var(--modal-bg);
+}
+
+[data-theme="dark"] .modal-footer {
+    background: var(--modal-header-bg);
+    border-top-color: var(--border-primary);
+}
+
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-textarea,
+[data-theme="dark"] .form-select {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .dropdown-menu {
+    background: var(--dropdown-bg);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background: var(--bg-hover);
+}
+
+[data-theme="dark"] .source-content {
+    background: var(--code-bg);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .output-content {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .search-result-item {
+    background: var(--bg-secondary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .search-result-score {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .toast {
+    background: var(--toast-bg);
+    box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .toast-title {
+    color: var(--text-heading);
+}
+
+[data-theme="dark"] .toast-message {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .loading {
+    color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .loading-overlay {
+    background: var(--loading-overlay);
+}
+
+[data-theme="dark"] .search-source-result-item {
+    background: var(--bg-tertiary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .qa-header {
+    background: linear-gradient(135deg, var(--qa-gradient-start) 0%, var(--qa-gradient-end) 100%);
+}
+
+[data-theme="dark"] .qa-input-section {
+    border-bottom-color: var(--border-primary);
+}
+
+[data-theme="dark"] .qa-question {
+    background: var(--qa-bg);
+    border-left-color: var(--qa-gradient-start);
+}
+
+[data-theme="dark"] .qa-answer {
+    background: var(--bg-secondary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .qa-source-item {
+    background: var(--qa-bg);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .qa-source-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+}
+
+[data-theme="dark"] .generation-progress {
+    background: var(--bg-tertiary);
+    border-color: var(--border-secondary);
+}
+
+[data-theme="dark"] .blog-post-result {
+    background: var(--bg-secondary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .result-header {
+    background: var(--modal-header-bg);
+    border-bottom-color: var(--border-primary);
+}
+
+[data-theme="dark"] .blog-post-content {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .blog-post-content h1,
+[data-theme="dark"] .blog-post-content h2,
+[data-theme="dark"] .blog-post-content h3 {
+    color: var(--text-heading);
+}
+
+[data-theme="dark"] .blog-post-content blockquote {
+    background: var(--bg-tertiary);
+    border-left-color: var(--bg-gradient-start);
+}
+
+[data-theme="dark"] .blog-post-content code,
+[data-theme="dark"] .blog-post-content pre {
+    background: var(--code-bg);
+}
+
+[data-theme="dark"] .result-stats {
+    background: var(--modal-header-bg);
+    border-top-color: var(--border-primary);
+}
+
+/* Fix button colors in dark mode */
+[data-theme="dark"] .btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+    background: var(--bg-hover);
+}
+
+[data-theme="dark"] .modal-close {
+    color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .modal-close:hover {
+    color: var(--text-secondary);
+    background: var(--bg-hover);
+}
+
+/* Enhance gradient visibility in dark mode */
+[data-theme="dark"] .output-item-type {
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+}
+
+/* Fix tag colors */
+[data-theme="dark"] .tag {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .notebook-tags .tag {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+/* Fix specific text colors */
+[data-theme="dark"] .source-item-name,
+[data-theme="dark"] .output-item-title,
+[data-theme="dark"] .notebook-title {
+    color: var(--text-heading);
+}
+
+[data-theme="dark"] .source-item-preview,
+[data-theme="dark"] .output-item-preview {
+    color: var(--text-secondary);
+}
+
+/* Fix meta information colors */
+[data-theme="dark"] .source-item-meta,
+[data-theme="dark"] .output-item-meta {
+    border-top-color: var(--border-primary);
+    color: var(--text-tertiary);
+}
+
+/* Fix welcome and empty states */
+[data-theme="dark"] .no-sources,
+[data-theme="dark"] .no-outputs {
+    color: var(--text-tertiary);
+}
+
+/* Fix QA specific elements */
+[data-theme="dark"] .qa-welcome {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .qa-welcome i {
+    color: var(--qa-gradient-start);
+}
+
+[data-theme="dark"] .qa-answer-content {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .qa-error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}
+
+/* Smooth transitions for theme changes */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Preserve animations during theme transition */
+.fa-spin,
+.loading-spinner i,
+.qa-loading i {
+    transition: none !important;
 }
