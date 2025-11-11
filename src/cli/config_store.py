@@ -126,6 +126,18 @@ class ConfigStore:
         self.save(config)
         return config
 
+    def set_default_notebook(self, notebook_id: str, profile_name: str | None = None) -> DiscoveryConfig:
+        """Set the default notebook for a profile."""
+        config = self.load()
+        target = profile_name or config.active_profile
+        if target not in config.profiles:
+            raise ConfigNotInitializedError(f"Profile '{target}' does not exist.")
+        profile = config.profiles[target]
+        profile.default_notebook = notebook_id
+        config.set_profile(profile)
+        self.save(config)
+        return config
+
     # State -------------------------------------------------------------------------
     def load_state(self) -> CLIState:
         if not self.state_path.exists():

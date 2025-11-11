@@ -38,8 +38,8 @@ def list_outputs(
         "limit": limit,
         "offset": offset,
     }
-    if notebook or runtime.recent_notebook():
-        notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    if notebook or runtime.fallback_notebook():
+        notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
         params["notebook_id"] = notebook_id
         runtime.remember_notebook(notebook_id)
     with runtime.api_client() as client:
@@ -59,7 +59,7 @@ def create_output(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     payload = {
         "title": title,
         "output_type": output_type,
@@ -139,8 +139,8 @@ def search_outputs(
         "limit": limit,
         "offset": offset,
     }
-    if notebook or runtime.recent_notebook():
-        notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    if notebook or runtime.fallback_notebook():
+        notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
         params["notebook_id"] = notebook_id
         runtime.remember_notebook(notebook_id)
     with runtime.api_client() as client:

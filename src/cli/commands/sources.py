@@ -28,7 +28,7 @@ def add_url_source(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     payload = {"notebook_id": notebook_id, "url": url, "title": title}
     with runtime.api_client() as client:
         response = client.post_json("/api/sources/url", json=payload)
@@ -45,7 +45,7 @@ def add_file_source(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     payload = {
         "notebook_id": notebook_id,
         "name": title or path.name,
@@ -67,7 +67,7 @@ def add_text_source(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     if content is None:
         content = open_editor()
     payload = {"notebook_id": notebook_id, "title": title, "content": content}
@@ -89,7 +89,7 @@ def list_sources(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     params = {
         "include_deleted": include_deleted,
         "limit": limit,
@@ -128,7 +128,7 @@ def delete_source(
     profile: str | None = typer.Option(None, "--profile", "-p", help="Profile to use"),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     typer.confirm(f"Remove source {source_id}?", abort=True)
     with runtime.api_client() as client:
         client.delete(f"/api/sources/{source_id}", params={"notebook_id": notebook_id})

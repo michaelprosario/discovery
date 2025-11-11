@@ -27,6 +27,13 @@ class RuntimeContext:
         self.state.set_recent_notebook(self.profile.name, notebook_id)
         self.store.save_state(self.state)
 
+    def fallback_notebook(self) -> str | None:
+        """Get fallback notebook: recent notebook, then default notebook."""
+        recent = self.recent_notebook()
+        if recent:
+            return recent
+        return self.profile.default_notebook
+
     @contextmanager
     def api_client(self, *, timeout: float = 30.0, verbose: bool = False) -> Iterator[DiscoveryApiClient]:
         client = DiscoveryApiClient(self.profile, timeout=timeout, verbose=verbose)

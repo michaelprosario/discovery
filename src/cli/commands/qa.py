@@ -26,7 +26,7 @@ def ask_notebook(
     fmt: OutputFormat = typer.Option(OutputFormat.TEXT, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     payload = {
         "question": question,
         "max_sources": max_sources,

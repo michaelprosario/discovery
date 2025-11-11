@@ -83,7 +83,7 @@ def show_notebook(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    resolved_id = ensure_notebook_id(notebook_id, runtime.recent_notebook())
+    resolved_id = ensure_notebook_id(notebook_id, runtime.fallback_notebook())
     with runtime.api_client() as client:
         notebook = client.get_json(f"/api/notebooks/{resolved_id}")
         if include_sources:
@@ -104,7 +104,7 @@ def update_notebook(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    resolved_id = ensure_notebook_id(notebook_id, runtime.recent_notebook())
+    resolved_id = ensure_notebook_id(notebook_id, runtime.fallback_notebook())
     payload = read_json_payload(data_file) if data_file else {}
     if name is not None:
         payload["name"] = name
@@ -129,7 +129,7 @@ def rename_notebook(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    resolved_id = ensure_notebook_id(notebook_id, runtime.recent_notebook())
+    resolved_id = ensure_notebook_id(notebook_id, runtime.fallback_notebook())
     payload = {"new_name": new_name}
     with runtime.api_client() as client:
         response = client.patch_json(f"/api/notebooks/{resolved_id}/rename", json=payload)
@@ -145,7 +145,7 @@ def add_tags(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    resolved_id = ensure_notebook_id(notebook_id, runtime.recent_notebook())
+    resolved_id = ensure_notebook_id(notebook_id, runtime.fallback_notebook())
     tag_list = comma_separated(tags)
     if not tag_list:
         raise typer.BadParameter("Provide at least one tag.")
@@ -163,7 +163,7 @@ def remove_tags(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    resolved_id = ensure_notebook_id(notebook_id, runtime.recent_notebook())
+    resolved_id = ensure_notebook_id(notebook_id, runtime.fallback_notebook())
     tag_list = comma_separated(tags)
     if not tag_list:
         raise typer.BadParameter("Provide at least one tag.")
@@ -181,7 +181,7 @@ def delete_notebook(
     profile: str | None = typer.Option(None, "--profile", "-p", help="Profile to use"),
 ) -> None:
     runtime = _context(profile)
-    resolved_id = ensure_notebook_id(notebook_id, runtime.recent_notebook())
+    resolved_id = ensure_notebook_id(notebook_id, runtime.fallback_notebook())
     typer.confirm(f"Delete notebook {resolved_id}?", abort=True)
     with runtime.api_client() as client:
         client.delete(f"/api/notebooks/{resolved_id}", params={"cascade": cascade})
@@ -204,7 +204,7 @@ def generate_blog_post(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    resolved_id = ensure_notebook_id(notebook_id, runtime.recent_notebook())
+    resolved_id = ensure_notebook_id(notebook_id, runtime.fallback_notebook())
     payload = {
         "title": title,
         "prompt": prompt_text,
@@ -216,6 +216,29 @@ def generate_blog_post(
         response = client.post_json(f"/api/notebooks/{resolved_id}/generate-blog-post", json=payload)
     runtime.remember_notebook(resolved_id)
     render_output(response, fmt=fmt, title="Blog Post Output")
+
+
+@notebooks_app.command("current")
+def current_notebook(
+    notebook_id: str | None = typer.Argument(None, help="Notebook GUID to set as current"),
+    profile: str | None = typer.Option(None, "--profile", "-p", help="Profile to use"),
+) -> None:
+    """Show or set the current (default) notebook for the active profile."""
+    from ..config_store import ConfigStore
+    
+    store = ConfigStore()
+    if notebook_id:
+        store.set_default_notebook(notebook_id, profile)
+        console.print(f"[green]Current notebook set to {notebook_id}.[/green]")
+        return
+    
+    # Show current notebook
+    config = store.load()
+    target_profile = config.get_profile(profile)
+    if target_profile.default_notebook:
+        console.print(target_profile.default_notebook)
+    else:
+        console.print("No current notebook set.")
 
 
 @notebooks_app.command("recent")

@@ -27,7 +27,7 @@ def ingest_notebook(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     payload = {"chunk_size": chunk_size, "overlap": overlap, "force_reingest": force}
     with runtime.api_client(timeout=300.0) as client:
         response = client.post_json(f"/api/notebooks/{notebook_id}/ingest", json=payload)
@@ -44,7 +44,7 @@ def similar_search(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     params = {"query": query, "limit": limit}
     with runtime.api_client() as client:
         response = client.get_json(f"/api/notebooks/{notebook_id}/similar", params=params)
@@ -60,7 +60,7 @@ def vector_count(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     with runtime.api_client() as client:
         response = client.get_json(f"/api/notebooks/{notebook_id}/vectors/count")
     runtime.remember_notebook(notebook_id)
@@ -73,7 +73,7 @@ def purge_vectors(
     profile: str | None = typer.Option(None, "--profile", "-p", help="Profile to use"),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     typer.confirm(f"Delete all vectors for notebook {notebook_id}?", abort=True)
     with runtime.api_client() as client:
         client.delete(f"/api/notebooks/{notebook_id}/vectors")
@@ -87,7 +87,7 @@ def create_collection(
     fmt: OutputFormat = typer.Option(OutputFormat.TABLE, "--format", "-f", case_sensitive=False),
 ) -> None:
     runtime = _context(profile)
-    notebook_id = ensure_notebook_id(notebook, runtime.recent_notebook())
+    notebook_id = ensure_notebook_id(notebook, runtime.fallback_notebook())
     with runtime.api_client() as client:
         response = client.post_json(f"/api/notebooks/{notebook_id}/collection", json={})
     runtime.remember_notebook(notebook_id)
