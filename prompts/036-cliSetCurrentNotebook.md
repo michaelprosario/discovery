@@ -1,0 +1,3 @@
+- edit src/cli
+- we need a cli command to set the current notebook by a guid
+- all cli commands that leverage "notebook" parameter can leverage the "current notebook" in their execution.  This will help the user avoid repeating the notebook guid over and over again.
