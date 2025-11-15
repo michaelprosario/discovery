@@ -1,9 +1,7 @@
 # Byte-compiled / optimized / DLL files
 chroma_data/
-*.pyc
-__pycache__/
-*.py[codz]
-*$py.class
+
+
 
 # C extensions
 *.so
@@ -217,27 +215,3 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-src/__pycache__/__init__.cpython-312.pyc
-src/api/__pycache__/__init__.cpython-312.pyc
-src/api/__pycache__/dtos.cpython-312.pyc
-src/api/__pycache__/main.cpython-312.pyc
-src/api/__pycache__/notebooks_router.cpython-312.pyc
-src/core/__pycache__/__init__.cpython-312.pyc
-src/core/commands/__pycache__/__init__.cpython-312.pyc
-src/core/commands/__pycache__/notebook_commands.cpython-312.pyc
-src/core/entities/__pycache__/__init__.cpython-312.pyc
-src/core/entities/__pycache__/notebook.cpython-312.pyc
-src/core/interfaces/__pycache__/__init__.cpython-312.pyc
-src/core/interfaces/repositories/__pycache__/__init__.cpython-312.pyc
-src/core/interfaces/repositories/__pycache__/i_notebook_repository.cpython-312.pyc
-src/core/queries/__pycache__/__init__.cpython-312.pyc
-src/core/queries/__pycache__/notebook_queries.cpython-312.pyc
-src/core/results/__pycache__/__init__.cpython-312.pyc
-src/core/results/__pycache__/result.cpython-312.pyc
-src/core/results/__pycache__/validation_error.cpython-312.pyc
-src/core/services/__pycache__/__init__.cpython-312.pyc
-src/core/services/__pycache__/notebook_management_service.cpython-312.pyc
-src/core/value_objects/__pycache__/__init__.cpython-312.pyc
-src/core/value_objects/__pycache__/enums.cpython-312.pyc
-src/infrastructure/__pycache__/__init__.cpython-312.pyc
-src/infrastructure/repositories/__pycache__/__init__.cpython-312.pyc
