@@ -1,5 +1,6 @@
 """Newspaper3k implementation of IWebFetchProvider for improved article extraction."""
 import random
+import re
 import time
 from typing import Dict, Any
 from urllib.parse import urlparse
@@ -59,6 +60,35 @@ class Newspaper3kWebFetchProvider(IWebFetchProvider):
             "Cache-Control": "max-age=0",
         }
 
+    def _sanitize_html(self, html: str) -> str:
+        """
+        Remove XML-incompatible characters from HTML content.
+        
+        XML 1.0 only allows specific character ranges:
+        - #x9 (tab)
+        - #xA (line feed)
+        - #xD (carriage return)  
+        - [#x20-#xD7FF] (printable characters and most Unicode)
+        - [#xE000-#xFFFD] (private use and other valid Unicode)
+        
+        This removes NULL bytes and control characters that cause
+        "All strings must be XML compatible" errors in newspaper3k.
+        
+        Args:
+            html: Raw HTML content that may contain invalid characters
+            
+        Returns:
+            str: Sanitized HTML content safe for XML parsing
+        """
+        if not html:
+            return html
+        
+        # Remove NULL bytes and control characters (except tab, LF, CR)
+        # Pattern matches: \x00-\x08, \x0B, \x0C, \x0E-\x1F, \x7F-\x9F
+        sanitized = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]', '', html)
+        
+        return sanitized
+
     def fetch_url(self, url: str, timeout: int = 30) -> Result[WebContent]:
         """
         Fetch content from a URL and extract main content using newspaper3k.
@@ -88,6 +118,11 @@ class Newspaper3kWebFetchProvider(IWebFetchProvider):
             
             # Download and parse the article
             article.download()
+            
+            # Sanitize HTML content before parsing to remove XML-incompatible characters
+            if article.html:
+                article.html = self._sanitize_html(article.html)
+            
             article.parse()
             
             # Extract NLP features (keywords, summary) if available
@@ -100,8 +135,10 @@ class Newspaper3kWebFetchProvider(IWebFetchProvider):
             # Extract title
             title = article.title or self._extract_title_from_url(url)
             
-            # Extract main text content
+            # Extract main text content and sanitize it
             text = article.text.strip()
+            if text:
+                text = self._sanitize_html(text)  # Also sanitize extracted text
             
             if not text:
                 return Result.failure("No text content extracted from article")
@@ -196,6 +233,9 @@ class Newspaper3kWebFetchProvider(IWebFetchProvider):
             if not html or not html.strip():
                 return Result.failure("HTML content cannot be empty")
 
+            # Sanitize HTML before parsing to remove XML-incompatible characters
+            html = self._sanitize_html(html)
+
             # Create a temporary article for parsing
             # Note: newspaper3k works best with URLs, this is a fallback
             article = Article('', config=self.config)
@@ -209,6 +249,9 @@ class Newspaper3kWebFetchProvider(IWebFetchProvider):
                 pass
 
             text = article.text.strip()
+            # Also sanitize the extracted text
+            if text:
+                text = self._sanitize_html(text)
 
             if not text:
                 return Result.failure("Could not extract text content from HTML")
