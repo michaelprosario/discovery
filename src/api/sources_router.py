@@ -23,6 +23,7 @@ from ..core.queries.source_queries import (
 )
 from ..core.queries.article_search_queries import ArticleSearchQuery
 from ..core.value_objects.enums import SourceType, FileType, SortOption, SortOrder
+from .dependencies.article_search import get_article_search_service
 from .dtos import (
     ImportFileSourceRequest,
     ImportUrlSourceRequest,
@@ -800,19 +801,6 @@ def get_source_preview(
         preview=preview,
         full_text_length=len(source.extracted_text)
     )
-
-
-def get_article_search_service() -> ArticleSearchService:
-    """Dependency injection for ArticleSearchService."""
-    try:
-        from ..infrastructure.providers.gemini_article_search_provider import GeminiArticleSearchProvider
-        gemini_provider = GeminiArticleSearchProvider()
-        return ArticleSearchService(gemini_provider)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to initialize article search service: {str(e)}"
-        )
 
 
 @router.post(
