@@ -193,8 +193,13 @@ class SourceIngestionService:
 
         notebook = notebook_result.value
 
-        # Fetch content from URL
-        fetch_result = self._web_fetch_provider.fetch_url(command.url)
+        # Fetch content from URL using enhanced retry logic for better success rates
+        if hasattr(self._web_fetch_provider, 'fetch_url_safe'):
+            fetch_result = self._web_fetch_provider.fetch_url_safe(command.url)
+        elif hasattr(self._web_fetch_provider, 'fetch_with_retry'):
+            fetch_result = self._web_fetch_provider.fetch_with_retry(command.url)
+        else:
+            fetch_result = self._web_fetch_provider.fetch_url(command.url)
         if fetch_result.is_failure:
             return Result.failure(f"Failed to fetch URL: {fetch_result.error}")
 

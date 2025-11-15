@@ -70,7 +70,7 @@ All commands respect `--profile` to target a specific configuration profile. Whe
 
 
 
-
+## discovery cli examples
   
 discovery --help
 discovery notebooks --help
