@@ -247,8 +247,9 @@ class Newspaper3kWebFetchProvider(IWebFetchProvider):
 
         # Basic article metadata
         if article.authors:
-            metadata['authors'] = article.authors
-            metadata['author'] = ', '.join(article.authors)
+            # Ensure authors is a list (could be a set)
+            metadata['authors'] = list(article.authors) if not isinstance(article.authors, list) else article.authors
+            metadata['author'] = ', '.join(metadata['authors'])
 
         if article.publish_date:
             metadata['publish_date'] = article.publish_date.isoformat()
@@ -261,17 +262,17 @@ class Newspaper3kWebFetchProvider(IWebFetchProvider):
         if article.meta_description:
             metadata['description'] = article.meta_description
 
-        # Keywords extracted via NLP
+        # Keywords extracted via NLP - convert set to list for JSON serialization
         if article.keywords:
-            metadata['keywords'] = article.keywords
+            metadata['keywords'] = list(article.keywords) if not isinstance(article.keywords, list) else article.keywords
 
         # Summary generated via NLP
         if article.summary:
             metadata['summary'] = article.summary
 
-        # Videos
+        # Videos - convert set to list for JSON serialization
         if article.movies:
-            metadata['videos'] = article.movies
+            metadata['videos'] = list(article.movies) if not isinstance(article.movies, list) else article.movies
 
         # Source URL metadata
         if article.source_url:
@@ -285,9 +286,9 @@ class Newspaper3kWebFetchProvider(IWebFetchProvider):
         if hasattr(article, 'meta_lang') and article.meta_lang:
             metadata['language'] = article.meta_lang
 
-        # Article tags/categories
+        # Article tags/categories - convert set to list for JSON serialization
         if article.tags:
-            metadata['tags'] = article.tags
+            metadata['tags'] = list(article.tags) if not isinstance(article.tags, list) else article.tags
 
         return metadata
 
