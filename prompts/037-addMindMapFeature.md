@@ -1,0 +1,5 @@
+- Please read the docs related to https://markmap.js.org/docs/packages--markmap-autoloader
+- As a discovery user, I should like the ability to build a mind map based on prompt input to help me learn aspects of my notebook.
+- The prompt input should use the vector search database and the llm provider to make an outline answering the prompt using markdown
+- Based on the outline of data, the system should enable me to view the mindmap in a new window
+- The system should enable me to download the outline markdown

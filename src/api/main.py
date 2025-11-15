@@ -15,6 +15,7 @@ from .outputs_router import router as outputs_router
 from .vector_search_router import router as vector_search_router
 from .article_search_router import router as article_search_router
 from .qa_router import router as qa_router
+from .mindmap_router import router as mindmap_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -45,6 +46,7 @@ app.include_router(outputs_router)
 app.include_router(vector_search_router)
 app.include_router(article_search_router)
 app.include_router(qa_router)
+app.include_router(mindmap_router)
 
 
 @app.on_event("startup")

@@ -169,6 +169,9 @@ class DiscoveryApp {
             }
         });
         
+        // Mind map generation
+        document.getElementById('generateMindMapBtn').addEventListener('click', () => this.openMindMapViewer());
+        
         // Blog post generation
         document.getElementById('generateBlogPostBtn').addEventListener('click', () => this.showBlogPostModal());
         document.getElementById('blogPostForm').addEventListener('submit', (e) => this.handleBlogPostSubmit(e));
@@ -1653,6 +1656,21 @@ class DiscoveryApp {
     }
 
     // Blog Post Generation Methods
+    // ===== MIND MAP GENERATION =====
+    
+    openMindMapViewer() {
+        if (!this.currentNotebook) {
+            this.showToast('Error', 'Please select a notebook first', 'error');
+            return;
+        }
+
+        // Open the mind map viewer in a new window
+        const viewerUrl = `/api/notebooks/${this.currentNotebook.id}/mindmap/viewer`;
+        window.open(viewerUrl, '_blank', 'width=1400,height=900');
+    }
+
+    // ===== BLOG POST GENERATION =====
+    
     showBlogPostModal() {
         if (!this.currentNotebook) {
             this.showToast('Error', 'No notebook selected', 'error');
