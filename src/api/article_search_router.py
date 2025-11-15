@@ -5,7 +5,7 @@ from typing import Dict, List
 
 from ..core.services.article_search_service import ArticleSearchService
 from ..core.queries.article_search_queries import ArticleSearchQuery
-from ..infrastructure.providers.gemini_article_search_provider import GeminiArticleSearchProvider
+from .dependencies.article_search import get_article_search_service
 
 router = APIRouter(
     prefix="/articles",
@@ -29,18 +29,6 @@ class ArticleResponse(BaseModel):
 class ArticleSearchResponse(BaseModel):
     """Response model for article search results."""
     robust_articles: List[ArticleResponse] = Field(..., description="List of found articles")
-
-
-def get_article_search_service() -> ArticleSearchService:
-    """Dependency injection for ArticleSearchService."""
-    try:
-        gemini_provider = GeminiArticleSearchProvider()
-        return ArticleSearchService(gemini_provider)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to initialize article search service: {str(e)}"
-        )
 
 
 @router.post("/search", response_model=ArticleSearchResponse)

@@ -1,5 +1,9 @@
 # Byte-compiled / optimized / DLL files
 chroma_data/
+*.pyc
+__pycache__/
+*.py[codz]
+*$py.class
 
 
 

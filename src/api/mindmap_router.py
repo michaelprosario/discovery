@@ -262,6 +262,7 @@ def get_mindmap_viewer(notebook_id: UUID):
             display: flex;
             gap: 0.75rem;
             align-items: center;
+            flex-wrap: wrap;
         }}
         
         .btn {{
@@ -275,6 +276,11 @@ def get_mindmap_viewer(notebook_id: UUID):
             display: flex;
             align-items: center;
             gap: 0.4rem;
+        }}
+        
+        .btn:disabled {{
+            opacity: 0.5;
+            cursor: not-allowed;
         }}
         
         .btn-primary {{
@@ -303,6 +309,24 @@ def get_mindmap_viewer(notebook_id: UUID):
         
         .btn-success:hover {{
             background: #218838;
+        }}
+        
+        .btn-info {{
+            background: #17a2b8;
+            color: white;
+        }}
+        
+        .btn-info:hover {{
+            background: #138496;
+        }}
+        
+        .btn-warning {{
+            background: #ffc107;
+            color: #333;
+        }}
+        
+        .btn-warning:hover {{
+            background: #e0a800;
         }}
         
         .input-group {{
@@ -440,6 +464,18 @@ def get_mindmap_viewer(notebook_id: UUID):
                     Generate
                 </button>
             </div>
+            <button class="btn btn-warning" onclick="collapseAll()" id="collapseBtn" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="18 15 12 9 6 15"/>
+                </svg>
+                Collapse All
+            </button>
+            <button class="btn btn-info" onclick="expandAll()" id="expandBtn" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+                Expand All
+            </button>
             <button class="btn btn-success" onclick="downloadMarkdown()" id="downloadBtn" style="display: none;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -486,6 +522,7 @@ def get_mindmap_viewer(notebook_id: UUID):
     <script>
         const notebookId = '{notebook_id}';
         let currentMarkdown = '';
+        let markmapInstance = null;
         
         async function generateMindMap() {{
             const prompt = document.getElementById('promptInput').value.trim();
@@ -505,6 +542,8 @@ def get_mindmap_viewer(notebook_id: UUID):
             
             document.getElementById('stats').style.display = 'none';
             document.getElementById('downloadBtn').style.display = 'none';
+            document.getElementById('collapseBtn').style.display = 'none';
+            document.getElementById('expandBtn').style.display = 'none';
             
             try {{
                 const response = await fetch(`/api/notebooks/${{notebookId}}/mindmap`, {{
@@ -534,6 +573,8 @@ def get_mindmap_viewer(notebook_id: UUID):
                 document.getElementById('sourcesCount').textContent = data.sources.length;
                 document.getElementById('stats').style.display = 'flex';
                 document.getElementById('downloadBtn').style.display = 'flex';
+                document.getElementById('collapseBtn').style.display = 'flex';
+                document.getElementById('expandBtn').style.display = 'flex';
                 
                 // Render mind map
                 container.innerHTML = '<svg id="mindmap"></svg>';
@@ -558,13 +599,49 @@ def get_mindmap_viewer(notebook_id: UUID):
                 const {{ Transformer, Markmap }} = window.markmap;
                 const transformer = new Transformer();
                 const {{ root }} = transformer.transform(markdown);
-                Markmap.create(svg, {{}}, root);
+                markmapInstance = Markmap.create(svg, {{}}, root);
             }} else {{
                 // Fallback: create a temporary element with the markdown
                 const pre = document.createElement('pre');
                 pre.innerHTML = `<code class="language-markmap">${{markdown}}</code>`;
                 svg.parentElement.insertBefore(pre, svg);
                 pre.style.display = 'none';
+            }}
+        }}
+        
+        function collapseAll() {{
+            if (markmapInstance) {{
+                // Collapse all nodes by recursively setting payload.fold to true
+                const collapseNode = (node) => {{
+                    if (node.children && node.children.length > 0) {{
+                        if (!node.payload) node.payload = {{}};
+                        node.payload.fold = 1; // 1 means collapsed
+                        node.children.forEach(collapseNode);
+                    }}
+                }};
+                
+                if (markmapInstance.state && markmapInstance.state.data) {{
+                    collapseNode(markmapInstance.state.data);
+                    markmapInstance.renderData();
+                }}
+            }}
+        }}
+        
+        function expandAll() {{
+            if (markmapInstance) {{
+                // Expand all nodes by recursively setting payload.fold to false
+                const expandNode = (node) => {{
+                    if (node.children && node.children.length > 0) {{
+                        if (!node.payload) node.payload = {{}};
+                        node.payload.fold = 0; // 0 means expanded
+                        node.children.forEach(expandNode);
+                    }}
+                }};
+                
+                if (markmapInstance.state && markmapInstance.state.data) {{
+                    expandNode(markmapInstance.state.data);
+                    markmapInstance.renderData();
+                }}
             }}
         }}
         
