@@ -69,10 +69,10 @@ def get_web_fetch_provider():
     """
     Dependency injection for IWebFetchProvider.
 
-    Creates an HttpWebFetchProvider instance.
+    Creates a Newspaper3kWebFetchProvider instance for improved article extraction.
     """
-    from ..infrastructure.providers.http_web_fetch_provider import HttpWebFetchProvider
-    return HttpWebFetchProvider()
+    from ..infrastructure.providers.newspaper_web_fetch_provider import Newspaper3kWebFetchProvider
+    return Newspaper3kWebFetchProvider()
 
 
 def get_content_extraction_provider():

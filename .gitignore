@@ -1,8 +1,7 @@
 # Byte-compiled / optimized / DLL files
-*.pyc
-__pycache__/
-*.py[codz]
-*$py.class
+chroma_data/
+
+
 
 # C extensions
 *.so
