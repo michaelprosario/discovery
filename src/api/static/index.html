@@ -118,6 +118,9 @@
                                     <button id="qaToggleBtn" class="dropdown-item">
                                         <i class="fas fa-question-circle"></i> Ask Questions
                                     </button>
+                                    <button id="generateMindMapBtn" class="dropdown-item">
+                                        <i class="fas fa-project-diagram"></i> Generate Mind Map
+                                    </button>
                                     <button id="generateBlogPostBtn" class="dropdown-item">
                                         <i class="fas fa-pen-fancy"></i> Generate Blog Post
                                     </button>
@@ -484,6 +487,100 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-modal="confirmationModal">Cancel</button>
                 <button type="button" id="confirmActionBtn" class="btn btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generate Mind Map Modal -->
+    <div id="mindMapModal" class="modal modal-large">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Generate Mind Map</h3>
+                <button class="modal-close" data-modal="mindMapModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="mindMapForm">
+                    <div class="form-group">
+                        <label for="mindMapPrompt">Prompt or Question *</label>
+                        <textarea id="mindMapPrompt" name="prompt" required maxlength="5000" class="form-textarea" rows="4" 
+                                placeholder="What would you like to explore? (e.g., 'Key concepts in machine learning', 'How does blockchain work?', 'Main themes in this notebook')"></textarea>
+                        <small class="form-help">The AI will analyze your notebook content and create a structured mind map based on your prompt</small>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mindMapMaxSources">Sources to Use</label>
+                            <select id="mindMapMaxSources" name="maxSources" class="form-select">
+                                <option value="5">5 sources</option>
+                                <option value="10" selected>10 sources</option>
+                                <option value="15">15 sources</option>
+                                <option value="20">20 sources</option>
+                            </select>
+                            <small class="form-help">Number of relevant content chunks to include</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="mindMapTemperature">Creativity</label>
+                            <select id="mindMapTemperature" name="temperature" class="form-select">
+                                <option value="0.2">Structured</option>
+                                <option value="0.4" selected>Balanced</option>
+                                <option value="0.6">Creative</option>
+                            </select>
+                            <small class="form-help">How creative vs structured the outline should be</small>
+                        </div>
+                    </div>
+                </form>
+                <div id="mindMapProgress" class="generation-progress hidden">
+                    <div class="progress-header">
+                        <i class="fas fa-project-diagram"></i>
+                        <h4>Generating Mind Map...</h4>
+                    </div>
+                    <div class="progress-steps">
+                        <div class="progress-step" data-step="search">
+                            <i class="fas fa-search"></i>
+                            <span>Searching for relevant content</span>
+                            <div class="step-status"></div>
+                        </div>
+                        <div class="progress-step" data-step="generate">
+                            <i class="fas fa-brain"></i>
+                            <span>Generating structured outline</span>
+                            <div class="step-status"></div>
+                        </div>
+                        <div class="progress-step" data-step="complete">
+                            <i class="fas fa-check"></i>
+                            <span>Preparing visualization</span>
+                            <div class="step-status"></div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <div id="mindMapResult" class="mind-map-result hidden">
+                    <div class="result-header">
+                        <h4>Mind Map Generated</h4>
+                        <div class="result-actions">
+                            <button id="viewMindMapBtn" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i> View Interactive
+                            </button>
+                            <button id="downloadMindMapBtn" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-download"></i> Download Markdown
+                            </button>
+                        </div>
+                    </div>
+                    <div id="mindMapPreview" class="mind-map-preview"></div>
+                    <div class="result-stats">
+                        <span id="mindMapSourceCount">0 sources</span>
+                        <span id="mindMapConfidence">0% confidence</span>
+                        <span id="mindMapGenTime">Generated in 0s</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal="mindMapModal">Close</button>
+                <button type="submit" form="mindMapForm" id="generateMindMapSubmitBtn" class="btn btn-primary">
+                    <i class="fas fa-magic"></i> Generate Mind Map
+                </button>
             </div>
         </div>
     </div>
