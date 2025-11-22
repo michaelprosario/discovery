@@ -45,6 +45,22 @@ export class EditNotebook implements OnInit {
     }
   }
 
+  deleteSource(source: SourceResponse) {
+    if (confirm(`Are you sure you want to delete source "${source.name}"?`)) {
+      if (this.notebookId && source.id) {
+        this.sourceService.deleteSource(source.id, this.notebookId).subscribe({
+          next: () => {
+            this.loadData(this.notebookId!);
+          },
+          error: (err) => {
+            console.error('Error deleting source', err);
+            alert('Failed to delete source');
+          }
+        });
+      }
+    }
+  }
+
   loadData(id: string) {
     this.isLoading = true;
     forkJoin({
