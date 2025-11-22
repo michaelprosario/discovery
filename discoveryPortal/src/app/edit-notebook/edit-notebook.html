@@ -1,22 +1,21 @@
-    <div class="flex h-screen">
+    <div class="flex h-screen" *ngIf="!isLoading && notebook">
 
         <main class="flex-1 overflow-y-auto">
             <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div class="flex flex-wrap gap-2 pb-4">
                     <a class="text-slate-500 dark:text-[#92adc9] text-base font-medium leading-normal hover:text-primary"
-                        href="/list-notebooks">
+                        routerLink="/list-notebooks">
                         All Notebooks
                     </a>
                     <span class="text-slate-400 dark:text-[#92adc9] text-base font-medium leading-normal">/</span>
-                    <span class="text-slate-800 dark:text-white text-base font-medium leading-normal">Notebook</span>
+                    <span class="text-slate-800 dark:text-white text-base font-medium leading-normal">{{ notebook.name }}</span>
                 </div>
                 <header class="flex flex-wrap items-start justify-between gap-4 pb-8">
                     <div class="flex min-w-72 flex-col gap-2">
                         <h1
                             class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
-                            Quantum Computing Research</h1>
-                        <p class="text-slate-500 dark:text-[#92adc9] text-base font-normal leading-normal">A collection
-                            of sources on quantum entanglement and computing principles.</p>
+                            {{ notebook.name }}</h1>
+                        <p class="text-slate-500 dark:text-[#92adc9] text-base font-normal leading-normal">{{ notebook.description }}</p>
                     </div>
                 </header>
                 <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -40,16 +39,16 @@
                                         </tr>
                                     </thead>
                                     <tbody class="text-slate-700 dark:text-slate-300">
-                                        <tr
+                                        <tr *ngFor="let source of sources"
                                             class="border-b border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-[#111a22] dark:hover:bg-slate-900/50">
                                             <td class="flex items-center gap-3 whitespace-nowrap px-6 py-4">
                                                 <span
-                                                    class="material-symbols-outlined text-lg text-red-500">picture_as_pdf</span>
+                                                    class="material-symbols-outlined text-lg text-slate-500">description</span>
                                                 <a class="font-medium text-slate-800 hover:text-primary dark:text-white"
-                                                    href="#">Quantum_Entanglement_Paper.pdf</a>
+                                                    href="#">{{ source.name }}</a>
                                             </td>
                                             <td class="px-6 py-4"><span
-                                                    class="rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">PDF</span>
+                                                    class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ source.source_type }}</span>
                                             </td>
                                             <td class="px-6 py-4 text-right">
                                                 <div class="flex items-center justify-end gap-2">
@@ -64,6 +63,9 @@
                                                             class="material-symbols-outlined text-xl">delete</span></button>
                                                 </div>
                                             </td>
+                                        </tr>
+                                        <tr *ngIf="sources.length === 0">
+                                            <td colspan="3" class="px-6 py-4 text-center text-slate-500">No sources found.</td>
                                         </tr>
 
                                     </tbody>
@@ -87,4 +89,7 @@
                 </div>
             </div>
         </main>
+    </div>
+    <div *ngIf="isLoading" class="flex h-screen items-center justify-center">
+        <p>Loading...</p>
     </div>
