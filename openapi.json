@@ -2616,6 +2616,144 @@
                 }
             }
         },
+        "/api/notebooks/{notebook_id}/mindmap": {
+            "post": {
+                "tags": [
+                    "mindmap"
+                ],
+                "summary": "Generate Mindmap",
+                "description": "Generate a mind map outline from notebook content using RAG.\n\nThis endpoint:\n1. Searches for relevant content chunks in the notebook using vector similarity\n2. Uses an LLM to generate a structured markdown outline based on the retrieved context\n3. Returns the markdown outline with source citations\n\nThe markdown outline can be visualized using markmap.js or similar tools.\n\nArgs:\n    notebook_id: UUID of the notebook to generate mind map from\n    request: Mind map generation prompt and parameters\n    service: Injected mind map service\n\nReturns:\n    Mind map response with markdown outline and sources",
+                "operationId": "generate_mindmap_api_notebooks__notebook_id__mindmap_post",
+                "parameters": [
+                    {
+                        "name": "notebook_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Notebook Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateMindMapRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MindMapResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Notebook not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid prompt or parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Mind map generation failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/notebooks/{notebook_id}/mindmap/viewer": {
+            "get": {
+                "tags": [
+                    "mindmap"
+                ],
+                "summary": "Get Mindmap Viewer",
+                "description": "Get the mind map viewer HTML page for a notebook.\n\nThis returns an HTML page with markmap.js integration that can display\nmind maps generated from the notebook.\n\nArgs:\n    notebook_id: UUID of the notebook\n\nReturns:\n    HTML page with mind map viewer",
+                "operationId": "get_mindmap_viewer_api_notebooks__notebook_id__mindmap_viewer_get",
+                "parameters": [
+                    {
+                        "name": "notebook_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Notebook Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mind map viewer HTML page",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Notebook not found",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/": {
             "get": {
                 "summary": "Root",
@@ -3150,6 +3288,61 @@
                 "title": "GenerateBlogPostRequest",
                 "description": "Request model for generating a blog post."
             },
+            "GenerateMindMapRequest": {
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "maxLength": 5000,
+                        "minLength": 1,
+                        "title": "Prompt",
+                        "description": "Prompt or question for mind map generation"
+                    },
+                    "max_sources": {
+                        "type": "integer",
+                        "maximum": 50.0,
+                        "minimum": 1.0,
+                        "title": "Max Sources",
+                        "description": "Maximum number of source chunks to use",
+                        "default": 10
+                    },
+                    "temperature": {
+                        "anyOf": [
+                            {
+                                "type": "number",
+                                "maximum": 2.0,
+                                "minimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Temperature",
+                        "description": "LLM temperature",
+                        "default": 0.4
+                    },
+                    "max_tokens": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "maximum": 4000.0,
+                                "minimum": 100.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Max Tokens",
+                        "description": "Maximum tokens for LLM",
+                        "default": 2000
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt"
+                ],
+                "title": "GenerateMindMapRequest",
+                "description": "Request to generate a mind map from notebook content."
+            },
             "HTTPValidationError": {
                 "properties": {
                     "detail": {
@@ -3316,6 +3509,120 @@
                 ],
                 "title": "IngestNotebookResponse",
                 "description": "Response from notebook ingestion."
+            },
+            "MindMapResponse": {
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "title": "Prompt"
+                    },
+                    "markdown_outline": {
+                        "type": "string",
+                        "title": "Markdown Outline"
+                    },
+                    "sources": {
+                        "items": {
+                            "$ref": "#/components/schemas/MindMapSourceItem"
+                        },
+                        "type": "array",
+                        "title": "Sources"
+                    },
+                    "notebook_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Notebook Id"
+                    },
+                    "confidence_score": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Confidence Score"
+                    },
+                    "processing_time_ms": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Processing Time Ms"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt",
+                    "markdown_outline",
+                    "sources",
+                    "notebook_id"
+                ],
+                "title": "MindMapResponse",
+                "description": "Response from mind map generation."
+            },
+            "MindMapSourceItem": {
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "title": "Text"
+                    },
+                    "source_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Id"
+                    },
+                    "chunk_index": {
+                        "type": "integer",
+                        "title": "Chunk Index"
+                    },
+                    "relevance_score": {
+                        "type": "number",
+                        "title": "Relevance Score"
+                    },
+                    "source_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Name"
+                    },
+                    "source_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "text",
+                    "source_id",
+                    "chunk_index",
+                    "relevance_score"
+                ],
+                "title": "MindMapSourceItem",
+                "description": "Source information in mind map response."
             },
             "NotebookListResponse": {
                 "properties": {

@@ -20,16 +20,21 @@ class GeminiLlmProvider(ILlmProvider):
     def __init__(
         self, 
         api_key: Optional[str] = None,
-        model_name: str = "gemini-2.0-flash-001"
+        model_name: Optional[str] = None
     ):
         """
         Initialize the Gemini LLM provider.
 
         Args:
             api_key: Gemini API key (if None, uses environment variable)
-            model_name: Name of the Gemini model to use
+            model_name: Name of the Gemini model to use (if None, uses GEMINI_MODEL env var or defaults to gemini-2.0-flash-001)
         """
-        self._model_name = model_name
+        # Use provided model name or get from environment
+        if model_name:
+            self._model_name = model_name
+        else:
+            self._model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-001")
+        
         self._client = None
         
         # Use provided API key or get from environment

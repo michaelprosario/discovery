@@ -1,0 +1,86 @@
+<div class="new-notebook-container">
+  <div class="header">
+    <h2>Create New Notebook</h2>
+  </div>
+
+  <form [formGroup]="notebookForm" (ngSubmit)="onSave()" class="notebook-form">
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Name Field -->
+    <div class="form-group">
+      <label for="name">Name <span class="required">*</span></label>
+      <input
+        type="text"
+        id="name"
+        formControlName="name"
+        class="form-control"
+        [class.invalid]="name?.invalid && name?.touched"
+        placeholder="Enter notebook name"
+      />
+      <div *ngIf="name?.invalid && name?.touched" class="validation-error">
+        <span *ngIf="name?.errors?.['required']">Name is required.</span>
+        <span *ngIf="name?.errors?.['minlength']">Name must be at least 1 character.</span>
+        <span *ngIf="name?.errors?.['maxlength']">Name cannot exceed 255 characters.</span>
+      </div>
+    </div>
+
+    <!-- Description Field -->
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea
+        id="description"
+        formControlName="description"
+        class="form-control"
+        rows="4"
+        placeholder="Enter notebook description (optional)"
+      ></textarea>
+    </div>
+
+    <!-- Tags Field -->
+    <div class="form-group">
+      <label for="tags">Tags</label>
+      <div class="tag-input-container">
+        <input
+          type="text"
+          id="tagInput"
+          [(ngModel)]="tagInput"
+          [ngModelOptions]="{standalone: true}"
+          class="form-control"
+          placeholder="Enter a tag and press Add"
+          (keyup.enter)="addTag()"
+        />
+        <button type="button" class="btn btn-secondary" (click)="addTag()">Add Tag</button>
+      </div>
+      <div class="tags-list" *ngIf="tags.length > 0">
+        <span *ngFor="let tag of tags" class="tag">
+          {{ tag }}
+          <button type="button" class="tag-remove" (click)="removeTag(tag)" aria-label="Remove tag">
+            ×
+          </button>
+        </span>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-cancel"
+        (click)="onCancel()"
+        [disabled]="isSubmitting"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="isSubmitting || notebookForm.invalid"
+      >
+        {{ isSubmitting ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+  </form>
+</div>

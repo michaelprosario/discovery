@@ -1,0 +1,63 @@
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+        <div class="px-6 py-8 md:px-10">
+            <!-- PageHeading -->
+            <div class="flex flex-wrap justify-between items-center gap-4">
+                <p
+                    class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">
+                    Notebooks</p>
+                <button
+                    (click)="onNewRecord()"
+                    class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+                    <span class="material-symbols-outlined mr-2">add_circle</span>
+                    <span class="truncate">
+                        Create New Notebook
+                    </span>
+                </button>
+            </div>
+
+            <div class="mt-6 @container">
+                <div
+                    class="flex overflow-hidden rounded-lg border border-slate-200 dark:border-[#324d67] bg-white dark:bg-[#111a22]">
+
+                    @if (!screenLoaded) {
+                        <div class="p-4 text-center">Loading...</div>
+                    } @else {
+                        <table class="flex-1">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-[#192633]">
+                                    <th
+                                        class="table-column-name px-4 py-3 text-left text-slate-600 dark:text-white w-[40%] text-sm font-medium leading-normal">
+                                        Name</th>
+                                    <th
+                                        class="table-column-sources px-4 py-3 text-left text-slate-600 dark:text-white w-[25%] text-sm font-medium leading-normal">
+                                        Sources</th>
+                                    <th
+                                        class="table-column-modified px-4 py-3 text-left text-slate-600 dark:text-white w-[25%] text-sm font-medium leading-normal">
+                                        Last Modified</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (record of records; track record.id) {
+                                <tr (click)="onEditRecord(record)"
+                                    class="cursor-pointer border-t border-t-slate-200 dark:border-t-[#324d67] hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                    <td
+                                        class="table-column-name h-[72px] px-4 py-2 text-slate-800 dark:text-white text-sm font-normal leading-normal">
+                                        {{ record.name }}</td>
+                                    <td
+                                        class="table-column-sources h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
+                                        {{ record.source_count }} Sources</td>
+                                    <td
+                                        class="table-column-modified h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
+                                        {{ record.updated_at | date:'mediumDate' }}</td>
+                                    
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </main>
