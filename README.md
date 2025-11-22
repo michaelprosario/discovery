@@ -30,6 +30,25 @@ This FastAPI-based application follows Clean Architecture principles, ensuring c
 
 ![Discovery QA](discover-question-answer.png)
 
+### Major Features
+
+**🎯 Intelligent Research Management**
+- **Multi-Source Ingestion**: Import content from PDFs, DOCX, TXT, Markdown files, and web URLs
+- **Vector-Powered Search**: Semantic similarity search across all your research materials using Weaviate
+- **AI-Driven Insights**: Generate summaries, blog posts, and research outputs using Google Gemini
+- **Question Answering**: Ask natural language questions and get AI-powered answers from your sources using RAG (Retrieval-Augmented Generation)
+
+**🛠️ Developer-First Design**
+- **Clean Architecture**: Framework-independent core business logic, fully testable
+- **RESTful API**: Comprehensive FastAPI backend with interactive documentation
+- **CLI Tool**: Full-featured command-line interface for all operations
+- **Local-First**: All data stored locally with PostgreSQL and Weaviate
+
+**🔒 Privacy & Control**
+- **Data Sovereignty**: Everything runs locally on your infrastructure
+- **No Cloud Lock-in**: Works entirely offline (except for optional Gemini API calls)
+- **Configurable AI**: Support for custom LLM and embedding model configurations
+
 ### Core Concepts
 
 - **Notebooks**: A collection of related sources for a specific project or topic.
@@ -83,6 +102,7 @@ DATABASE_URL="postgresql://postgres:Foobar321@localhost:5432/postgres"
 
 # AI Services
 GEMINI_API_KEY="your_gemini_api_key_here"        # For Google Gemini LLM
+GEMINI_MODEL="gemini-3-pro-preview"              # Gemini model to use (optional, defaults to gemini-2.0-flash-001)
 
 # Google Search Services
 GOOGLE_CUSTOM_SEARCH_API_KEY="your_google_search_api_key"     # For web search features
@@ -99,6 +119,7 @@ WEAVIATE_API_KEY="your_weaviate_cloud_key"       # Only for cloud instances
 |----------|---------|----------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | Yes | None |
 | `GEMINI_API_KEY` | Google Gemini API access for AI features | Yes | None |
+| `GEMINI_MODEL` | Gemini model name (e.g., gemini-3-pro-preview) | No | `gemini-2.0-flash-001` |
 | `GOOGLE_CUSTOM_SEARCH_API_KEY` | Google Custom Search API for web search features | Yes | None |
 | `GOOGLE_CUSTOM_SEARCH_ENGINE_ID` | Custom search engine identifier for Google search | Yes | None |
 | `WEAVIATE_URL` | Weaviate vector database URL | No | `http://localhost:8080` |
@@ -286,6 +307,246 @@ python src/apps/ingest_notebook_into_vectordb.py
 # 3. Ingesting content for semantic search
 # 4. Performing similarity queries
 ```
+
+## Command-Line Interface (CLI)
+
+Discovery includes a powerful CLI built with Typer for managing your research notebooks from the terminal. Perfect for automation, scripting, and quick workflows.
+
+### CLI Installation & Setup
+
+The CLI is automatically installed when you set up the project:
+
+```bash
+# After running 'uv sync', the CLI is available as:
+python -m src.cli
+
+# Or install globally with pipx for convenience:
+pipx install .
+
+# Then use directly:
+discovery --help
+```
+
+### Initial Configuration
+
+**1. Start the API server first:**
+```bash
+./scripts/dev.sh
+# Server runs at http://localhost:8000
+```
+
+**2. Configure the CLI to connect to your API:**
+```bash
+# Initialize a configuration profile
+python -m src.cli config init --url http://localhost:8000
+
+# Test the connection
+python -m src.cli config test
+
+# View current configuration
+python -m src.cli config show
+```
+
+Configuration is stored in `~/.discovery/config.toml`. You can manage multiple profiles for different environments.
+
+### Essential CLI Commands
+
+**Notebook Management:**
+```bash
+# List all notebooks
+python -m src.cli notebooks list
+
+# Create a new notebook
+python -m src.cli notebooks create --name "AI Research" --tags "machine-learning,llm"
+
+# Show notebook details
+python -m src.cli notebooks show <notebook-id>
+
+# Update notebook
+python -m src.cli notebooks update <notebook-id> --name "Updated Name"
+
+# Delete notebook
+python -m src.cli notebooks delete <notebook-id>
+```
+
+**Source Management:**
+```bash
+# Add a web URL source
+python -m src.cli sources add url \
+  --notebook <notebook-id> \
+  --url "https://en.wikipedia.org/wiki/Artificial_intelligence"
+
+# Add a file source
+python -m src.cli sources add file \
+  --notebook <notebook-id> \
+  --path /path/to/research-paper.pdf
+
+# Add text content directly
+python -m src.cli sources add text \
+  --notebook <notebook-id> \
+  --content "Your research notes here"
+
+# List sources in a notebook
+python -m src.cli sources list --notebook <notebook-id>
+
+# Remove a source
+python -m src.cli sources remove <source-id>
+```
+
+**Vector Database Operations:**
+```bash
+# Ingest notebook sources into vector database for semantic search
+python -m src.cli vectors ingest --notebook <notebook-id>
+
+# Perform similarity search
+python -m src.cli vectors search \
+  --notebook <notebook-id> \
+  --query "machine learning applications" \
+  --limit 5
+
+# Check vector count
+python -m src.cli vectors count --notebook <notebook-id>
+
+# Clear vectors for a notebook
+python -m src.cli vectors delete --notebook <notebook-id>
+```
+
+**Question Answering (RAG):**
+```bash
+# Ask a question and get AI-powered answers from your sources
+python -m src.cli qa ask \
+  --notebook <notebook-id> \
+  --question "What are the main applications of deep learning?"
+
+# Output in JSON format for scripting
+python -m src.cli qa ask \
+  --notebook <notebook-id> \
+  --question "Summarize the key findings" \
+  --format json
+```
+
+**Output Generation:**
+```bash
+# Generate a blog post from sources
+python -m src.cli outputs create \
+  --notebook <notebook-id> \
+  --type "blog_post" \
+  --prompt "Write a blog post about AI trends"
+
+# List generated outputs
+python -m src.cli outputs list --notebook <notebook-id>
+
+# View output content
+python -m src.cli outputs show <output-id>
+```
+
+### CLI Output Formats
+
+All list and show commands support multiple output formats:
+
+```bash
+# Human-readable table (default)
+python -m src.cli notebooks list --format table
+
+# JSON for scripting
+python -m src.cli notebooks list --format json
+
+# YAML for configuration
+python -m src.cli notebooks list --format yaml
+
+# Plain text
+python -m src.cli notebooks list --format text
+```
+
+### Scripting Examples
+
+**Complete research workflow:**
+```bash
+#!/bin/bash
+# Create notebook and add sources
+
+NOTEBOOK_ID=$(python -m src.cli notebooks create \
+  --name "AI Ethics Research" \
+  --format json | jq -r '.id')
+
+# Add multiple sources
+for url in \
+  "https://en.wikipedia.org/wiki/Ethics_of_artificial_intelligence" \
+  "https://en.wikipedia.org/wiki/AI_safety"; do
+  python -m src.cli sources add url --notebook $NOTEBOOK_ID --url "$url"
+done
+
+# Ingest into vector database
+python -m src.cli vectors ingest --notebook $NOTEBOOK_ID
+
+# Ask questions
+python -m src.cli qa ask \
+  --notebook $NOTEBOOK_ID \
+  --question "What are the main ethical concerns with AI?" \
+  --format json
+```
+
+**Extract notebook information:**
+```bash
+# Get all notebook IDs
+python -m src.cli notebooks list --format json | jq -r '.notebooks[].id'
+
+# Count sources per notebook
+python -m src.cli notebooks list --format json | \
+  jq '.notebooks[] | "\(.name): \(.source_count) sources"'
+```
+
+### CLI Aliases
+
+The CLI provides convenient short aliases:
+
+- `notebooks` → `nb`
+- `sources` → `src`
+- `vectors` → `vec`
+- `outputs` → `out`
+
+```bash
+python -m src.cli nb list        # Same as 'notebooks list'
+python -m src.cli src add url    # Same as 'sources add url'
+python -m src.cli vec ingest     # Same as 'vectors ingest'
+```
+
+### Advanced CLI Features
+
+**Profile Management:**
+```bash
+# Create profiles for different environments
+python -m src.cli config init --profile production --url https://api.production.com
+python -m src.cli config init --profile staging --url https://api.staging.com
+
+# Use specific profile
+python -m src.cli notebooks list --profile production
+
+# Switch default profile
+python -m src.cli config use --profile staging
+```
+
+**Environment Variables:**
+```bash
+# Export configuration as environment variables
+python -m src.cli config env
+
+# Use in scripts:
+eval $(python -m src.cli config env)
+echo $DISCOVERY_API_URL
+```
+
+**Notebook State Tracking:**
+```bash
+# CLI remembers your most recent notebook
+python -m src.cli notebooks recent --set <notebook-id>
+
+# Then commands work without specifying notebook ID
+python -m src.cli sources list  # Uses recent notebook
+python -m src.cli vectors ingest  # Uses recent notebook
+```
+
+For complete CLI documentation, see `src/cli/README.md`.
 
 ## Development & Testing
 
