@@ -1,0 +1,5 @@
+- Review spec - specs/clean_architecture.md
+- Review openapi spec - openapi.json
+- Following clean architecture style, implement folders for core, infrastructure
+- Implement HttpClientService class for all openapi http calls
+- Responses should be strongly typed following the openapi spec

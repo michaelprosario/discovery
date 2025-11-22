@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { AppComponent } from './app';
 import { routes } from './app.routes';
 import { SideMenu } from './side-menu/side-menu';
+import { NotebookExampleComponent } from "./examples/notebook-example.component";
 
 
 @NgModule({
@@ -13,8 +14,9 @@ import { SideMenu } from './side-menu/side-menu';
   ],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(routes)
-  ],
+    RouterModule.forRoot(routes),
+    NotebookExampleComponent
+],
   providers: [],
   bootstrap: [AppComponent]
 })
