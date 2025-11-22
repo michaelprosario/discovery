@@ -37,4 +37,8 @@ Properly report validation errors to the user if I do not fill out required fiel
     - system shows notebook name
     - system shows notebook description
     - system lists content sources linked to notebook
-    
+
+## Add delete note book
+- On edit-notebook add button on right to enable user to delete a notebook
+- Please make sure to confirm operation before execution
+- After delete, navigate the user back to the list-notebooks screen.
