@@ -29,3 +29,12 @@ Then
 - The system navigates me back to  'list-notebooks'
 
 Properly report validation errors to the user if I do not fill out required fields.
+
+
+## Implement edit-notebook component
+- Review edit-notebook component code
+- Screen features
+    - system shows notebook name
+    - system shows notebook description
+    - system lists content sources linked to notebook
+    
