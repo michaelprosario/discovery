@@ -48,3 +48,10 @@ Properly report validation errors to the user if I do not fill out required fiel
 - Create component to enable me to add source to notebook using text
 - Return the user to "edit-notebook" after adding source
 - follow ui guidance
+
+
+## Add source from url
+- Enable user to "add source from url" from "edit-notebook"
+- Create component to enable me to add source to notebook using url
+- Return the user to "edit-notebook" after adding source
+- follow ui guidance

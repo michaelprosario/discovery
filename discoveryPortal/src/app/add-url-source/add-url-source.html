@@ -1,0 +1,97 @@
+<div class="flex h-screen" *ngIf="notebookId">
+  <main class="flex-1 overflow-y-auto">
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div class="flex flex-wrap gap-2 pb-4">
+        <a class="text-slate-500 dark:text-[#92adc9] text-base font-medium leading-normal hover:text-primary"
+          routerLink="/list-notebooks">
+          All Notebooks
+        </a>
+        <span class="text-slate-400 dark:text-[#92adc9] text-base font-medium leading-normal">/</span>
+        <a class="text-slate-500 dark:text-[#92adc9] text-base font-medium leading-normal hover:text-primary"
+          [routerLink]="['/edit-notebook', notebookId]">
+          Notebook
+        </a>
+        <span class="text-slate-400 dark:text-[#92adc9] text-base font-medium leading-normal">/</span>
+        <span class="text-slate-800 dark:text-white text-base font-medium leading-normal">Add Source by URL</span>
+      </div>
+
+      <header class="pb-8">
+        <h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
+          Add a source by URL
+        </h1>
+        <p class="text-slate-500 dark:text-[#92adc9] text-base font-normal leading-normal mt-2">
+          Paste a URL to fetch and add the content to your notebook
+        </p>
+      </header>
+
+      <div class="max-w-3xl">
+        <form (ngSubmit)="onSubmit()">
+          <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22] p-6">
+            <div class="flex flex-col gap-6">
+              <div *ngIf="errorMessage" class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+                <p class="text-red-600 dark:text-red-400 text-sm font-medium">{{ errorMessage }}</p>
+              </div>
+
+              <div>
+                <label for="url" class="block text-slate-900 dark:text-white text-sm font-medium leading-normal pb-2">
+                  Paste URL
+                </label>
+                <input 
+                  type="text" 
+                  id="url" 
+                  name="url"
+                  [(ngModel)]="url"
+                  required
+                  placeholder="https://example.com/article"
+                  [disabled]="isSubmitting"
+                  class="form-input min-h-12 w-full resize-none overflow-hidden rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:border-primary dark:focus:border-primary placeholder:text-slate-400 p-3 text-base font-normal leading-normal disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label for="title" class="block text-slate-900 dark:text-white text-sm font-medium leading-normal pb-2">
+                  Title (optional)
+                </label>
+                <input 
+                  type="text" 
+                  id="title" 
+                  name="title"
+                  [(ngModel)]="title"
+                  placeholder="Leave empty to auto-extract from URL"
+                  [disabled]="isSubmitting"
+                  class="form-input min-h-12 w-full resize-none overflow-hidden rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:border-primary dark:focus:border-primary placeholder:text-slate-400 p-3 text-base font-normal leading-normal disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <p class="text-slate-500 dark:text-[#92adc9] text-xs mt-2">
+                  If not provided, the title will be extracted from the webpage
+                </p>
+              </div>
+
+              <div *ngIf="isSubmitting" class="flex flex-col items-center gap-4 py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">
+                  Fetching content from URL... This may take a few seconds.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3 pt-6 justify-end">
+            <button 
+              type="button" 
+              (click)="onCancel()"
+              [disabled]="isSubmitting"
+              class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              <span class="truncate">Cancel</span>
+            </button>
+            <button 
+              type="submit" 
+              [disabled]="!url || isSubmitting"
+              class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
+              <span class="truncate">{{ isSubmitting ? 'Fetching...' : 'Fetch and Add Source' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
