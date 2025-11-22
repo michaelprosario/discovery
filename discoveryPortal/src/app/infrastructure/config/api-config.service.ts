@@ -4,6 +4,7 @@
  */
 
 import { Injectable } from '@angular/core';
+import { environment } from '../../../environments/environment';
 
 export interface ApiConfig {
   baseUrl: string;
@@ -15,7 +16,7 @@ export interface ApiConfig {
 })
 export class ApiConfigService {
   private config: ApiConfig = {
-    baseUrl: this.getDefaultBaseUrl(),
+    baseUrl: environment.apiUrl,
     timeout: 30000
   };
 
@@ -52,24 +53,5 @@ export class ApiConfigService {
    */
   setTimeout(timeout: number): void {
     this.config.timeout = timeout;
-  }
-
-  /**
-   * Get default base URL based on environment
-   */
-  private getDefaultBaseUrl(): string {
-    // Check if running in development mode
-    if (typeof window !== 'undefined' && window.location) {
-      const hostname = window.location.hostname;
-      const port = window.location.port;
-      
-      // If running on localhost with a different port, assume API is on 8000
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return `http://${hostname}:8000`;
-      }
-    }
-    
-    // Default to relative path for production
-    return '';
   }
 }

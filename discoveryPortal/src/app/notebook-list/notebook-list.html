@@ -9,149 +9,53 @@
                 <button
                     class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
                     <span class="material-symbols-outlined mr-2">add_circle</span>
-                    <span class="truncate">Create New Notebook</span>
+                    <span class="truncate">
+                        Create New Notebook
+                    </span>
                 </button>
             </div>
-            <!-- Search and Filters -->
-            <div class="mt-8 flex flex-wrap gap-4 items-center">
-                <!-- SearchBar -->
-                <div class="flex-1 min-w-[250px]">
-                    <label class="flex flex-col h-12 w-full">
-                        <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
-                            <div
-                                class="text-slate-400 dark:text-[#92adc9] flex border border-r-0 border-slate-300 dark:border-[#324d67] bg-slate-100 dark:bg-[#233648] items-center justify-center pl-4 rounded-l-lg">
-                                <span class="material-symbols-outlined">search</span>
-                            </div>
-                            <input
-                                class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-slate-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-l-0 border-slate-300 dark:border-[#324d67] bg-slate-100 dark:bg-[#233648] h-full placeholder:text-slate-400 dark:placeholder:text-[#92adc9] px-4 rounded-l-none pl-2 text-base font-normal leading-normal"
-                                placeholder="Search notebooks by name..." value="" />
-                        </div>
-                    </label>
-                </div>
-                <!-- Chips -->
-                <div class="flex gap-3">
-                    <button
-                        class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-slate-100 dark:bg-[#233648] px-3 border border-slate-300 dark:border-[#324d67] hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
-                        <span class="material-symbols-outlined text-slate-600 dark:text-white">filter_list</span>
-                        <p class="text-slate-800 dark:text-white text-sm font-medium leading-normal">Filter by Date</p>
-                        <span class="material-symbols-outlined text-slate-600 dark:text-white">expand_more</span>
-                    </button>
-                    <button
-                        class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-slate-100 dark:bg-[#233648] px-3 border border-slate-300 dark:border-[#324d67] hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
-                        <span class="material-symbols-outlined text-slate-600 dark:text-white">sort</span>
-                        <p class="text-slate-800 dark:text-white text-sm font-medium leading-normal">Sort by Name</p>
-                        <span class="material-symbols-outlined text-slate-600 dark:text-white">expand_more</span>
-                    </button>
-                </div>
-            </div>
-            <!-- Table -->
+
             <div class="mt-6 @container">
                 <div
                     class="flex overflow-hidden rounded-lg border border-slate-200 dark:border-[#324d67] bg-white dark:bg-[#111a22]">
-                    <table class="flex-1">
-                        <thead>
-                            <tr class="bg-slate-50 dark:bg-[#192633]">
-                                <th
-                                    class="table-column-name px-4 py-3 text-left text-slate-600 dark:text-white w-[40%] text-sm font-medium leading-normal">
-                                    Name</th>
-                                <th
-                                    class="table-column-sources px-4 py-3 text-left text-slate-600 dark:text-white w-[25%] text-sm font-medium leading-normal">
-                                    Sources</th>
-                                <th
-                                    class="table-column-modified px-4 py-3 text-left text-slate-600 dark:text-white w-[25%] text-sm font-medium leading-normal">
-                                    Last Modified</th>
-                                <th
-                                    class="table-column-actions px-4 py-3 text-right text-slate-600 dark:text-white w-[10%] text-sm font-medium leading-normal">
-                                    Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                class="border-t border-t-slate-200 dark:border-t-[#324d67] hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                <td
-                                    class="table-column-name h-[72px] px-4 py-2 text-slate-800 dark:text-white text-sm font-normal leading-normal">
-                                    Quantum Computing Research</td>
-                                <td
-                                    class="table-column-sources h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
-                                    15 Sources</td>
-                                <td
-                                    class="table-column-modified h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
-                                    Oct 26, 2023</td>
-                                <td
-                                    class="table-column-actions h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-bold leading-normal tracking-[0.015em]">
-                                    <div class="flex justify-end">
-                                        <button class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10">
-                                            <span
-                                                class="material-symbols-outlined text-slate-600 dark:text-white">more_horiz</span>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr
-                                class="border-t border-t-slate-200 dark:border-t-[#324d67] hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                <td
-                                    class="table-column-name h-[72px] px-4 py-2 text-slate-800 dark:text-white text-sm font-normal leading-normal">
-                                    Historical Linguistics</td>
-                                <td
-                                    class="table-column-sources h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
-                                    32 Sources</td>
-                                <td
-                                    class="table-column-modified h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
-                                    Oct 22, 2023</td>
-                                <td
-                                    class="table-column-actions h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-bold leading-normal tracking-[0.015em]">
-                                    <div class="flex justify-end">
-                                        <button class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10">
-                                            <span
-                                                class="material-symbols-outlined text-slate-600 dark:text-white">more_horiz</span>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr
-                                class="border-t border-t-slate-200 dark:border-t-[#324d67] hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                <td
-                                    class="table-column-name h-[72px] px-4 py-2 text-slate-800 dark:text-white text-sm font-normal leading-normal">
-                                    AI Ethics Frameworks</td>
-                                <td
-                                    class="table-column-sources h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
-                                    8 Sources</td>
-                                <td
-                                    class="table-column-modified h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
-                                    Sep 15, 2023</td>
-                                <td
-                                    class="table-column-actions h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-bold leading-normal tracking-[0.015em]">
-                                    <div class="flex justify-end">
-                                        <button class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10">
-                                            <span
-                                                class="material-symbols-outlined text-slate-600 dark:text-white">more_horiz</span>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr
-                                class="border-t border-t-slate-200 dark:border-t-[#324d67] hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                <td
-                                    class="table-column-name h-[72px] px-4 py-2 text-slate-800 dark:text-white text-sm font-normal leading-normal">
-                                    Marine Biology of the Pacific</td>
-                                <td
-                                    class="table-column-sources h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
-                                    57 Sources</td>
-                                <td
-                                    class="table-column-modified h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
-                                    Aug 01, 2023</td>
-                                <td
-                                    class="table-column-actions h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-bold leading-normal tracking-[0.015em]">
-                                    <div class="flex justify-end">
-                                        <button class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10">
-                                            <span
-                                                class="material-symbols-outlined text-slate-600 dark:text-white">more_horiz</span>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                    @if (!screenLoaded) {
+                        <div class="p-4 text-center">Loading...</div>
+                    } @else {
+                        <table class="flex-1">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-[#192633]">
+                                    <th
+                                        class="table-column-name px-4 py-3 text-left text-slate-600 dark:text-white w-[40%] text-sm font-medium leading-normal">
+                                        Name</th>
+                                    <th
+                                        class="table-column-sources px-4 py-3 text-left text-slate-600 dark:text-white w-[25%] text-sm font-medium leading-normal">
+                                        Sources</th>
+                                    <th
+                                        class="table-column-modified px-4 py-3 text-left text-slate-600 dark:text-white w-[25%] text-sm font-medium leading-normal">
+                                        Last Modified</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (record of records; track record.id) {
+                                <tr (click)="onEditRecord(record)"
+                                    class="cursor-pointer border-t border-t-slate-200 dark:border-t-[#324d67] hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                    <td
+                                        class="table-column-name h-[72px] px-4 py-2 text-slate-800 dark:text-white text-sm font-normal leading-normal">
+                                        {{ record.name }}</td>
+                                    <td
+                                        class="table-column-sources h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
+                                        {{ record.source_count }} Sources</td>
+                                    <td
+                                        class="table-column-modified h-[72px] px-4 py-2 text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal">
+                                        {{ record.updated_at | date:'mediumDate' }}</td>
+                                    
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+
                 </div>
             </div>
         </div>
