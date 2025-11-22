@@ -84,6 +84,12 @@
                                     <span class="material-symbols-outlined">link</span>
                                     <span class="truncate">Add Source from URL</span>
                                 </button>
+                                <button
+                                    [routerLink]="['/edit-notebook', notebook.id, 'add-pdf-source']"
+                                    class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90">
+                                    <span class="material-symbols-outlined">picture_as_pdf</span>
+                                    <span class="truncate">Add Source from PDF</span>
+                                </button>
                                 <button (click)="deleteNotebook()"
                                     class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-red-500 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-red-600">
                                     <span class="material-symbols-outlined">delete</span>

@@ -49,9 +49,17 @@ Properly report validation errors to the user if I do not fill out required fiel
 - Return the user to "edit-notebook" after adding source
 - follow ui guidance
 
-
 ## Add source from url
 - Enable user to "add source from url" from "edit-notebook"
 - Create component to enable me to add source to notebook using url
+- Return the user to "edit-notebook" after adding source
+- follow ui guidance
+
+
+## Add source from pdf
+- Enable user to "add source from PDF" from "edit-notebook"
+- UX needs to faciliate uploading PDF to api
+- Create component to enable me to add source to notebook using PDF
+- Process of adding pdf to server  takes 5 seconds.   Add  spinner ui for process
 - Return the user to "edit-notebook" after adding source
 - follow ui guidance
