@@ -42,3 +42,9 @@ Properly report validation errors to the user if I do not fill out required fiel
 - On edit-notebook add button on right to enable user to delete a notebook
 - Please make sure to confirm operation before execution
 - After delete, navigate the user back to the list-notebooks screen.
+
+## Add source / text
+- Enable user to "add source from text" from "edit-notebook"
+- Create component to enable me to add source to notebook using text
+- Return the user to "edit-notebook" after adding source
+- follow ui guidance
