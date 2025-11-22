@@ -5,11 +5,12 @@ import { forkJoin } from 'rxjs';
 import { NotebookApiService } from '../infrastructure/http/notebook-api.service';
 import { SourceApiService } from '../infrastructure/http/source-api.service';
 import { NotebookResponse, SourceResponse } from '../core/models';
+import { LoadingComponent } from '../shared/components/loading/loading.component';
 
 @Component({
   selector: 'app-edit-notebook',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, LoadingComponent],
   templateUrl: './edit-notebook.html',
   styleUrl: './edit-notebook.scss',
 })

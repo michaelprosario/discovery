@@ -4,10 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ListNotebooksParams, NotebookResponse } from '../core/models/notebook.models';
 import { CommonModule } from '@angular/common';
 import { lastValueFrom } from 'rxjs';
+import { LoadingComponent } from '../shared/components/loading/loading.component';
 
 @Component({
   selector: 'app-notebook-list',
-  imports: [CommonModule],
+  imports: [CommonModule, LoadingComponent],
   templateUrl: './notebook-list.html',
   styleUrl: './notebook-list.scss',
 })

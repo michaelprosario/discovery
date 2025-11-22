@@ -21,7 +21,7 @@
                     class="flex overflow-hidden rounded-lg border border-slate-200 dark:border-[#324d67] bg-white dark:bg-[#111a22]">
 
                     @if (!screenLoaded) {
-                        <div class="p-4 text-center">Loading...</div>
+                        <app-loading size="large" message="Loading..."></app-loading>
                     } @else {
                         <table class="flex-1">
                             <thead>
