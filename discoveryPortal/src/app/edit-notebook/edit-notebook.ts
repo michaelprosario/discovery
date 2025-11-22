@@ -31,6 +31,20 @@ export class EditNotebook implements OnInit {
     }
   }
 
+  openSource(source: SourceResponse) {
+    // console.log(source)
+    if(source.source_type === 'url') 
+    {
+      if (source.url) {
+        window.open(source.url, '_blank');
+      }
+    }
+    else
+    {
+      alert('fix me - implement opening non-url sources');
+    }
+  }
+
   loadData(id: string) {
     this.isLoading = true;
     forkJoin({
