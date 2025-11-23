@@ -1,0 +1,23 @@
+// Component-specific styles for view output
+
+// Markmap styles
+svg {
+  ::ng-deep {
+    // Make the connecting lines visible and black
+    .markmap-link {
+      stroke: #adadad !important;
+      stroke-width:1px !important;
+    }
+    
+    // Make sure text is visible
+    .markmap-node text {
+      fill: #000000 !important;
+    }
+    
+    // Node circles
+    .markmap-node circle {
+      stroke: #adadad !important;
+      stroke-width: 1px !important;
+    }
+  }
+}

@@ -63,3 +63,61 @@ Properly report validation errors to the user if I do not fill out required fiel
 - Process of adding pdf to server  takes 5 seconds.   Add  spinner ui for process
 - Return the user to "edit-notebook" after adding source
 - follow ui guidance
+
+## Make blog post based on notebook and sources
+
+User should be able to generate blog post
+- Navigate to notebook(edit-notebook component)
+- User clicks "new blog post" button
+- Navigate to "new blog post" component
+- On the "new blog post" component enables the user to fill out the following:
+- blog title
+- custom prompt
+- tone(informative, causal,formal,conversational,academic)
+- word count(550,700,1000)
+- structure(default,how to, list article, comparison, case study,opinion)
+- blog post should be generated using retrieval augmented generation using segments most closely linked to the prompt
+- the API will take 5 seconds to run. make sure ux includes spinner during the blog post generation process
+- store the blog post as an output record using api
+- display the content of blog post
+
+## output list screen
+
+as a user, I should be able to navigate to a component so that I can see the list of output records connected to my notebook
+- I should be able to see the list of output records
+- I should be able to see the type of output record
+- I should be able to open the output records and view it's contents
+
+## mindmapt output
+
+- Please read the docs related to https://markmap.js.org/docs/packages--markmap-autoloader
+- As a discovery user, I should like the ability to build a mind map based on prompt input to help me learn aspects of my notebook.
+- The prompt input should use the vector search database and the llm provider to make an outline answering the prompt using markdown
+- I should be able to view the mindmap
+- The mindmap data should be stored as an aoutput record connected to the notebook
+- The system should enable me to download the outline markdown
+
+make sure to read markmap.html as an example
+I tested the mindmap generation feature
+The system produced markup grounded on the sources of the notebook. This is great
+The system did not visualize the markdown output using the markmap library
+Please correct this.
+
+
+### Refactor - Create separated components for viewing blog posts vs. mindmap outputs
+
+- Review the /workspaces/discovery/discoveryPortal/src/app/view-output/view-output.html
+- Review /workspaces/discovery/discoveryPortal/src/app/view-output/view-output.ts
+- In a future state of the system, we will have more output types besides blog posts and mindmaps
+- Let's create different components for viewing each output type
+
+
+## chat Question answer interface
+
+As a user, I should be able to chat with an agent
+- the agent should be a helpful agent that replies only upon the context obtained from the vector database
+- implement question and answer agent on a notebook based on data ingested
+- implement RAG agent using content similarity services
+- the agent should promote a conversational way to explore the sources in the notebook
+- The system should show related sources to help me gain trust in the answers of the agent. 
+- I should be able to open source reference links with a click

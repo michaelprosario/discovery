@@ -1,0 +1,22 @@
+// Mindmap viewer styles
+
+svg {
+  ::ng-deep {
+    // Make the connecting lines visible and black
+    .markmap-link {
+      stroke: #000000 !important;
+      stroke-width: 2px !important;
+    }
+    
+    // Make sure text is visible
+    .markmap-node text {
+      fill: #000000 !important;
+    }
+    
+    // Node circles
+    .markmap-node circle {
+      stroke: #000000 !important;
+      stroke-width: 1.5px !important;
+    }
+  }
+}

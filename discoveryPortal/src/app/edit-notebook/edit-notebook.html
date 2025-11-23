@@ -96,6 +96,30 @@
                                     <span class="material-symbols-outlined">sync</span>
                                     <span class="truncate">Sync with Vector Database</span>
                                 </button>
+                                <button
+                                    [routerLink]="['/edit-notebook', notebook.id, 'new-blog-post']"
+                                    class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-green-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-green-700">
+                                    <span class="material-symbols-outlined">article</span>
+                                    <span class="truncate">New Blog Post</span>
+                                </button>
+                                <button
+                                    [routerLink]="['/edit-notebook', notebook.id, 'new-mindmap']"
+                                    class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-blue-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-blue-700">
+                                    <span class="material-symbols-outlined">account_tree</span>
+                                    <span class="truncate">New Mind Map</span>
+                                </button>
+                                <button
+                                    [routerLink]="['/edit-notebook', notebook.id, 'chat']"
+                                    class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-teal-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-teal-700">
+                                    <span class="material-symbols-outlined">chat</span>
+                                    <span class="truncate">Chat with Notebook</span>
+                                </button>
+                                <button
+                                    [routerLink]="['/edit-notebook', notebook.id, 'outputs']"
+                                    class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-purple-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-purple-700">
+                                    <span class="material-symbols-outlined">list_alt</span>
+                                    <span class="truncate">View Outputs</span>
+                                </button>
                                 <button (click)="deleteNotebook()"
                                     class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-red-500 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-red-600">
                                     <span class="material-symbols-outlined">delete</span>

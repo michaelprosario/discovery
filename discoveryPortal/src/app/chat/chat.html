@@ -1,0 +1,163 @@
+<div class="flex h-screen flex-col bg-slate-50 dark:bg-[#0e141b]" *ngIf="!isLoading && notebook">
+  <!-- Header -->
+  <header class="border-b border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-[#111a22]">
+    <div class="mx-auto flex max-w-5xl items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button 
+          (click)="backToNotebook()"
+          class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 dark:text-white">
+            Chat with {{ notebook.name }}
+          </h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            Ask questions about your {{ sources.length }} source(s)
+          </p>
+        </div>
+      </div>
+      <button
+        (click)="clearChat()"
+        class="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+        <span class="material-symbols-outlined text-lg">delete_sweep</span>
+        Clear Chat
+      </button>
+    </div>
+  </header>
+
+  <!-- Messages Container -->
+  <div #messagesContainer class="flex-1 overflow-y-auto px-4 py-6">
+    <div class="mx-auto max-w-5xl space-y-6">
+      <div *ngFor="let message of messages" 
+           [ngClass]="{
+             'flex justify-end': message.role === 'user',
+             'flex justify-start': message.role === 'assistant'
+           }">
+        
+        <!-- User Message -->
+        <div *ngIf="message.role === 'user'" 
+             class="max-w-[80%] rounded-2xl bg-primary px-4 py-3 text-white">
+          <p class="whitespace-pre-wrap text-sm leading-relaxed">{{ message.content }}</p>
+          <p class="mt-1 text-xs opacity-75">
+            {{ message.timestamp | date:'short' }}
+          </p>
+        </div>
+
+        <!-- Assistant Message -->
+        <div *ngIf="message.role === 'assistant'" 
+             class="max-w-[85%] rounded-2xl bg-white px-4 py-3 shadow-sm dark:bg-[#111a22]">
+          
+          <!-- Loading State -->
+          <div *ngIf="message.isLoading" class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+            <div class="flex gap-1">
+              <div class="h-2 w-2 animate-pulse rounded-full bg-slate-400"></div>
+              <div class="h-2 w-2 animate-pulse rounded-full bg-slate-400" style="animation-delay: 0.2s"></div>
+              <div class="h-2 w-2 animate-pulse rounded-full bg-slate-400" style="animation-delay: 0.4s"></div>
+            </div>
+            <span class="text-sm">{{ message.content }}</span>
+          </div>
+
+          <!-- Normal Message -->
+          <div *ngIf="!message.isLoading">
+            <p class="whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+              {{ message.content }}
+            </p>
+            
+            <!-- Sources -->
+            <div *ngIf="message.sources && message.sources.length > 0" 
+                 class="mt-4 border-t border-slate-200 pt-3 dark:border-slate-700">
+              <button
+                (click)="toggleSources(message)"
+                class="mb-2 flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold uppercase text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+                <span>Related Sources ({{ message.sources.length }})</span>
+                <span class="material-symbols-outlined text-base transition-transform" 
+                      [class.rotate-180]="message.showSources">
+                  expand_more
+                </span>
+              </button>
+              <div *ngIf="message.showSources" class="space-y-2">
+                <div *ngFor="let source of message.sources; let i = index"
+                     class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/50">
+                  <div class="mb-2 flex items-start justify-between gap-2">
+                    <div class="flex items-start gap-2">
+                      <span class="material-symbols-outlined text-sm text-slate-500">source</span>
+                      <div class="flex-1">
+                        <button
+                          *ngIf="source.source_id"
+                          (click)="openSourceLink(source.source_id)"
+                          class="text-left text-sm font-medium text-primary hover:underline">
+                          {{ source.source_name || 'Source ' + (i + 1) }}
+                        </button>
+                        <span *ngIf="!source.source_id" 
+                              class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          {{ source.source_name || 'Source ' + (i + 1) }}
+                        </span>
+                        <div class="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                          <span *ngIf="source.source_type" 
+                                class="rounded bg-slate-200 px-1.5 py-0.5 dark:bg-slate-800">
+                            {{ source.source_type }}
+                          </span>
+                          <span>Relevance: {{ (source.relevance_score * 100) | number:'1.0-0' }}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400 line-clamp-3">
+                    {{ source.text }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p class="mt-2 text-xs text-slate-500">
+              {{ message.timestamp | date:'short' }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="messages.length === 0" class="py-12 text-center">
+        <span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700">chat</span>
+        <p class="mt-4 text-slate-500 dark:text-slate-400">
+          No messages yet. Start a conversation!
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Area -->
+  <div class="border-t border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-[#111a22]">
+    <div class="mx-auto max-w-5xl">
+      <form (submit)="askQuestion()" class="flex gap-3">
+        <div class="flex-1">
+          <textarea
+            [(ngModel)]="currentQuestion"
+            name="question"
+            (keypress)="handleKeyPress($event)"
+            [disabled]="isProcessing"
+            placeholder="Ask a question about your notebook sources..."
+            rows="1"
+            class="w-full resize-none rounded-lg border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder-slate-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder-slate-400"
+          ></textarea>
+        </div>
+        <button
+          type="submit"
+          [disabled]="!currentQuestion.trim() || isProcessing"
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span *ngIf="!isProcessing" class="material-symbols-outlined">send</span>
+          <span *ngIf="isProcessing" class="material-symbols-outlined animate-spin">progress_activity</span>
+        </button>
+      </form>
+      <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        Press Enter to send, Shift+Enter for new line
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="isLoading" class="flex h-screen items-center justify-center">
+  <app-loading size="large" message="Loading chat..."></app-loading>
+</div>

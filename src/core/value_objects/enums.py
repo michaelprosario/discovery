@@ -27,8 +27,9 @@ class OutputType(str, Enum):
     ESSAY = "essay"
     FAQ = "faq"
     MEETING_NOTES = "meeting_notes"
-    COMPARATIVE_ANALYSIS = "comparative_analysis"
+    COMPARATIVE_ANALYSIS = "comparative_analysis"    
     CUSTOM = "custom"
+    MIND_MAP = "mind_map"
 
 
 class OutputStatus(str, Enum):

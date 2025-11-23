@@ -101,3 +101,16 @@ export interface GenerateMindMapRequest {
   temperature?: number | null;
   max_tokens?: number | null;
 }
+
+/**
+ * Chat message for conversational UI
+ */
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  sources?: QaSourceItem[];
+  timestamp: Date;
+  isLoading?: boolean;
+  showSources?: boolean;
+}

@@ -1,0 +1,104 @@
+<div class="flex h-screen" *ngIf="!isLoading && notebook">
+    <main class="flex-1 overflow-y-auto">
+        <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap gap-2 pb-4">
+                <a class="text-slate-500 dark:text-[#92adc9] text-base font-medium leading-normal hover:text-primary"
+                    routerLink="/list-notebooks">
+                    All Notebooks
+                </a>
+                <span class="text-slate-400 dark:text-[#92adc9] text-base font-medium leading-normal">/</span>
+                <a class="text-slate-500 dark:text-[#92adc9] text-base font-medium leading-normal hover:text-primary"
+                    [routerLink]="['/edit-notebook', notebook.id]">
+                    {{ notebook.name }}
+                </a>
+                <span class="text-slate-400 dark:text-[#92adc9] text-base font-medium leading-normal">/</span>
+                <span class="text-slate-800 dark:text-white text-base font-medium leading-normal">Outputs</span>
+            </div>
+            <header class="flex flex-wrap items-start justify-between gap-4 pb-8">
+                <div class="flex min-w-72 flex-col gap-2">
+                    <h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
+                        Output Records</h1>
+                    <p class="text-slate-500 dark:text-[#92adc9] text-base font-normal leading-normal">
+                        Generated outputs for {{ notebook.name }}
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button [routerLink]="['/edit-notebook', notebook.id]"
+                        class="flex h-10 items-center justify-center gap-2 rounded-lg px-4 bg-slate-200 text-slate-800 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-slate-300 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                        <span class="truncate">Back to Notebook</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22]">
+                <div class="p-4">
+                    <h3 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">
+                        All Outputs ({{ outputs.length }})</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead
+                            class="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-600 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400">
+                            <tr>
+                                <th class="px-6 py-3 font-medium" scope="col">Title</th>
+                                <th class="px-6 py-3 font-medium" scope="col">Type</th>
+                                <th class="px-6 py-3 font-medium" scope="col">Status</th>
+                                <th class="px-6 py-3 font-medium" scope="col">Word Count</th>
+                                <th class="px-6 py-3 font-medium" scope="col">Created</th>
+                                <th class="px-6 py-3 font-medium text-right" scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-700 dark:text-slate-300">
+                            <tr *ngFor="let output of outputs"
+                                class="border-b border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-[#111a22] dark:hover:bg-slate-900/50">
+                                <td class="flex items-center gap-3 px-6 py-4">
+                                    <span class="material-symbols-outlined text-lg text-slate-500">article</span>
+                                    <a class="font-medium text-slate-800 hover:text-primary dark:text-white cursor-pointer"
+                                        (click)="viewOutput(output)">{{ output.title }}</a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                        {{ output.output_type }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="rounded-md px-2 py-1 text-xs font-medium" [ngClass]="getStatusClass(output.status)">
+                                        {{ output.status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">{{ output.word_count }}</td>
+                                <td class="px-6 py-4">{{ formatDate(output.created_at) }}</td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button (click)="viewOutput(output)"
+                                            class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20">
+                                            <span class="material-symbols-outlined text-xl">visibility</span>
+                                        </button>
+                                        <button (click)="deleteOutput(output)"
+                                            class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400">
+                                            <span class="material-symbols-outlined text-xl">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr *ngIf="outputs.length === 0">
+                                <td colspan="6" class="px-6 py-8 text-center text-slate-500">
+                                    <div class="flex flex-col items-center gap-2">
+                                        <span class="material-symbols-outlined text-4xl text-slate-400">article</span>
+                                        <p>No outputs found for this notebook.</p>
+                                        <p class="text-sm">Generate your first output using the "New Blog Post" feature.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<div *ngIf="isLoading" class="flex h-screen items-center justify-center">
+    <app-loading size="large" message="Loading outputs..."></app-loading>
+</div>
