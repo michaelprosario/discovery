@@ -102,3 +102,11 @@ I tested the mindmap generation feature
 The system produced markup grounded on the sources of the notebook. This is great
 The system did not visualize the markdown output using the markmap library
 Please correct this.
+
+
+### Refactor - Create separated components for viewing blog posts vs. mindmap outputs
+
+- Review the /workspaces/discovery/discoveryPortal/src/app/view-output/view-output.html
+- Review /workspaces/discovery/discoveryPortal/src/app/view-output/view-output.ts
+- In a future state of the system, we will have more output types besides blog posts and mindmaps
+- Let's create different components for viewing each output type
