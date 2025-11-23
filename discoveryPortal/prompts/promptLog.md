@@ -63,3 +63,20 @@ Properly report validation errors to the user if I do not fill out required fiel
 - Process of adding pdf to server  takes 5 seconds.   Add  spinner ui for process
 - Return the user to "edit-notebook" after adding source
 - follow ui guidance
+
+## Make blog post based on notebook and sources
+
+User should be able to generate blog post
+- Navigate to notebook(edit-notebook component)
+- User clicks "new blog post" button
+- Navigate to "new blog post" component
+- On the "new blog post" component enables the user to fill out the following:
+- blog title
+- custom prompt
+- tone(informative, causal,formal,conversational,academic)
+- word count(550,700,1000)
+- structure(default,how to, list article, comparison, case study,opinion)
+- blog post should be generated using retrieval augmented generation using segments most closely linked to the prompt
+- the API will take 5 seconds to run. make sure ux includes spinner during the blog post generation process
+- store the blog post as an output record using api
+- display the content of blog post

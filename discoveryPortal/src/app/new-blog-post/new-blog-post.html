@@ -1,0 +1,173 @@
+<div class="flex h-screen" *ngIf="notebookId">
+  <main class="flex-1 overflow-y-auto">
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div class="flex flex-wrap gap-2 pb-4">
+        <a class="text-slate-500 dark:text-[#92adc9] text-base font-medium leading-normal hover:text-primary"
+          routerLink="/list-notebooks">
+          All Notebooks
+        </a>
+        <span class="text-slate-400 dark:text-[#92adc9] text-base font-medium leading-normal">/</span>
+        <a class="text-slate-500 dark:text-[#92adc9] text-base font-medium leading-normal hover:text-primary"
+          [routerLink]="['/edit-notebook', notebookId]">
+          Notebook
+        </a>
+        <span class="text-slate-400 dark:text-[#92adc9] text-base font-medium leading-normal">/</span>
+        <span class="text-slate-800 dark:text-white text-base font-medium leading-normal">New Blog Post</span>
+      </div>
+
+      <header class="pb-8">
+        <h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
+          Generate Blog Post
+        </h1>
+        <p class="text-slate-500 dark:text-[#92adc9] text-base font-normal leading-normal mt-2">
+          Create a blog post from your notebook sources using AI
+        </p>
+      </header>
+
+      <div class="max-w-4xl">
+        <!-- Loading Spinner -->
+        <div *ngIf="isGenerating" class="flex items-center justify-center py-12">
+          <app-loading size="large" message="Generating your blog post... This may take a few seconds."></app-loading>
+        </div>
+
+        <!-- Form Section -->
+        <div *ngIf="!isGenerating && !generatedBlogPost">
+          <form (ngSubmit)="onGenerate()">
+            <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22] p-6">
+              <div class="flex flex-col gap-6">
+                <!-- Title -->
+                <div>
+                  <label for="title" class="block text-slate-900 dark:text-white text-sm font-medium leading-normal pb-2">
+                    Blog Title <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="title" 
+                    name="title"
+                    [(ngModel)]="title"
+                    required
+                    placeholder="Enter blog post title"
+                    class="form-input min-h-12 w-full resize-none overflow-hidden rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:border-primary dark:focus:border-primary placeholder:text-slate-400 p-3 text-base font-normal leading-normal"
+                  />
+                </div>
+
+                <!-- Custom Prompt -->
+                <div>
+                  <label for="customPrompt" class="block text-slate-900 dark:text-white text-sm font-medium leading-normal pb-2">
+                    Custom Prompt
+                  </label>
+                  <textarea 
+                    id="customPrompt" 
+                    name="customPrompt"
+                    [(ngModel)]="customPrompt"
+                    rows="4"
+                    placeholder="Add any specific instructions or topics to focus on (optional)"
+                    class="form-input min-h-32 w-full resize-y rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:border-primary dark:focus:border-primary placeholder:text-slate-400 p-3 text-base font-normal leading-normal"
+                  ></textarea>
+                </div>
+
+                <!-- Tone -->
+                <div>
+                  <label for="tone" class="block text-slate-900 dark:text-white text-sm font-medium leading-normal pb-2">
+                    Tone
+                  </label>
+                  <select 
+                    id="tone" 
+                    name="tone"
+                    [(ngModel)]="tone"
+                    class="form-select min-h-12 w-full rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:border-primary dark:focus:border-primary p-3 text-base font-normal leading-normal"
+                  >
+                    <option *ngFor="let option of toneOptions" [value]="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Word Count -->
+                <div>
+                  <label for="wordCount" class="block text-slate-900 dark:text-white text-sm font-medium leading-normal pb-2">
+                    Word Count
+                  </label>
+                  <select 
+                    id="wordCount" 
+                    name="wordCount"
+                    [(ngModel)]="wordCount"
+                    class="form-select min-h-12 w-full rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:border-primary dark:focus:border-primary p-3 text-base font-normal leading-normal"
+                  >
+                    <option *ngFor="let option of wordCountOptions" [value]="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Structure -->
+                <div>
+                  <label for="structure" class="block text-slate-900 dark:text-white text-sm font-medium leading-normal pb-2">
+                    Structure
+                  </label>
+                  <select 
+                    id="structure" 
+                    name="structure"
+                    [(ngModel)]="structure"
+                    class="form-select min-h-12 w-full rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:border-primary dark:focus:border-primary p-3 text-base font-normal leading-normal"
+                  >
+                    <option *ngFor="let option of structureOptions" [value]="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-3 pt-6 justify-end">
+              <button 
+                type="button" 
+                (click)="onCancel()"
+                class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-slate-200 dark:hover:bg-slate-700">
+                <span class="truncate">Cancel</span>
+              </button>
+              <button 
+                type="submit" 
+                [disabled]="!title || isGenerating"
+                class="flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined">auto_awesome</span>
+                <span class="truncate">Generate Blog Post</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Generated Blog Post Display -->
+        <div *ngIf="!isGenerating && generatedBlogPost">
+          <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22] p-6">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div>
+                <h2 class="text-slate-900 dark:text-white text-2xl font-bold leading-tight">
+                  {{ generatedBlogPost.title }}
+                </h2>
+                <div class="flex items-center gap-4 mt-2">
+                  <span class="text-slate-500 dark:text-[#92adc9] text-sm">
+                    {{ generatedBlogPost.word_count }} words
+                  </span>
+                  <span class="rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    {{ generatedBlogPost.status }}
+                  </span>
+                </div>
+              </div>
+              <button 
+                (click)="onBackToNotebook()"
+                class="flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span class="truncate">Back to Notebook</span>
+              </button>
+            </div>
+
+            <div class="prose prose-slate dark:prose-invert max-w-none">
+              <div class="text-slate-700 dark:text-slate-300" style="white-space: pre-wrap;">{{ generatedBlogPost.content }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
