@@ -9,6 +9,7 @@ import { SyncNotebook } from './sync-notebook/sync-notebook';
 import { NewBlogPost } from './new-blog-post/new-blog-post';
 import { NotebookOutputs } from './notebook-outputs/notebook-outputs';
 import { ViewOutput } from './view-output/view-output';
+import { NewMindMap } from './new-mindmap/new-mindmap';
 
 export const routes: Routes = [
     { path: '', component: NotebookList },
@@ -19,6 +20,7 @@ export const routes: Routes = [
     { path: 'edit-notebook/:id/add-pdf-source', component: AddPdfSource },
     { path: 'edit-notebook/:id/sync', component: SyncNotebook },
     { path: 'edit-notebook/:id/new-blog-post', component: NewBlogPost },
+    { path: 'edit-notebook/:id/new-mindmap', component: NewMindMap },
     { path: 'edit-notebook/:id/outputs', component: NotebookOutputs },
     { path: 'edit-notebook/:id/outputs/:outputId', component: ViewOutput },
     { path: 'new-notebook', component: NewNotebook }

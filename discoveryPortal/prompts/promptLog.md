@@ -87,3 +87,18 @@ as a user, I should be able to navigate to a component so that I can see the lis
 - I should be able to see the list of output records
 - I should be able to see the type of output record
 - I should be able to open the output records and view it's contents
+
+## mindmapt output
+
+- Please read the docs related to https://markmap.js.org/docs/packages--markmap-autoloader
+- As a discovery user, I should like the ability to build a mind map based on prompt input to help me learn aspects of my notebook.
+- The prompt input should use the vector search database and the llm provider to make an outline answering the prompt using markdown
+- I should be able to view the mindmap
+- The mindmap data should be stored as an aoutput record connected to the notebook
+- The system should enable me to download the outline markdown
+
+make sure to read markmap.html as an example
+I tested the mindmap generation feature
+The system produced markup grounded on the sources of the notebook. This is great
+The system did not visualize the markdown output using the markmap library
+Please correct this.

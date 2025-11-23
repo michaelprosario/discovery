@@ -38,6 +38,21 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
+                    <button *ngIf="isMindMap" (click)="downloadMarkdown()"
+                        class="flex h-10 items-center justify-center gap-2 rounded-lg px-4 bg-green-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-green-700">
+                        <span class="material-symbols-outlined">download</span>
+                        <span class="truncate">Download</span>
+                    </button>
+                    <button *ngIf="isMindMap" (click)="expandAll()"
+                        class="flex h-10 items-center justify-center gap-2 rounded-lg px-4 bg-blue-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-blue-700">
+                        <span class="material-symbols-outlined">unfold_more</span>
+                        <span class="truncate">Expand All</span>
+                    </button>
+                    <button *ngIf="isMindMap" (click)="collapseAll()"
+                        class="flex h-10 items-center justify-center gap-2 rounded-lg px-4 bg-purple-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-purple-700">
+                        <span class="material-symbols-outlined">unfold_less</span>
+                        <span class="truncate">Collapse All</span>
+                    </button>
                     <button (click)="copyToClipboard()"
                         class="flex h-10 items-center justify-center gap-2 rounded-lg px-4 bg-slate-200 text-slate-800 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-slate-300 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">
                         <span class="material-symbols-outlined">content_copy</span>
@@ -54,10 +69,36 @@
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
                 <!-- Main content area -->
                 <div class="lg:col-span-2">
-                    <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22]">
+                    <!-- Mind Map Visualization -->
+                    <div *ngIf="isMindMap" class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22]">
+                        <div class="p-6">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-4">Interactive Mind Map</h2>
+                            <div class="bg-white rounded-lg p-4 border border-slate-200" style="min-height: 600px;">
+                                <svg #markmapContainer style="width: 100%; height: 600px;"></svg>
+                            </div>
+                            <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                <p class="text-sm text-blue-800 dark:text-blue-300">
+                                    <strong>Tip:</strong> Click on nodes to expand/collapse branches. Use the controls above to expand or collapse all nodes.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regular Content Display -->
+                    <div *ngIf="!isMindMap" class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22]">
                         <div class="p-6">
                             <div class="prose prose-slate dark:prose-invert max-w-none text-white">
                                 <div class="whitespace-pre-wrap">{{ output.content }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Markdown Source (for mindmaps) -->
+                    <div *ngIf="isMindMap" class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22] mt-6">
+                        <div class="p-6">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-4">Markdown Source</h2>
+                            <div class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 max-h-96 overflow-y-auto">
+                                <pre class="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-mono">{{ output.content }}</pre>
                             </div>
                         </div>
                     </div>

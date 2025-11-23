@@ -103,6 +103,12 @@
                                     <span class="truncate">New Blog Post</span>
                                 </button>
                                 <button
+                                    [routerLink]="['/edit-notebook', notebook.id, 'new-mindmap']"
+                                    class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-blue-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-blue-700">
+                                    <span class="material-symbols-outlined">account_tree</span>
+                                    <span class="truncate">New Mind Map</span>
+                                </button>
+                                <button
                                     [routerLink]="['/edit-notebook', notebook.id, 'outputs']"
                                     class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-purple-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-purple-700">
                                     <span class="material-symbols-outlined">list_alt</span>
