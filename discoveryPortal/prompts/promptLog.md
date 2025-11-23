@@ -110,3 +110,14 @@ Please correct this.
 - Review /workspaces/discovery/discoveryPortal/src/app/view-output/view-output.ts
 - In a future state of the system, we will have more output types besides blog posts and mindmaps
 - Let's create different components for viewing each output type
+
+
+## chat Question answer interface
+
+As a user, I should be able to chat with an agent
+- the agent should be a helpful agent that replies only upon the context obtained from the vector database
+- implement question and answer agent on a notebook based on data ingested
+- implement RAG agent using content similarity services
+- the agent should promote a conversational way to explore the sources in the notebook
+- The system should show related sources to help me gain trust in the answers of the agent. 
+- I should be able to open source reference links with a click

@@ -109,6 +109,12 @@
                                     <span class="truncate">New Mind Map</span>
                                 </button>
                                 <button
+                                    [routerLink]="['/edit-notebook', notebook.id, 'chat']"
+                                    class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-teal-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-teal-700">
+                                    <span class="material-symbols-outlined">chat</span>
+                                    <span class="truncate">Chat with Notebook</span>
+                                </button>
+                                <button
                                     [routerLink]="['/edit-notebook', notebook.id, 'outputs']"
                                     class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-purple-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-purple-700">
                                     <span class="material-symbols-outlined">list_alt</span>
