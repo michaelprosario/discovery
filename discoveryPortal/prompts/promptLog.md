@@ -80,3 +80,10 @@ User should be able to generate blog post
 - the API will take 5 seconds to run. make sure ux includes spinner during the blog post generation process
 - store the blog post as an output record using api
 - display the content of blog post
+
+## output list screen
+
+as a user, I should be able to navigate to a component so that I can see the list of output records connected to my notebook
+- I should be able to see the list of output records
+- I should be able to see the type of output record
+- I should be able to open the output records and view it's contents
