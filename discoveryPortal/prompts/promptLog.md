@@ -37,4 +37,29 @@ Properly report validation errors to the user if I do not fill out required fiel
     - system shows notebook name
     - system shows notebook description
     - system lists content sources linked to notebook
-    
+
+## Add delete note book
+- On edit-notebook add button on right to enable user to delete a notebook
+- Please make sure to confirm operation before execution
+- After delete, navigate the user back to the list-notebooks screen.
+
+## Add source / text
+- Enable user to "add source from text" from "edit-notebook"
+- Create component to enable me to add source to notebook using text
+- Return the user to "edit-notebook" after adding source
+- follow ui guidance
+
+## Add source from url
+- Enable user to "add source from url" from "edit-notebook"
+- Create component to enable me to add source to notebook using url
+- Return the user to "edit-notebook" after adding source
+- follow ui guidance
+
+
+## Add source from pdf
+- Enable user to "add source from PDF" from "edit-notebook"
+- UX needs to faciliate uploading PDF to api
+- Create component to enable me to add source to notebook using PDF
+- Process of adding pdf to server  takes 5 seconds.   Add  spinner ui for process
+- Return the user to "edit-notebook" after adding source
+- follow ui guidance

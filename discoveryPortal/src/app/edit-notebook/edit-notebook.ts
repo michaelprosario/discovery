@@ -1,20 +1,22 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { NotebookApiService } from '../infrastructure/http/notebook-api.service';
 import { SourceApiService } from '../infrastructure/http/source-api.service';
 import { NotebookResponse, SourceResponse } from '../core/models';
+import { LoadingComponent } from '../shared/components/loading/loading.component';
 
 @Component({
   selector: 'app-edit-notebook',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, LoadingComponent],
   templateUrl: './edit-notebook.html',
   styleUrl: './edit-notebook.scss',
 })
 export class EditNotebook implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private notebookService = inject(NotebookApiService);
   private sourceService = inject(SourceApiService);
   private cdr = inject(ChangeDetectorRef);
@@ -55,6 +57,22 @@ export class EditNotebook implements OnInit {
           error: (err) => {
             console.error('Error deleting source', err);
             alert('Failed to delete source');
+          }
+        });
+      }
+    }
+  }
+
+  deleteNotebook() {
+    if (this.notebook && confirm(`Are you sure you want to delete notebook "${this.notebook.name}"?`)) {
+      if (this.notebookId) {
+        this.notebookService.deleteNotebook(this.notebookId, true).subscribe({
+          next: () => {
+            this.router.navigate(['/list-notebooks']);
+          },
+          error: (err) => {
+            console.error('Error deleting notebook', err);
+            alert('Failed to delete notebook');
           }
         });
       }
