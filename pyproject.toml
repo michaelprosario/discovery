@@ -26,6 +26,7 @@ dependencies = [
     "tomli-w>=1.0.0",
     "newspaper3k>=0.2.8",
     "lxml_html_clean>=0.1.0",
+    "firebase-admin>=6.0.0",
 ]
 
 [project.optional-dependencies]

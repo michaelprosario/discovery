@@ -56,6 +56,7 @@ class PostgresOutputRepository(IOutputRepository):
             metadata=dict(model.output_metadata) if model.output_metadata else {},
             source_references=list(model.source_references) if model.source_references else [],
             word_count=model.word_count,
+            created_by=model.created_by,
             created_at=model.created_at,
             updated_at=model.updated_at,
             completed_at=model.completed_at
@@ -83,6 +84,7 @@ class PostgresOutputRepository(IOutputRepository):
             output_metadata=entity.metadata,
             source_references=entity.source_references,
             word_count=entity.word_count,
+            created_by=entity.created_by,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
             completed_at=entity.completed_at

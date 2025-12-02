@@ -14,6 +14,7 @@ class ImportFileSourceCommand:
     file_name: str
     file_type: FileType
     file_content: bytes  # Raw file content for storage and hash calculation
+    created_by: str
     metadata: Optional[Dict[str, Any]] = None
 
 
@@ -23,6 +24,7 @@ class ImportUrlSourceCommand:
 
     notebook_id: UUID
     url: str
+    created_by: str
     title: Optional[str] = None  # If None, will be extracted from page
 
 
@@ -33,6 +35,7 @@ class ImportTextSourceCommand:
     notebook_id: UUID
     title: str
     content: str
+    created_by: str
     metadata: Optional[Dict[str, Any]] = None
 
 
