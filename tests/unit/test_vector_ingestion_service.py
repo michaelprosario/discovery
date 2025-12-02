@@ -64,7 +64,7 @@ def service(notebook_repository, source_repository, vector_db_provider, content_
 @pytest.fixture
 def test_notebook(notebook_repository):
     """Create a test notebook."""
-    notebook = Notebook.create(name="Test Notebook", description="For testing").value
+    notebook = Notebook.create(name="Test Notebook", created_by="user@example.com", description="For testing").value
     notebook_repository.add(notebook)
     return notebook
 
@@ -72,7 +72,7 @@ def test_notebook(notebook_repository):
 @pytest.fixture
 def test_source(test_notebook, source_repository):
     """Create a test source with extracted text."""
-    source_result = Source.create_url_source(
+    source_result = Source.create_url_source(created_by="user@example.com", 
         notebook_id=test_notebook.id,
         name="Test Source",
         url="https://example.com",
@@ -148,7 +148,7 @@ class TestIngestNotebook:
     def test_ingest_notebook_source_without_text(self, service, test_notebook, source_repository, vector_db_provider):
         """Test ingesting source without extracted text is skipped."""
         # Create source without extracted text
-        source_result = Source.create_url_source(
+        source_result = Source.create_url_source(created_by="user@example.com", 
             notebook_id=test_notebook.id,
             name="Empty Source",
             url="https://example.com",
@@ -233,7 +233,7 @@ class TestIngestNotebook:
         """Test ingesting notebook with multiple sources."""
         # Create multiple sources
         for i in range(3):
-            source_result = Source.create_url_source(
+            source_result = Source.create_url_source(created_by="user@example.com", 
                 notebook_id=test_notebook.id,
                 name=f"Source {i}",
                 url=f"https://example.com/{i}",

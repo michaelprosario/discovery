@@ -68,6 +68,8 @@ def web_fetch_provider():
         metadata={"author": "John Doe"}
     )
     provider.fetch_url.return_value = Result.success(web_content)
+    provider.fetch_url_safe.return_value = Result.success(web_content)
+    provider.fetch_with_retry.return_value = Result.success(web_content)
     return provider
 
 
@@ -87,7 +89,7 @@ def service(notebook_repository, source_repository, file_storage_provider,
 @pytest.fixture
 def test_notebook(notebook_repository):
     """Create a test notebook."""
-    notebook = Notebook.create(name="Test Notebook", description="For testing").value
+    notebook = Notebook.create(name="Test Notebook", created_by="user@example.com", description="For testing").value
     notebook_repository.add(notebook)
     return notebook
 
@@ -102,6 +104,7 @@ class TestImportFileSource:
             file_name="Test Document.pdf",
             file_type=FileType.PDF,
             file_content=b"PDF content here",
+            created_by="user@example.com",
             metadata={"pages": 10}
         )
 
@@ -120,7 +123,8 @@ class TestImportFileSource:
             notebook_id=uuid4(),
             file_name="Test.pdf",
             file_type=FileType.PDF,
-            file_content=b"content"
+            file_content=b"content",
+            created_by="user@example.com"
         )
 
         result = service.import_file_source(command)
@@ -137,7 +141,8 @@ class TestImportFileSource:
             notebook_id=test_notebook.id,
             file_name="Large File.pdf",
             file_type=FileType.PDF,
-            file_content=large_content
+            file_content=large_content,
+            created_by="user@example.com"
         )
 
         result = service.import_file_source(command)
@@ -153,7 +158,8 @@ class TestImportFileSource:
             notebook_id=test_notebook.id,
             file_name="File 1.txt",
             file_type=FileType.TXT,
-            file_content=content
+            file_content=content,
+            created_by="user@example.com"
         )
 
         # First import should succeed
@@ -165,7 +171,8 @@ class TestImportFileSource:
             notebook_id=test_notebook.id,
             file_name="File 2.txt",
             file_type=FileType.TXT,
-            file_content=content
+            file_content=content,
+            created_by="user@example.com"
         )
 
         result2 = service.import_file_source(command2)
@@ -178,7 +185,8 @@ class TestImportFileSource:
             notebook_id=test_notebook.id,
             file_name="",
             file_type=FileType.PDF,
-            file_content=b"content"
+            file_content=b"content",
+            created_by="user@example.com"
         )
 
         result = service.import_file_source(command)
@@ -195,7 +203,8 @@ class TestImportUrlSource:
         command = ImportUrlSourceCommand(
             notebook_id=test_notebook.id,
             url="https://example.com/article",
-            title="Example Article"
+            title="Example Article",
+            created_by="user@example.com"
         )
 
         result = service.import_url_source(command)
@@ -210,7 +219,8 @@ class TestImportUrlSource:
         """Test URL import uses fetched title when not provided."""
         command = ImportUrlSourceCommand(
             notebook_id=test_notebook.id,
-            url="https://example.com/article"
+            url="https://example.com/article",
+            created_by="user@example.com"
         )
 
         result = service.import_url_source(command)
@@ -222,7 +232,8 @@ class TestImportUrlSource:
         """Test importing to non-existent notebook fails."""
         command = ImportUrlSourceCommand(
             notebook_id=uuid4(),
-            url="https://example.com"
+            url="https://example.com",
+            created_by="user@example.com"
         )
 
         result = service.import_url_source(command)
@@ -233,10 +244,13 @@ class TestImportUrlSource:
     def test_import_url_source_fetch_failure(self, service, test_notebook, web_fetch_provider):
         """Test import fails when URL fetch fails."""
         web_fetch_provider.fetch_url.return_value = Result.failure("Network error")
+        web_fetch_provider.fetch_url_safe.return_value = Result.failure("Network error")
+        web_fetch_provider.fetch_with_retry.return_value = Result.failure("Network error")
 
         command = ImportUrlSourceCommand(
             notebook_id=test_notebook.id,
-            url="https://example.com"
+            url="https://example.com",
+            created_by="user@example.com"
         )
 
         result = service.import_url_source(command)
@@ -248,7 +262,8 @@ class TestImportUrlSource:
         """Test importing duplicate URL content is rejected."""
         command1 = ImportUrlSourceCommand(
             notebook_id=test_notebook.id,
-            url="https://example.com/page1"
+            url="https://example.com/page1",
+            created_by="user@example.com"
         )
 
         # First import should succeed
@@ -258,7 +273,8 @@ class TestImportUrlSource:
         # Second import with same content should fail (same mock content)
         command2 = ImportUrlSourceCommand(
             notebook_id=test_notebook.id,
-            url="https://example.com/page2"
+            url="https://example.com/page2",
+            created_by="user@example.com"
         )
 
         result2 = service.import_url_source(command2)
@@ -276,7 +292,8 @@ class TestDeleteSource:
             notebook_id=test_notebook.id,
             file_name="Test.txt",
             file_type=FileType.TXT,
-            file_content=b"content"
+            file_content=b"content",
+            created_by="user@example.com"
         )
         import_result = service.import_file_source(import_cmd)
         source_id = import_result.value.id
@@ -314,7 +331,7 @@ class TestDeleteSource:
     def test_delete_source_wrong_notebook(self, service, test_notebook, notebook_repository):
         """Test deleting source from wrong notebook fails."""
         # Create another notebook
-        other_notebook = Notebook.create(name="Other Notebook").value
+        other_notebook = Notebook.create(name="Other Notebook", created_by="user@example.com").value
         notebook_repository.add(other_notebook)
 
         # Create source in first notebook
@@ -322,7 +339,8 @@ class TestDeleteSource:
             notebook_id=test_notebook.id,
             file_name="Test.txt",
             file_type=FileType.TXT,
-            file_content=b"content"
+            file_content=b"content",
+            created_by="user@example.com"
         )
         import_result = service.import_file_source(import_cmd)
         source_id = import_result.value.id
@@ -347,7 +365,8 @@ class TestRestoreSource:
             notebook_id=test_notebook.id,
             file_name="Test.txt",
             file_type=FileType.TXT,
-            file_content=b"content"
+            file_content=b"content",
+            created_by="user@example.com"
         )
         import_result = service.import_file_source(import_cmd)
         source_id = import_result.value.id
@@ -376,7 +395,8 @@ class TestRestoreSource:
             notebook_id=test_notebook.id,
             file_name="Test.txt",
             file_type=FileType.TXT,
-            file_content=b"content"
+            file_content=b"content",
+            created_by="user@example.com"
         )
         import_result = service.import_file_source(import_cmd)
         source_id = import_result.value.id
@@ -402,7 +422,8 @@ class TestRenameSource:
             notebook_id=test_notebook.id,
             file_name="Original Name.txt",
             file_type=FileType.TXT,
-            file_content=b"content"
+            file_content=b"content",
+            created_by="user@example.com"
         )
         import_result = service.import_file_source(import_cmd)
         source_id = import_result.value.id
@@ -425,7 +446,8 @@ class TestRenameSource:
             notebook_id=test_notebook.id,
             file_name="Test.txt",
             file_type=FileType.TXT,
-            file_content=b"content"
+            file_content=b"content",
+            created_by="user@example.com"
         )
         import_result = service.import_file_source(import_cmd)
         source_id = import_result.value.id
@@ -450,7 +472,8 @@ class TestExtractContent:
             notebook_id=test_notebook.id,
             file_name="Test.pdf",
             file_type=FileType.PDF,
-            file_content=b"content"
+            file_content=b"content",
+            created_by="user@example.com"
         )
         import_result = service.import_file_source(import_cmd)
         source_id = import_result.value.id
@@ -473,7 +496,8 @@ class TestExtractContent:
             notebook_id=test_notebook.id,
             file_name="Test.pdf",
             file_type=FileType.PDF,
-            file_content=b"content"
+            file_content=b"content",
+            created_by="user@example.com"
         )
         import_result = service.import_file_source(import_cmd)
         source_id = import_result.value.id
@@ -509,7 +533,8 @@ class TestListSources:
                 notebook_id=test_notebook.id,
                 file_name=f"File {i}.txt",
                 file_type=FileType.TXT,
-                file_content=f"content{i}".encode()
+                file_content=f"content{i}".encode(),
+                created_by="user@example.com"
             )
             service.import_file_source(cmd)
 
@@ -528,7 +553,8 @@ class TestListSources:
                 notebook_id=test_notebook.id,
                 file_name=f"{name}.txt",
                 file_type=FileType.TXT,
-                file_content=name.encode()
+                file_content=name.encode(),
+                created_by="user@example.com"
             )
             service.import_file_source(cmd)
 
@@ -550,7 +576,8 @@ class TestListSources:
             notebook_id=test_notebook.id,
             file_name="File 1.txt",
             file_type=FileType.TXT,
-            file_content=b"content1"
+            file_content=b"content1",
+            created_by="user@example.com"
         )
         result1 = service.import_file_source(cmd1)
 
@@ -558,7 +585,8 @@ class TestListSources:
             notebook_id=test_notebook.id,
             file_name="File 2.txt",
             file_type=FileType.TXT,
-            file_content=b"content2"
+            file_content=b"content2",
+            created_by="user@example.com"
         )
         service.import_file_source(cmd2)
 
@@ -588,7 +616,8 @@ class TestCheckOperations:
             notebook_id=test_notebook.id,
             file_name="Test.txt",
             file_type=FileType.TXT,
-            file_content=b"content"
+            file_content=b"content",
+            created_by="user@example.com"
         )
         import_result = service.import_file_source(import_cmd)
         source_id = import_result.value.id
@@ -615,7 +644,8 @@ class TestCheckOperations:
                 notebook_id=test_notebook.id,
                 file_name=f"File {i}.txt",
                 file_type=FileType.TXT,
-                file_content=f"content{i}".encode()
+                file_content=f"content{i}".encode(),
+                created_by="user@example.com"
             )
             service.import_file_source(cmd)
 

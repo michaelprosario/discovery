@@ -69,7 +69,7 @@ def service(notebook_repository, vector_db_provider):
 @pytest.fixture
 def test_notebook(notebook_repository):
     """Create a test notebook."""
-    notebook = Notebook.create(name="Test Notebook", description="For testing").value
+    notebook = Notebook.create(created_by="user@example.com", name="Test Notebook", description="For testing").value
     notebook_repository.add(notebook)
     return notebook
 

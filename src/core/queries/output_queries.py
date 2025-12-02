@@ -107,6 +107,7 @@ class OutputSummary:
     output_type: OutputType
     status: OutputStatus
     word_count: int
+    created_by: str
     created_at: datetime
     updated_at: datetime
     completed_at: Optional[datetime] = None
@@ -121,6 +122,7 @@ class OutputSummary:
             output_type=output.output_type,
             status=output.status,
             word_count=output.word_count,
+            created_by=output.created_by,
             created_at=output.created_at,
             updated_at=output.updated_at,
             completed_at=output.completed_at

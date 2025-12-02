@@ -41,6 +41,7 @@ def sample_notebook():
     """Create a sample notebook for testing."""
     result = Notebook.create(
         name="Test Notebook",
+        created_by="user@example.com",
         description="A test notebook",
         tags=["test", "sample"]
     )
@@ -192,9 +193,9 @@ class TestPostgresNotebookRepository:
     def test_get_all_returns_all_notebooks(self, repository):
         """Test that get_all returns all notebooks."""
         # Add multiple notebooks
-        nb1 = Notebook.create("Notebook 1", tags=["tag1"]).value
-        nb2 = Notebook.create("Notebook 2", tags=["tag2"]).value
-        nb3 = Notebook.create("Notebook 3", tags=["tag1", "tag2"]).value
+        nb1 = Notebook.create(name="Notebook 1", created_by="user@example.com", tags=["tag1"]).value
+        nb2 = Notebook.create(name="Notebook 2", created_by="user@example.com", tags=["tag2"]).value
+        nb3 = Notebook.create(name="Notebook 3", created_by="user@example.com", tags=["tag1", "tag2"]).value
 
         repository.add(nb1)
         repository.add(nb2)
@@ -207,9 +208,9 @@ class TestPostgresNotebookRepository:
 
     def test_get_all_with_tag_filter(self, repository):
         """Test get_all with tag filtering."""
-        nb1 = Notebook.create("Notebook 1", tags=["python"]).value
-        nb2 = Notebook.create("Notebook 2", tags=["java"]).value
-        nb3 = Notebook.create("Notebook 3", tags=["python", "ml"]).value
+        nb1 = Notebook.create(name="Notebook 1", created_by="user@example.com", tags=["python"]).value
+        nb2 = Notebook.create(name="Notebook 2", created_by="user@example.com", tags=["java"]).value
+        nb3 = Notebook.create(name="Notebook 3", created_by="user@example.com", tags=["python", "ml"]).value
 
         repository.add(nb1)
         repository.add(nb2)
@@ -224,9 +225,9 @@ class TestPostgresNotebookRepository:
 
     def test_get_all_with_sorting(self, repository):
         """Test get_all with sorting."""
-        nb1 = Notebook.create("A Notebook").value
-        nb2 = Notebook.create("C Notebook").value
-        nb3 = Notebook.create("B Notebook").value
+        nb1 = Notebook.create(name="A Notebook", created_by="user@example.com").value
+        nb2 = Notebook.create(name="C Notebook", created_by="user@example.com").value
+        nb3 = Notebook.create(name="B Notebook", created_by="user@example.com").value
 
         repository.add(nb1)
         repository.add(nb2)
@@ -247,7 +248,7 @@ class TestPostgresNotebookRepository:
     def test_get_all_with_pagination(self, repository):
         """Test get_all with pagination."""
         for i in range(5):
-            nb = Notebook.create(f"Notebook {i}").value
+            nb = Notebook.create(name=f"Notebook {i}", created_by="user@example.com").value
             repository.add(nb)
 
         query = ListNotebooksQuery(limit=2, offset=1)
@@ -265,7 +266,7 @@ class TestPostgresNotebookRepository:
 
         # Add notebooks
         for i in range(3):
-            nb = Notebook.create(f"Notebook {i}").value
+            nb = Notebook.create(name=f"Notebook {i}", created_by="user@example.com").value
             repository.add(nb)
 
         result = repository.count()
@@ -274,7 +275,7 @@ class TestPostgresNotebookRepository:
 
     def test_repository_handles_unicode_names(self, repository):
         """Test that repository handles Unicode characters in names."""
-        nb = Notebook.create("Notebook 日本語 测试").value
+        nb = Notebook.create(name="Notebook 日本語 测试", created_by="user@example.com").value
         result = repository.add(nb)
 
         assert result.is_success
@@ -282,7 +283,7 @@ class TestPostgresNotebookRepository:
 
     def test_repository_preserves_tags_order(self, repository):
         """Test that repository preserves tag order."""
-        nb = Notebook.create("Test", tags=["z", "a", "m"]).value
+        nb = Notebook.create(name="Test", created_by="user@example.com", tags=["z", "a", "m"]).value
         repository.add(nb)
 
         result = repository.get_by_id(nb.id)
@@ -293,7 +294,7 @@ class TestPostgresNotebookRepository:
 
     def test_repository_handles_empty_description(self, repository):
         """Test that repository handles notebooks with no description."""
-        nb = Notebook.create("Test Notebook", description=None).value
+        nb = Notebook.create(name="Test Notebook", created_by="user@example.com", description=None).value
         result = repository.add(nb)
 
         assert result.is_success
@@ -301,7 +302,7 @@ class TestPostgresNotebookRepository:
 
     def test_repository_handles_empty_tags(self, repository):
         """Test that repository handles notebooks with no tags."""
-        nb = Notebook.create("Test Notebook", tags=[]).value
+        nb = Notebook.create(name="Test Notebook", created_by="user@example.com", tags=[]).value
         result = repository.add(nb)
 
         assert result.is_success

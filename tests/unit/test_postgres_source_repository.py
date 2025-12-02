@@ -42,6 +42,7 @@ def notebook_id(session):
         name="Test Notebook",
         description="A test notebook",
         tags=["test"],
+        created_by="test@example.com",
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
         source_count=0,
@@ -65,6 +66,7 @@ def sample_file_source(notebook_id):
         file_size=1024,
         content_hash="abc123hash",
         extracted_text="Sample extracted text",
+        created_by="test@example.com",
         metadata={"author": "Test Author", "pages": 10}
     )
 
@@ -78,6 +80,7 @@ def sample_url_source(notebook_id):
         name="Test Website",
         source_type=SourceType.URL,
         url="https://example.com/article",
+        created_by="test@example.com",
         content_hash="def456hash",
         extracted_text="Website content",
         metadata={"title": "Example Article", "date": "2024-01-01"}
