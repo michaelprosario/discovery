@@ -282,7 +282,8 @@ def get_notebook(
     "",
     response_model=NotebookListResponse,
     responses={
-        200: {"description": "List of notebooks"}
+        200: {"description": "List of notebooks"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"}
     }
 )
 def list_notebooks(
@@ -291,10 +292,13 @@ def list_notebooks(
     sort_order: SortOrder = SortOrder.DESC,
     limit: Optional[int] = None,
     offset: int = 0,
+    current_user_email: str = Depends(get_current_user_email),
     service: NotebookManagementService = Depends(get_notebook_service)
 ):
     """
-    List all notebooks with optional filtering and sorting.
+    List all notebooks owned by the authenticated user with optional filtering and sorting.
+
+    Requires authentication. Only returns notebooks owned by the authenticated user.
 
     Args:
         tags: Filter by tags (optional)
@@ -302,6 +306,7 @@ def list_notebooks(
         sort_order: Sort order (default: desc)
         limit: Maximum number of results (optional)
         offset: Number of results to skip (default: 0)
+        current_user_email: Email of authenticated user
         service: Injected notebook service
 
     Returns:
@@ -317,21 +322,20 @@ def list_notebooks(
 
     result = service.list_notebooks(query)
 
-    result = service.list_notebooks(query)
-
     if result.is_failure:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": result.error}
         )
 
-    notebooks = result.value
+    # Filter notebooks by ownership
+    notebooks = [nb for nb in result.value if nb.created_by == current_user_email]
     count_result = service.get_count(query)
     total = count_result.value if count_result.is_success else 0
 
     return NotebookListResponse(
         notebooks=[to_notebook_response(nb) for nb in notebooks],
-        total=total
+        total=len(notebooks)
     )
 
 

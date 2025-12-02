@@ -427,27 +427,32 @@ def import_text_source(
     "/{source_id}",
     response_model=SourceResponse,
     responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Source not found"}
     }
 )
 def get_source(
     source_id: UUID,
     include_deleted: bool = False,
+    current_user_email: str = Depends(get_current_user_email),
     service: SourceIngestionService = Depends(get_source_service)
 ):
     """
     Get a source by its ID.
 
+    Requires authentication. Only the owner can access their sources.
+
     Args:
         source_id: UUID of the source
         include_deleted: Include soft-deleted sources
+        current_user_email: Email of authenticated user
         service: Injected source service
 
     Returns:
         Source details
 
     Raises:
-        HTTPException: 404 if source not found
+        HTTPException: 401 for unauthorized, 404 if source not found or not owned by user
     """
     query = GetSourceByIdQuery(
         source_id=source_id,
@@ -461,14 +466,23 @@ def get_source(
             detail={"error": result.error}
         )
 
-    return to_source_response(result.value)
+    source = result.value
+    # Verify ownership - return 404 to hide existence
+    if source.created_by != current_user_email:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": "Source not found"}
+        )
+
+    return to_source_response(source)
 
 
 @router.get(
     "/notebook/{notebook_id}",
     response_model=SourceListResponse,
     responses={
-        200: {"description": "List of sources for notebook"}
+        200: {"description": "List of sources for notebook"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"}
     }
 )
 def list_sources_by_notebook(
@@ -480,10 +494,13 @@ def list_sources_by_notebook(
     sort_order: SortOrder = SortOrder.DESC,
     limit: Optional[int] = None,
     offset: int = 0,
+    current_user_email: str = Depends(get_current_user_email),
     service: SourceIngestionService = Depends(get_source_service)
 ):
     """
     List all sources for a notebook with optional filtering and sorting.
+
+    Requires authentication. Only returns sources owned by the authenticated user.
 
     Args:
         notebook_id: UUID of the notebook
@@ -494,6 +511,7 @@ def list_sources_by_notebook(
         sort_order: Sort order (default: desc)
         limit: Maximum number of results (optional)
         offset: Number of results to skip (default: 0)
+        current_user_email: Email of authenticated user
         service: Injected source service
 
     Returns:
@@ -539,13 +557,12 @@ def list_sources_by_notebook(
             detail={"error": result.error}
         )
 
-    count_query = GetSourceCountQuery(notebook_id=notebook_id, include_deleted=include_deleted)
-    count_result = service.get_count(count_query)
-    total = count_result.value if count_result.is_success else 0
+    # Filter sources by ownership
+    owned_sources = [s for s in result.value if s.created_by == current_user_email]
 
     return SourceListResponse(
-        sources=[summary_to_source_response(summary) for summary in result.value],
-        total=total
+        sources=[summary_to_source_response(summary) for summary in owned_sources],
+        total=len(owned_sources)
     )
 
 
