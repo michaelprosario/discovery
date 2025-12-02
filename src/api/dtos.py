@@ -70,6 +70,7 @@ class NotebookResponse(BaseModel):
     name: str
     description: Optional[str]
     tags: List[str]
+    created_by: str
     source_count: int
     output_count: int
     created_at: datetime
@@ -213,6 +214,7 @@ class SourceResponse(BaseModel):
     content_hash: str
     extracted_text: str
     metadata: dict
+    created_by: str
     created_at: datetime
     updated_at: datetime
     deleted_at: Optional[datetime]
@@ -331,6 +333,7 @@ class OutputResponse(BaseModel):
     metadata: dict
     source_references: List[str]
     word_count: int
+    created_by: str
     created_at: datetime
     updated_at: datetime
     completed_at: Optional[datetime]

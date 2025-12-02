@@ -18,6 +18,7 @@ from ..core.queries.output_queries import (
     SearchOutputsQuery
 )
 from ..core.value_objects.enums import SortOption, SortOrder, OutputType, OutputStatus
+from .auth.firebase_auth import get_current_user_email
 from .dtos import (
     CreateOutputRequest,
     UpdateOutputRequest,
@@ -140,6 +141,7 @@ def to_output_response(output) -> OutputResponse:
         metadata=output.metadata,
         source_references=output.source_references,
         word_count=output.word_count,
+        created_by=output.created_by,
         created_at=output.created_at,
         updated_at=output.updated_at,
         completed_at=output.completed_at
@@ -167,31 +169,37 @@ def to_output_summary_response(summary) -> OutputSummaryResponse:
     status_code=status.HTTP_201_CREATED,
     responses={
         400: {"model": ValidationErrorResponse, "description": "Validation error"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Notebook not found"}
     }
 )
 def create_output(
     request: CreateOutputRequest,
     notebook_id: UUID = Query(..., description="UUID of the parent notebook"),
+    current_user_email: str = Depends(get_current_user_email),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
     Create a new output.
 
+    Requires authentication.
+
     Args:
         request: Output creation data
         notebook_id: UUID of the parent notebook
+        current_user_email: Email of authenticated user
         service: Injected output service
 
     Returns:
         Created output
 
     Raises:
-        HTTPException: 400 for validation errors, 404 if notebook not found
+        HTTPException: 400 for validation errors, 401 for unauthorized, 404 if notebook not found
     """
     command = CreateOutputCommand(
         notebook_id=notebook_id,
         title=request.title,
+        created_by=current_user_email,
         output_type=OutputType(request.output_type),
         prompt=request.prompt,
         template_name=request.template_name

@@ -19,6 +19,8 @@ from ..core.queries.notebook_queries import (
     ListNotebooksQuery
 )
 from ..core.value_objects.enums import SortOption, SortOrder
+from .auth.firebase_auth import get_current_user_email
+from .auth.authorization import require_resource_owner_or_fail
 from .dtos import (
     CreateNotebookRequest,
     UpdateNotebookRequest,
@@ -144,6 +146,7 @@ def to_output_response(output) -> OutputResponse:
         metadata=output.metadata,
         source_references=output.source_references,
         word_count=output.word_count,
+        created_by=output.created_by,
         created_at=output.created_at,
         updated_at=output.updated_at,
         completed_at=output.completed_at
@@ -157,6 +160,7 @@ def to_notebook_response(notebook) -> NotebookResponse:
         name=notebook.name,
         description=notebook.description,
         tags=notebook.tags,
+        created_by=notebook.created_by,
         source_count=notebook.source_count,
         output_count=notebook.output_count,
         created_at=notebook.created_at,
@@ -170,28 +174,34 @@ def to_notebook_response(notebook) -> NotebookResponse:
     status_code=status.HTTP_201_CREATED,
     responses={
         400: {"model": ValidationErrorResponse, "description": "Validation error"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         409: {"model": ErrorResponse, "description": "Duplicate notebook name"}
     }
 )
 def create_notebook(
     request: CreateNotebookRequest,
+    current_user_email: str = Depends(get_current_user_email),
     service: NotebookManagementService = Depends(get_notebook_service)
 ):
     """
     Create a new notebook.
 
+    Requires authentication. The notebook will be owned by the authenticated user.
+
     Args:
         request: Notebook creation data
+        current_user_email: Email of authenticated user
         service: Injected notebook service
 
     Returns:
         Created notebook
 
     Raises:
-        HTTPException: 400 for validation errors, 409 for duplicate names
+        HTTPException: 400 for validation errors, 401 for unauthorized, 409 for duplicate names
     """
     command = CreateNotebookCommand(
         name=request.name,
+        created_by=current_user_email,
         description=request.description,
         tags=request.tags
     )
@@ -227,25 +237,30 @@ def create_notebook(
     "/{notebook_id}",
     response_model=NotebookResponse,
     responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Notebook not found"}
     }
 )
 def get_notebook(
     notebook_id: UUID,
+    current_user_email: str = Depends(get_current_user_email),
     service: NotebookManagementService = Depends(get_notebook_service)
 ):
     """
     Get a notebook by its ID.
 
+    Requires authentication. Only the owner can access their notebooks.
+
     Args:
         notebook_id: UUID of the notebook
+        current_user_email: Email of authenticated user
         service: Injected notebook service
 
     Returns:
         Notebook details
 
     Raises:
-        HTTPException: 404 if notebook not found
+        HTTPException: 401 for unauthorized, 404 if notebook not found or not owned by user
     """
     query = GetNotebookByIdQuery(notebook_id=notebook_id)
     result = service.get_notebook_by_id(query)
@@ -256,7 +271,11 @@ def get_notebook(
             detail={"error": result.error}
         )
 
-    return to_notebook_response(result.value)
+    notebook = result.value
+    # Check ownership - return 404 to hide existence
+    require_resource_owner_or_fail(notebook, current_user_email, "Notebook")
+
+    return to_notebook_response(notebook)
 
 
 @router.get(
@@ -597,6 +616,7 @@ def remove_tags(
     status_code=status.HTTP_201_CREATED,
     responses={
         400: {"model": ValidationErrorResponse, "description": "Validation error"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Notebook not found"},
         409: {"model": ErrorResponse, "description": "Notebook has no sources"}
     }
@@ -604,6 +624,7 @@ def remove_tags(
 def generate_blog_post(
     notebook_id: UUID,
     request: GenerateBlogPostRequest,
+    current_user_email: str = Depends(get_current_user_email),
     service: BlogGenerationService = Depends(get_blog_generation_service)
 ):
     """
@@ -615,21 +636,26 @@ def generate_blog_post(
     - Using LLM to synthesize the content into a cohesive blog post
     - Including reference links at the bottom if requested
 
+    Requires authentication. Only the notebook owner can generate blog posts.
+
     Args:
         notebook_id: UUID of the notebook containing sources
         request: Blog post generation parameters
+        current_user_email: Email of authenticated user
         service: Injected blog generation service
 
     Returns:
         Generated blog post output
 
     Raises:
-        HTTPException: 400 for validation errors, 404 if notebook not found,
+        HTTPException: 400 for validation errors, 401 for unauthorized,
+                      404 if notebook not found or not owned by user,
                       409 if notebook has no sources
     """
     command = GenerateBlogPostCommand(
         notebook_id=notebook_id,
         title=request.title,
+        created_by=current_user_email,
         prompt=request.prompt,
         template_name=request.template_name,
         target_word_count=request.target_word_count,

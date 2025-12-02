@@ -12,6 +12,7 @@ class GenerateBlogPostCommand:
     
     notebook_id: UUID
     title: str
+    created_by: str
     prompt: Optional[str] = None
     template_name: Optional[str] = None
     target_word_count: int = 550  # 500-600 words as requested
@@ -26,6 +27,9 @@ class GenerateBlogPostCommand:
         if not self.title or not self.title.strip():
             raise ValueError("Title is required")
         
+        if not self.created_by or not self.created_by.strip():
+            raise ValueError("Created by (user email) is required")
+        
         if self.target_word_count < 100 or self.target_word_count > 2000:
             raise ValueError("Target word count must be between 100 and 2000")
         
@@ -39,6 +43,7 @@ class CreateOutputCommand:
     
     notebook_id: UUID
     title: str
+    created_by: str
     output_type: OutputType = OutputType.BLOG_POST
     prompt: Optional[str] = None
     template_name: Optional[str] = None
@@ -50,6 +55,9 @@ class CreateOutputCommand:
         
         if not self.title or not self.title.strip():
             raise ValueError("Title is required")
+        
+        if not self.created_by or not self.created_by.strip():
+            raise ValueError("Created by (user email) is required")
         
         # Normalize title
         self.title = self.title.strip()

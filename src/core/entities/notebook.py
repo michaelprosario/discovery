@@ -19,6 +19,7 @@ class Notebook:
     name: str = ""
     description: Optional[str] = None
     tags: List[str] = field(default_factory=list)
+    created_by: str = ""  # Email address of the user who created the notebook
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
     source_count: int = 0
@@ -36,6 +37,7 @@ class Notebook:
     @staticmethod
     def create(
         name: str,
+        created_by: str,
         description: Optional[str] = None,
         tags: Optional[List[str]] = None
     ) -> Result['Notebook']:
@@ -44,6 +46,7 @@ class Notebook:
 
         Args:
             name: Notebook name (required, max 255 chars)
+            created_by: Email of the user creating the notebook (required)
             description: Optional description (max 2000 chars)
             tags: Optional list of tags for categorization
 
@@ -67,6 +70,21 @@ class Notebook:
                 code="MAX_LENGTH"
             ))
 
+        # Validate created_by (email)
+        created_by = created_by.strip() if created_by else ""
+        if not created_by:
+            errors.append(ValidationError(
+                field="created_by",
+                message="Created by (user email) is required",
+                code="REQUIRED"
+            ))
+        elif "@" not in created_by:
+            errors.append(ValidationError(
+                field="created_by",
+                message="Created by must be a valid email address",
+                code="INVALID_FORMAT"
+            ))
+
         # Validate description
         if description and len(description) > 2000:
             errors.append(ValidationError(
@@ -82,6 +100,7 @@ class Notebook:
         # Create notebook
         notebook = Notebook(
             name=name,
+            created_by=created_by,
             description=description,
             tags=tags or []
         )
