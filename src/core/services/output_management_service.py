@@ -73,6 +73,7 @@ class OutputManagementService:
         create_result = Output.create(
             notebook_id=command.notebook_id,
             title=command.title,
+            created_by=command.created_by,
             output_type=command.output_type,
             prompt=command.prompt,
             template_name=command.template_name

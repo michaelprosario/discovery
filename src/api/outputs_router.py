@@ -18,6 +18,8 @@ from ..core.queries.output_queries import (
     SearchOutputsQuery
 )
 from ..core.value_objects.enums import SortOption, SortOrder, OutputType, OutputStatus
+from .auth.firebase_auth import get_current_user_email
+from .auth.authorization import require_resource_owner_or_fail
 from .dtos import (
     CreateOutputRequest,
     UpdateOutputRequest,
@@ -140,6 +142,7 @@ def to_output_response(output) -> OutputResponse:
         metadata=output.metadata,
         source_references=output.source_references,
         word_count=output.word_count,
+        created_by=output.created_by,
         created_at=output.created_at,
         updated_at=output.updated_at,
         completed_at=output.completed_at
@@ -167,31 +170,37 @@ def to_output_summary_response(summary) -> OutputSummaryResponse:
     status_code=status.HTTP_201_CREATED,
     responses={
         400: {"model": ValidationErrorResponse, "description": "Validation error"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Notebook not found"}
     }
 )
 def create_output(
     request: CreateOutputRequest,
     notebook_id: UUID = Query(..., description="UUID of the parent notebook"),
+    current_user_email: str = Depends(get_current_user_email),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
     Create a new output.
 
+    Requires authentication. The output will be owned by the authenticated user.
+
     Args:
         request: Output creation data
         notebook_id: UUID of the parent notebook
+        current_user_email: Email of the authenticated user
         service: Injected output service
 
     Returns:
         Created output
 
     Raises:
-        HTTPException: 400 for validation errors, 404 if notebook not found
+        HTTPException: 400 for validation errors, 401 for unauthorized, 404 if notebook not found
     """
     command = CreateOutputCommand(
         notebook_id=notebook_id,
         title=request.title,
+        created_by=current_user_email,
         output_type=OutputType(request.output_type),
         prompt=request.prompt,
         template_name=request.template_name
@@ -228,25 +237,30 @@ def create_output(
     "/{output_id}",
     response_model=OutputResponse,
     responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Output not found"}
     }
 )
 def get_output(
     output_id: UUID,
+    current_user_email: str = Depends(get_current_user_email),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
     Get an output by its ID.
 
+    Requires authentication. Only the owner can access the output.
+
     Args:
         output_id: UUID of the output
+        current_user_email: Email of the authenticated user
         service: Injected output service
 
     Returns:
         Output details
 
     Raises:
-        HTTPException: 404 if output not found
+        HTTPException: 401 for unauthorized, 404 if output not found or not owned by user
     """
     query = GetOutputByIdQuery(output_id=output_id)
     result = service.get_output_by_id(query)
@@ -257,37 +271,45 @@ def get_output(
             detail={"error": result.error}
         )
 
-    return to_output_response(result.value)
+    output = result.value
+    require_resource_owner_or_fail(output, current_user_email, "Output")
+
+    return to_output_response(output)
 
 
 @router.get(
     "",
     response_model=OutputListResponse,
     responses={
-        200: {"description": "List of outputs"}
+        200: {"description": "List of outputs"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"}
     }
 )
 def list_outputs(
     notebook_id: Optional[UUID] = Query(None, description="Filter by notebook ID"),
     output_type: Optional[OutputType] = Query(None, description="Filter by output type"),
-    status: Optional[OutputStatus] = Query(None, description="Filter by status"),
+    output_status: Optional[OutputStatus] = Query(None, alias="status", description="Filter by status"),
     sort_by: SortOption = SortOption.UPDATED_AT,
     sort_order: SortOrder = SortOrder.DESC,
     limit: Optional[int] = None,
     offset: int = 0,
+    current_user_email: str = Depends(get_current_user_email),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
     List outputs with optional filtering and sorting.
 
+    Requires authentication. Only returns outputs owned by the authenticated user.
+
     Args:
         notebook_id: Filter by notebook ID (optional)
         output_type: Filter by output type (optional)
-        status: Filter by status (optional)
+        output_status: Filter by status (optional)
         sort_by: Sort field (default: updated_at)
         sort_order: Sort order (default: desc)
         limit: Maximum number of results (optional)
         offset: Number of results to skip (default: 0)
+        current_user_email: Email of the authenticated user
         service: Injected output service
 
     Returns:
@@ -298,7 +320,7 @@ def list_outputs(
         query = ListOutputsByNotebookQuery(
             notebook_id=notebook_id,
             output_type=output_type,
-            status=status,
+            status=output_status,
             sort_by=sort_by,
             sort_order=sort_order,
             limit=limit,
@@ -310,7 +332,7 @@ def list_outputs(
         # List all outputs
         query = ListAllOutputsQuery(
             output_type=output_type,
-            status=status,
+            status=output_status,
             sort_by=sort_by,
             sort_order=sort_order,
             limit=limit,
@@ -325,10 +347,12 @@ def list_outputs(
             detail={"error": result.error}
         )
 
-    total = count_result.value if count_result.is_success else 0
+    # Filter outputs by owner
+    outputs = [o for o in result.value if o.created_by == current_user_email]
+    total = len(outputs)
 
     return OutputListResponse(
-        outputs=[to_output_summary_response(summary) for summary in result.value],
+        outputs=[to_output_summary_response(summary) for summary in outputs],
         total=total
     )
 
@@ -338,28 +362,43 @@ def list_outputs(
     response_model=OutputResponse,
     responses={
         400: {"model": ValidationErrorResponse, "description": "Validation error or output not editable"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Output not found"}
     }
 )
 def update_output(
     output_id: UUID,
     request: UpdateOutputRequest,
+    current_user_email: str = Depends(get_current_user_email),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
     Update an existing output.
 
+    Requires authentication. Only the owner can update the output.
+
     Args:
         output_id: UUID of the output to update
         request: Update data
+        current_user_email: Email of the authenticated user
         service: Injected output service
 
     Returns:
         Updated output
 
     Raises:
-        HTTPException: 400 for validation errors or if not editable, 404 if not found
+        HTTPException: 400 for validation errors or if not editable, 401 for unauthorized, 404 if not found
     """
+    # First verify ownership
+    get_query = GetOutputByIdQuery(output_id=output_id)
+    get_result = service.get_output_by_id(get_query)
+    if get_result.is_failure:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": get_result.error}
+        )
+    require_resource_owner_or_fail(get_result.value, current_user_email, "Output")
+
     command = UpdateOutputCommand(
         output_id=output_id,
         title=request.title,
@@ -403,26 +442,41 @@ def update_output(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         400: {"model": ErrorResponse, "description": "Cannot delete (output not editable)"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Output not found"}
     }
 )
 def delete_output(
     output_id: UUID,
+    current_user_email: str = Depends(get_current_user_email),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
     Delete an output.
 
+    Requires authentication. Only the owner can delete the output.
+
     Args:
         output_id: UUID of the output to delete
+        current_user_email: Email of the authenticated user
         service: Injected output service
 
     Returns:
         204 No Content on success
 
     Raises:
-        HTTPException: 400 if not editable, 404 if not found
+        HTTPException: 400 if not editable, 401 for unauthorized, 404 if not found
     """
+    # First verify ownership
+    get_query = GetOutputByIdQuery(output_id=output_id)
+    get_result = service.get_output_by_id(get_query)
+    if get_result.is_failure:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": get_result.error}
+        )
+    require_resource_owner_or_fail(get_result.value, current_user_email, "Output")
+
     command = DeleteOutputCommand(output_id=output_id)
     result = service.delete_output(command)
 
@@ -445,32 +499,37 @@ def delete_output(
     "/search",
     response_model=OutputListResponse,
     responses={
-        200: {"description": "Search results"}
+        200: {"description": "Search results"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"}
     }
 )
 def search_outputs(
     q: str = Query(..., description="Search term"),
     notebook_id: Optional[UUID] = Query(None, description="Filter by notebook ID"),
     output_type: Optional[OutputType] = Query(None, description="Filter by output type"),
-    status: Optional[OutputStatus] = Query(None, description="Filter by status"),
+    output_status: Optional[OutputStatus] = Query(None, alias="status", description="Filter by status"),
     sort_by: SortOption = SortOption.UPDATED_AT,
     sort_order: SortOrder = SortOrder.DESC,
     limit: Optional[int] = None,
     offset: int = 0,
+    current_user_email: str = Depends(get_current_user_email),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
     Search outputs by content or title.
 
+    Requires authentication. Only searches within outputs owned by the authenticated user.
+
     Args:
         q: Search term
         notebook_id: Filter by notebook ID (optional)
         output_type: Filter by output type (optional)
-        status: Filter by status (optional)
+        output_status: Filter by status (optional)
         sort_by: Sort field (default: updated_at)
         sort_order: Sort order (default: desc)
         limit: Maximum number of results (optional)
         offset: Number of results to skip (default: 0)
+        current_user_email: Email of the authenticated user
         service: Injected output service
 
     Returns:
@@ -480,7 +539,7 @@ def search_outputs(
         search_term=q,
         notebook_id=notebook_id,
         output_type=output_type,
-        status=status,
+        status=output_status,
         sort_by=sort_by,
         sort_order=sort_order,
         limit=limit,
@@ -495,9 +554,12 @@ def search_outputs(
             detail={"error": result.error}
         )
 
+    # Filter outputs by owner
+    outputs = [o for o in result.value if o.created_by == current_user_email]
+
     return OutputListResponse(
-        outputs=[to_output_summary_response(summary) for summary in result.value],
-        total=len(result.value)  # For search, we return the actual count
+        outputs=[to_output_summary_response(summary) for summary in outputs],
+        total=len(outputs)
     )
 
 
@@ -505,27 +567,32 @@ def search_outputs(
     "/{output_id}/preview",
     response_model=OutputPreviewResponse,
     responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Output not found"}
     }
 )
 def get_output_preview(
     output_id: UUID,
     length: int = Query(300, ge=50, le=1000, description="Preview length in characters"),
+    current_user_email: str = Depends(get_current_user_email),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
     Get a preview of output content.
 
+    Requires authentication. Only the owner can preview the output.
+
     Args:
         output_id: UUID of the output
         length: Preview length in characters
+        current_user_email: Email of the authenticated user
         service: Injected output service
 
     Returns:
         Output preview
 
     Raises:
-        HTTPException: 404 if output not found
+        HTTPException: 401 for unauthorized, 404 if output not found
     """
     query = GetOutputByIdQuery(output_id=output_id)
     result = service.get_output_by_id(query)
@@ -537,6 +604,8 @@ def get_output_preview(
         )
 
     output = result.value
+    require_resource_owner_or_fail(output, current_user_email, "Output")
+
     preview = output.content[:length] + "..." if len(output.content) > length else output.content
 
     return OutputPreviewResponse(
