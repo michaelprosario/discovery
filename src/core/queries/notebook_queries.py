@@ -56,6 +56,7 @@ class NotebookSummary:
     tags: List[str]
     source_count: int
     output_count: int
+    created_by: str
     created_at: datetime
     updated_at: datetime
 
@@ -69,6 +70,7 @@ class NotebookSummary:
             tags=notebook.tags.copy(),
             source_count=notebook.source_count,
             output_count=notebook.output_count,
+            created_by=notebook.created_by,
             created_at=notebook.created_at,
             updated_at=notebook.updated_at
         )

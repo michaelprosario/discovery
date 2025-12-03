@@ -2,6 +2,28 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.0.
 
+## 🔐 Firebase Authentication
+
+**NEW**: This application now includes Firebase Authentication for secure user access.
+
+**Quick Start:**
+1. See [`FIREBASE_AUTH_SETUP.md`](./FIREBASE_AUTH_SETUP.md) for detailed setup instructions
+2. Configure your Firebase project credentials in environment files
+3. Create a test user in Firebase Console
+4. Run the app and login
+
+**Key Features:**
+- ✅ Email/password authentication
+- ✅ Secure API communication with Firebase ID tokens
+- ✅ Protected routes with automatic redirects
+- ✅ User menu with profile display and logout
+- ✅ Ready for Firebase Hosting deployment
+
+**Documentation:**
+- Setup Guide: [`FIREBASE_AUTH_SETUP.md`](./FIREBASE_AUTH_SETUP.md)
+- Implementation Details: [`FIREBASE_IMPLEMENTATION.md`](./FIREBASE_IMPLEMENTATION.md)
+- Deployment Guide: [`../DEPLOYMENT_GUIDE.md`](../DEPLOYMENT_GUIDE.md)
+
 ## Features
 
 ### Chat with Notebook (Q&A Interface)

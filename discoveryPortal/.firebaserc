@@ -1,0 +1,12 @@
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/

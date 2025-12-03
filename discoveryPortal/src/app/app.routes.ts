@@ -11,19 +11,28 @@ import { NotebookOutputs } from './notebook-outputs/notebook-outputs';
 import { ViewOutput } from './view-output/view-output';
 import { NewMindMap } from './new-mindmap/new-mindmap';
 import { ChatComponent } from './chat/chat';
+import { authGuard, noAuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-    { path: '', component: NotebookList },
-    { path: 'list-notebooks', component: NotebookList },    
-    { path: 'edit-notebook/:id', component: EditNotebook },
-    { path: 'edit-notebook/:id/add-text-source', component: AddTextSource },
-    { path: 'edit-notebook/:id/add-url-source', component: AddUrlSource },
-    { path: 'edit-notebook/:id/add-pdf-source', component: AddPdfSource },
-    { path: 'edit-notebook/:id/sync', component: SyncNotebook },
-    { path: 'edit-notebook/:id/new-blog-post', component: NewBlogPost },
-    { path: 'edit-notebook/:id/new-mindmap', component: NewMindMap },
-    { path: 'edit-notebook/:id/outputs', component: NotebookOutputs },
-    { path: 'edit-notebook/:id/outputs/:outputId', component: ViewOutput },
-    { path: 'edit-notebook/:id/chat', component: ChatComponent },
-    { path: 'new-notebook', component: NewNotebook }
+    // Public routes
+    {
+        path: 'login',
+        loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent),
+        canActivate: [noAuthGuard]
+    },
+    
+    // Protected routes
+    { path: '', component: NotebookList, canActivate: [authGuard] },
+    { path: 'list-notebooks', component: NotebookList, canActivate: [authGuard] },    
+    { path: 'edit-notebook/:id', component: EditNotebook, canActivate: [authGuard] },
+    { path: 'edit-notebook/:id/add-text-source', component: AddTextSource, canActivate: [authGuard] },
+    { path: 'edit-notebook/:id/add-url-source', component: AddUrlSource, canActivate: [authGuard] },
+    { path: 'edit-notebook/:id/add-pdf-source', component: AddPdfSource, canActivate: [authGuard] },
+    { path: 'edit-notebook/:id/sync', component: SyncNotebook, canActivate: [authGuard] },
+    { path: 'edit-notebook/:id/new-blog-post', component: NewBlogPost, canActivate: [authGuard] },
+    { path: 'edit-notebook/:id/new-mindmap', component: NewMindMap, canActivate: [authGuard] },
+    { path: 'edit-notebook/:id/outputs', component: NotebookOutputs, canActivate: [authGuard] },
+    { path: 'edit-notebook/:id/outputs/:outputId', component: ViewOutput, canActivate: [authGuard] },
+    { path: 'edit-notebook/:id/chat', component: ChatComponent, canActivate: [authGuard] },
+    { path: 'new-notebook', component: NewNotebook, canActivate: [authGuard] }
 ];

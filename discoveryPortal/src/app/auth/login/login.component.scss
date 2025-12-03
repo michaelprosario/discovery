@@ -1,0 +1,312 @@
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 420px;
+  width: 100%;
+  padding: 40px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    font-size: 16px;
+    color: #718096;
+    margin: 0;
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d3748;
+  }
+
+  input {
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.2s;
+    width: 100%;
+
+    &:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    &.error {
+      border-color: #fc8181;
+    }
+
+    &::placeholder {
+      color: #a0aec0;
+    }
+  }
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    flex: 1;
+    padding-right: 48px;
+  }
+
+  .password-toggle {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #718096;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #2d3748;
+    }
+
+    &:focus {
+      outline: none;
+      color: #667eea;
+    }
+  }
+}
+
+.error-message {
+  font-size: 14px;
+  color: #e53e3e;
+  margin-top: -4px;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 4px;
+
+  &.alert-error {
+    background-color: #fff5f5;
+    border: 1px solid #fc8181;
+    color: #c53030;
+  }
+}
+
+.btn {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 8px 0;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  span {
+    padding: 0 16px;
+    font-size: 14px;
+    color: #718096;
+    font-weight: 500;
+  }
+}
+
+.btn-google {
+  background: white;
+  color: #3c4043;
+  border: 1px solid #dadce0;
+  font-weight: 500;
+
+  &:hover:not(:disabled) {
+    background: #f8f9fa;
+    border-color: #d2d3d4;
+    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  }
+
+  &:active:not(:disabled) {
+    background: #f1f3f4;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.form-footer {
+  text-align: center;
+  margin-top: 8px;
+
+  p {
+    font-size: 14px;
+    color: #718096;
+    margin: 0;
+
+    a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #764ba2;
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .login-card {
+    background: #2d3748;
+  }
+
+  .login-header h1 {
+    color: #f7fafc;
+  }
+
+  .login-header p {
+    color: #cbd5e0;
+  }
+
+  .form-group label {
+    color: #e2e8f0;
+  }
+
+  .form-group input {
+    background: #1a202c;
+    border-color: #4a5568;
+    color: #f7fafc;
+
+    &::placeholder {
+      color: #718096;
+    }
+
+    &:focus {
+      background: #1a202c;
+      border-color: #667eea;
+    }
+  }
+
+  .alert.alert-error {
+    background-color: #742a2a;
+    border-color: #fc8181;
+    color: #feb2b2;
+  }
+
+  .divider {
+    &::before,
+    &::after {
+      border-bottom-color: #4a5568;
+    }
+
+    span {
+      color: #a0aec0;
+    }
+  }
+
+  .btn-google {
+    background: #1a202c;
+    border-color: #4a5568;
+    color: #e2e8f0;
+
+    &:hover:not(:disabled) {
+      background: #2d3748;
+      border-color: #718096;
+    }
+
+    &:active:not(:disabled) {
+      background: #374151;
+    }
+  }
+}
