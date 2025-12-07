@@ -1,0 +1,210 @@
+<div class="flex h-screen" *ngIf="notebookId">
+  <main class="flex-1 overflow-y-auto">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div class="flex flex-wrap gap-2 pb-4 text-sm sm:text-base">
+        <a class="text-slate-500 dark:text-[#92adc9] font-medium leading-normal hover:text-primary"
+          routerLink="/list-notebooks">
+          All Notebooks
+        </a>
+        <span class="text-slate-400 dark:text-[#92adc9] font-medium leading-normal">/</span>
+        <a class="text-slate-500 dark:text-[#92adc9] font-medium leading-normal hover:text-primary"
+          [routerLink]="['/edit-notebook', notebookId]">
+          Notebook
+        </a>
+        <span class="text-slate-400 dark:text-[#92adc9] font-medium leading-normal">/</span>
+        <span class="text-slate-800 dark:text-white font-medium leading-normal">Add Sources by Search</span>
+      </div>
+
+      <header class="pb-6 sm:pb-8">
+        <h1 class="text-slate-900 dark:text-white text-2xl sm:text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">
+          Add sources by search
+        </h1>
+        <p class="text-slate-500 dark:text-[#92adc9] text-sm sm:text-base font-normal leading-normal mt-2">
+          Enter a search phrase or question to find and add relevant articles to your notebook
+        </p>
+      </header>
+
+      <div class="max-w-3xl">
+        <!-- Search Form -->
+        <form (ngSubmit)="onSubmit()" *ngIf="!searchResponse">
+          <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22] p-4 sm:p-6">
+            <div class="flex flex-col gap-4 sm:gap-6">
+              <div *ngIf="errorMessage" class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+                <p class="text-red-600 dark:text-red-400 text-sm font-medium">{{ errorMessage }}</p>
+              </div>
+
+              <div>
+                <label for="searchPhrase" class="block text-slate-900 dark:text-white text-sm font-medium leading-normal pb-2">
+                  Search Phrase or Question
+                </label>
+                <input 
+                  type="text" 
+                  id="searchPhrase" 
+                  name="searchPhrase"
+                  [(ngModel)]="searchPhrase"
+                  required
+                  placeholder="e.g., 'machine learning best practices' or 'What is Python?'"
+                  [disabled]="isSearching"
+                  class="form-input min-h-12 w-full resize-none overflow-hidden rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:border-primary dark:focus:border-primary placeholder:text-slate-400 p-3 text-base font-normal leading-normal disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <p class="text-slate-500 dark:text-[#92adc9] text-xs mt-2">
+                  Enter a topic, keyword, or question to search for relevant articles
+                </p>
+              </div>
+
+              <div>
+                <label for="maxResults" class="block text-slate-900 dark:text-white text-sm font-medium leading-normal pb-2">
+                  Maximum number of articles
+                </label>
+                <input 
+                  type="number" 
+                  id="maxResults" 
+                  name="maxResults"
+                  [(ngModel)]="maxResults"
+                  min="1"
+                  max="10"
+                  required
+                  [disabled]="isSearching"
+                  class="form-input min-h-12 w-full resize-none overflow-hidden rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:border-primary dark:focus:border-primary placeholder:text-slate-400 p-3 text-base font-normal leading-normal disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <p class="text-slate-500 dark:text-[#92adc9] text-xs mt-2">
+                  Choose between 1 and 10 articles
+                </p>
+              </div>
+
+              <div *ngIf="isSearching" class="flex flex-col items-center gap-4 py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">
+                  Searching for articles and adding them to your notebook...
+                </p>
+                <p class="text-slate-500 dark:text-slate-400 text-xs">
+                  This may take a moment as we search and fetch content from each article
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 pt-4 sm:pt-6 sm:justify-end">
+            <button 
+              type="button" 
+              (click)="onCancel()"
+              [disabled]="isSearching"
+              class="w-full sm:w-auto flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 sm:h-10 px-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              <span class="truncate">Cancel</span>
+            </button>
+            <button 
+              type="submit" 
+              [disabled]="!searchPhrase.trim() || isSearching"
+              class="w-full sm:w-auto flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 sm:h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
+              <span class="truncate">{{ isSearching ? 'Searching...' : 'Search and Add Sources' }}</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Results Display -->
+        <div *ngIf="searchResponse" class="space-y-6">
+          <!-- Summary Card -->
+          <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22] p-4 sm:p-6">
+            <h2 class="text-slate-900 dark:text-white text-xl font-bold mb-4">Search Results</h2>
+            
+            <div class="flex flex-wrap gap-4 mb-4">
+              <div class="flex-1 min-w-[200px]">
+                <p class="text-slate-500 dark:text-[#92adc9] text-sm">Search Phrase</p>
+                <p class="text-slate-900 dark:text-white text-base font-medium">{{ searchResponse.search_phrase }}</p>
+              </div>
+              <div class="flex-1 min-w-[150px]">
+                <p class="text-slate-500 dark:text-[#92adc9] text-sm">Articles Found</p>
+                <p class="text-slate-900 dark:text-white text-base font-medium">{{ searchResponse.total_found }}</p>
+              </div>
+            </div>
+
+            <div class="flex gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                  <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-sm">check_circle</span>
+                </span>
+                <div>
+                  <p class="text-slate-500 dark:text-[#92adc9] text-xs">Successfully Added</p>
+                  <p class="text-green-600 dark:text-green-400 text-lg font-bold">{{ searchResponse.total_added }}</p>
+                </div>
+              </div>
+              
+              <div class="flex items-center gap-2" *ngIf="getFailureCount() > 0">
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                  <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-sm">error</span>
+                </span>
+                <div>
+                  <p class="text-slate-500 dark:text-[#92adc9] text-xs">Failed</p>
+                  <p class="text-red-600 dark:text-red-400 text-lg font-bold">{{ getFailureCount() }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detailed Results -->
+          <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22] p-4 sm:p-6">
+            <h3 class="text-slate-900 dark:text-white text-lg font-bold mb-4">Article Details</h3>
+            
+            <div class="space-y-3">
+              <div *ngFor="let result of searchResponse.results" 
+                   class="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+                <div class="flex items-start gap-3">
+                  <!-- Status Icon -->
+                  <span *ngIf="result.success" 
+                        class="flex-shrink-0 flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mt-1">
+                    <span class="material-symbols-outlined text-green-600 dark:text-green-400" style="font-size: 16px;">check</span>
+                  </span>
+                  <span *ngIf="!result.success" 
+                        class="flex-shrink-0 flex h-6 w-6 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mt-1">
+                    <span class="material-symbols-outlined text-red-600 dark:text-red-400" style="font-size: 16px;">close</span>
+                  </span>
+
+                  <!-- Article Info -->
+                  <div class="flex-1 min-w-0">
+                    <h4 class="text-slate-900 dark:text-white text-base font-semibold mb-1 break-words">
+                      {{ result.title }}
+                    </h4>
+                    <a [href]="result.url" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       class="text-primary text-sm hover:underline break-all">
+                      {{ result.url }}
+                    </a>
+                    
+                    <div *ngIf="!result.success && result.error" 
+                         class="mt-2 rounded bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-2">
+                      <p class="text-red-600 dark:text-red-400 text-xs">
+                        <strong>Error:</strong> {{ result.error }}
+                      </p>
+                    </div>
+
+                    <div *ngIf="result.success && result.source_id" 
+                         class="mt-2 text-slate-500 dark:text-slate-400 text-xs">
+                      Source ID: {{ result.source_id }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+            <button 
+              type="button" 
+              (click)="onSearchAgain()"
+              class="w-full sm:w-auto flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 sm:h-10 px-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-slate-200 dark:hover:bg-slate-700">
+              <span class="truncate">Search Again</span>
+            </button>
+            <button 
+              type="button" 
+              (click)="onDone()"
+              class="w-full sm:w-auto flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 sm:h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90">
+              <span class="truncate">Done</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

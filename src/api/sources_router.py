@@ -834,6 +834,7 @@ def get_source_preview(
 )
 def add_sources_by_search(
     request: AddSourcesBySearchRequest,
+    current_user_email: str = Depends(get_current_user_email),
     source_service: SourceIngestionService = Depends(get_source_service),
     article_service: ArticleSearchService = Depends(get_article_search_service)
 ):
@@ -845,6 +846,7 @@ def add_sources_by_search(
 
     Args:
         request: Search phrase and notebook information
+        current_user_email: Email of the authenticated user
         source_service: Injected source ingestion service
         article_service: Injected article search service
 
@@ -879,7 +881,8 @@ def add_sources_by_search(
             import_command = ImportUrlSourceCommand(
                 notebook_id=request.notebook_id,
                 title=article.title,
-                url=article.link
+                url=article.link,
+                created_by=current_user_email
             )
 
             # Attempt to import the URL source

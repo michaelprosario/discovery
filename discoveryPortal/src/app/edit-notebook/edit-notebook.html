@@ -115,6 +115,12 @@
                                     <span class="truncate">Add Source from PDF</span>
                                 </button>
                                 <button
+                                    [routerLink]="['/edit-notebook', notebook.id, 'add-source-by-search']"
+                                    class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90">
+                                    <span class="material-symbols-outlined">search</span>
+                                    <span class="truncate">Add Sources by Search</span>
+                                </button>
+                                <button
                                     [routerLink]="['/edit-notebook', notebook.id, 'sync']"
                                     class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-indigo-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-indigo-700">
                                     <span class="material-symbols-outlined">sync</span>

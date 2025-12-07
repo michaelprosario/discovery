@@ -5,6 +5,7 @@ import { NewNotebook } from './new-notebook/new-notebook';
 import { AddTextSource } from './add-text-source/add-text-source';
 import { AddUrlSource } from './add-url-source/add-url-source';
 import { AddPdfSource } from './add-pdf-source/add-pdf-source';
+import { AddSourceBySearch } from './add-source-by-search/add-source-by-search';
 import { SyncNotebook } from './sync-notebook/sync-notebook';
 import { NewBlogPost } from './new-blog-post/new-blog-post';
 import { NotebookOutputs } from './notebook-outputs/notebook-outputs';
@@ -28,6 +29,7 @@ export const routes: Routes = [
     { path: 'edit-notebook/:id/add-text-source', component: AddTextSource, canActivate: [authGuard] },
     { path: 'edit-notebook/:id/add-url-source', component: AddUrlSource, canActivate: [authGuard] },
     { path: 'edit-notebook/:id/add-pdf-source', component: AddPdfSource, canActivate: [authGuard] },
+    { path: 'edit-notebook/:id/add-source-by-search', component: AddSourceBySearch, canActivate: [authGuard] },
     { path: 'edit-notebook/:id/sync', component: SyncNotebook, canActivate: [authGuard] },
     { path: 'edit-notebook/:id/new-blog-post', component: NewBlogPost, canActivate: [authGuard] },
     { path: 'edit-notebook/:id/new-mindmap', component: NewMindMap, canActivate: [authGuard] },
