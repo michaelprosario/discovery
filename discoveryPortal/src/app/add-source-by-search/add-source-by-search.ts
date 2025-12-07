@@ -57,6 +57,10 @@ export class AddSourceBySearch implements OnInit {
       next: (response) => {
         this.isSearching = false;
         this.searchResponse = response;
+        // Navigate back to the notebook's source list
+        if (this.notebookId) {
+          this.router.navigate(['/edit-notebook', this.notebookId]);
+        }
       },
       error: (err) => {
         console.error('Error searching and adding sources', err);
