@@ -1,4 +1,5 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
+import { MobileMenuService } from './core/services/mobile-menu.service';
 
 @Component({
   selector: 'app-root',
@@ -8,4 +9,9 @@ import { Component, signal } from '@angular/core';
 })
 export class AppComponent {
   protected readonly title = signal('discoveryPortal');
+  private mobileMenuService = inject(MobileMenuService);
+  
+  toggleMobileMenu() {
+    this.mobileMenuService.toggle();
+  }
 }

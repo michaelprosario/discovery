@@ -1,14 +1,14 @@
     <!-- Main Content -->
     <main class="flex-1 overflow-y-auto">
-        <div class="px-6 py-8 md:px-10">
+        <div class="px-4 sm:px-6 py-6 sm:py-8 md:px-10">
             <!-- PageHeading -->
-            <div class="flex flex-wrap justify-between items-center gap-4">
+            <div class="flex flex-col sm:flex-row sm:flex-wrap justify-between items-start sm:items-center gap-3 sm:gap-4">
                 <p
-                    class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">
+                    class="text-slate-900 dark:text-white text-2xl sm:text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">
                     Notebooks</p>
                 <button
                     (click)="onNewRecord()"
-                    class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+                    class="w-full sm:w-auto flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 sm:h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
                     <span class="material-symbols-outlined mr-2">add_circle</span>
                     <span class="truncate">
                         Create New Notebook
@@ -23,7 +23,8 @@
                     @if (!screenLoaded) {
                         <app-loading size="large" message="Loading..."></app-loading>
                     } @else {
-                        <table class="flex-1">
+                        <!-- Desktop Table View -->
+                        <table class="hidden sm:table flex-1">
                             <thead>
                                 <tr class="bg-slate-50 dark:bg-[#192633]">
                                     <th
@@ -55,6 +56,34 @@
                                 }
                             </tbody>
                         </table>
+
+                        <!-- Mobile Card View -->
+                        <div class="sm:hidden flex-1 divide-y divide-slate-200 dark:divide-[#324d67]">
+                            @for (record of records; track record.id) {
+                                <div 
+                                    (click)="onEditRecord(record)"
+                                    class="p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                    <h3 class="text-slate-800 dark:text-white text-base font-semibold mb-2">
+                                        {{ record.name }}
+                                    </h3>
+                                    <div class="flex items-center gap-4 text-sm text-slate-500 dark:text-[#92adc9]">
+                                        <div class="flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">folder</span>
+                                            <span>{{ record.source_count }} Sources</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">schedule</span>
+                                            <span>{{ record.updated_at | date:'shortDate' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            @if (records.length === 0) {
+                                <div class="p-8 text-center text-slate-500 dark:text-[#92adc9]">
+                                    No notebooks found.
+                                </div>
+                            }
+                        </div>
                     }
 
                 </div>

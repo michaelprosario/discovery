@@ -180,8 +180,16 @@ class Source:
                 code="MAX_LENGTH"
             ))
 
-        # Validate URL
-        if not url or not url.strip():
+        # Validate and normalize URL
+        url = url.strip() if url else ""
+        
+        # Normalize URL protocol to lowercase (e.g., Https:// -> https://)
+        if url.startswith('Https://'):
+            url = 'https://' + url[8:]
+        elif url.startswith('Http://'):
+            url = 'http://' + url[7:]
+        
+        if not url:
             errors.append(ValidationError(
                 field="url",
                 message="URL is required for URL sources",

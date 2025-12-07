@@ -1,34 +1,39 @@
 <div class="flex h-screen flex-col bg-slate-50 dark:bg-[#0e141b]" *ngIf="!isLoading && notebook">
   <!-- Header -->
-  <header class="border-b border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-[#111a22]">
-    <div class="mx-auto flex max-w-5xl items-center justify-between">
-      <div class="flex items-center gap-3">
+  <header class="border-b border-slate-200 bg-white px-3 sm:px-4 py-3 sm:py-4 dark:border-slate-800 dark:bg-[#111a22]">
+    <div class="mx-auto flex max-w-5xl items-center justify-between gap-3">
+      <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
         <button 
           (click)="backToNotebook()"
-          class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+          class="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 shrink-0">
           <span class="material-symbols-outlined">arrow_back</span>
         </button>
-        <div>
-          <h1 class="text-xl font-bold text-slate-900 dark:text-white">
+        <div class="min-w-0 flex-1">
+          <h1 class="text-base sm:text-xl font-bold text-slate-900 dark:text-white truncate">
             Chat with {{ notebook.name }}
           </h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400">
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">
             Ask questions about your {{ sources.length }} source(s)
           </p>
         </div>
       </div>
       <button
         (click)="clearChat()"
-        class="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+        class="hidden sm:flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 shrink-0">
         <span class="material-symbols-outlined text-lg">delete_sweep</span>
         Clear Chat
+      </button>
+      <button
+        (click)="clearChat()"
+        class="sm:hidden flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 shrink-0">
+        <span class="material-symbols-outlined text-lg">delete_sweep</span>
       </button>
     </div>
   </header>
 
   <!-- Messages Container -->
-  <div #messagesContainer class="flex-1 overflow-y-auto px-4 py-6">
-    <div class="mx-auto max-w-5xl space-y-6">
+  <div #messagesContainer class="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-6">
+    <div class="mx-auto max-w-5xl space-y-4 sm:space-y-6">
       <div *ngFor="let message of messages" 
            [ngClass]="{
              'flex justify-end': message.role === 'user',
@@ -37,7 +42,7 @@
         
         <!-- User Message -->
         <div *ngIf="message.role === 'user'" 
-             class="max-w-[80%] rounded-2xl bg-primary px-4 py-3 text-white">
+             class="max-w-[90%] sm:max-w-[80%] rounded-2xl bg-primary px-3 sm:px-4 py-2.5 sm:py-3 text-white">
           <p class="whitespace-pre-wrap text-sm leading-relaxed">{{ message.content }}</p>
           <p class="mt-1 text-xs opacity-75">
             {{ message.timestamp | date:'short' }}
@@ -46,7 +51,7 @@
 
         <!-- Assistant Message -->
         <div *ngIf="message.role === 'assistant'" 
-             class="max-w-[85%] rounded-2xl bg-white px-4 py-3 shadow-sm dark:bg-[#111a22]">
+             class="max-w-[95%] sm:max-w-[85%] rounded-2xl bg-white px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm dark:bg-[#111a22]">
           
           <!-- Loading State -->
           <div *ngIf="message.isLoading" class="flex items-center gap-2 text-slate-600 dark:text-slate-400">

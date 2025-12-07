@@ -281,6 +281,61 @@ class TestImportUrlSource:
         assert result2.is_failure
         assert "duplicate" in result2.error.lower()
 
+    def test_import_url_source_normalizes_https_protocol(self, service, test_notebook, web_fetch_provider):
+        """Test that URLs starting with 'Https://' are normalized to 'https://'."""
+        # Configure mock to return content for the URL with normalized protocol
+        web_content = WebContent(
+            url="https://example.com/test",
+            title="Test Page",
+            html="<html>...</html>",
+            text="Test content",
+            metadata={}
+        )
+        web_fetch_provider.fetch_url.return_value = Result.success(web_content)
+        web_fetch_provider.fetch_url_safe.return_value = Result.success(web_content)
+        web_fetch_provider.fetch_with_retry.return_value = Result.success(web_content)
+
+        command = ImportUrlSourceCommand(
+            notebook_id=test_notebook.id,
+            url="Https://example.com/test",  # Capital H
+            title="Test",
+            created_by="user@example.com"
+        )
+
+        result = service.import_url_source(command)
+
+        assert result.is_success
+        # The URL should be normalized to lowercase https://
+        assert result.value.url == "https://example.com/test"
+        assert not result.value.url.startswith("Https://")
+
+    def test_import_url_source_normalizes_http_protocol(self, service, test_notebook, web_fetch_provider):
+        """Test that URLs starting with 'Http://' are normalized to 'http://'."""
+        web_content = WebContent(
+            url="http://example.com/test",
+            title="Test Page",
+            html="<html>...</html>",
+            text="Test content",
+            metadata={}
+        )
+        web_fetch_provider.fetch_url.return_value = Result.success(web_content)
+        web_fetch_provider.fetch_url_safe.return_value = Result.success(web_content)
+        web_fetch_provider.fetch_with_retry.return_value = Result.success(web_content)
+
+        command = ImportUrlSourceCommand(
+            notebook_id=test_notebook.id,
+            url="Http://example.com/test",  # Capital H
+            title="Test",
+            created_by="user@example.com"
+        )
+
+        result = service.import_url_source(command)
+
+        assert result.is_success
+        # The URL should be normalized to lowercase http://
+        assert result.value.url == "http://example.com/test"
+        assert not result.value.url.startswith("Http://")
+
 
 class TestDeleteSource:
     """Tests for deleting sources."""
