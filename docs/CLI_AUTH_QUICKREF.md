@@ -3,8 +3,10 @@
 ## Environment Setup
 
 ```bash
-# Required environment variables
+# Required: Firebase Web API Key
 export FIREBASE_WEB_API_KEY="AIzaSy..."
+
+# Optional: Only needed for Google Sign-In
 export GOOGLE_OAUTH_CLIENT_ID="123456789-xxx.apps.googleusercontent.com"
 export GOOGLE_OAUTH_CLIENT_SECRET="GOCSPX-xxx"
 ```
@@ -15,8 +17,10 @@ export GOOGLE_OAUTH_CLIENT_SECRET="GOCSPX-xxx"
 # 1. Initialize profile
 discovery config init --url https://api.example.com
 
-# 2. Authenticate
-discovery auth login
+# 2. Create account or login
+discovery auth signup  # First time
+# OR
+discovery auth login-email  # Existing account
 
 # 3. Verify
 discovery auth status
@@ -27,7 +31,31 @@ discovery notebooks list
 
 ## Authentication Commands
 
-### Login
+### Email/Password (Recommended - Simple)
+
+```bash
+# Create new account
+discovery auth signup
+
+# Login with email/password
+discovery auth login-email
+
+# Login with prompts
+discovery auth login-email
+# Email: user@example.com
+# Password: ••••••••
+
+# Login with flags (for scripts)
+discovery auth login-email --email user@example.com --password mypassword
+
+# Reset password
+discovery auth reset-password
+# OR
+discovery auth reset-password --email user@example.com
+```
+
+### Google Sign-In (Requires OAuth Setup)
+
 ```bash
 # Standard login (opens browser)
 discovery auth login

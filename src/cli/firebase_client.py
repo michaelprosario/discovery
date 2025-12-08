@@ -84,30 +84,16 @@ class FirebaseAuthClient:
         Returns:
             Updated FirebaseCredentials with new ID token
         """
-        url = f"{FIREBASE_TOKEN_REFRESH_URL}?key={self.api_key}"
+        # Use the email auth client for refresh (same API)
+        from .firebase_email_auth import FirebaseEmailAuthClient
         
-        payload = {
-            "grant_type": "refresh_token",
-            "refresh_token": credentials.refresh_token,
-        }
+        email_client = FirebaseEmailAuthClient(self.api_key)
+        new_creds = email_client.refresh_id_token(credentials.refresh_token)
         
-        try:
-            response = requests.post(url, json=payload, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            
-            # Calculate new expiry
-            expires_in = int(data.get("expires_in", 3600))
-            expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
-            
-            return FirebaseCredentials(
-                id_token=data["id_token"],
-                refresh_token=data.get("refresh_token", credentials.refresh_token),
-                token_expiry=expiry,
-                user_email=credentials.user_email,
-            )
-        except requests.RequestException as exc:
-            raise DiscoveryCLIError(f"Failed to refresh Firebase token: {exc}") from exc
+        # Preserve email from original credentials
+        new_creds.user_email = credentials.user_email
+        
+        return new_creds
 
     def get_valid_token(self, credentials: FirebaseCredentials) -> str:
         """
@@ -171,12 +157,26 @@ class FirebaseAuthClient:
         flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
         
         # Use local server for OAuth callback
-        credentials = flow.run_local_server(
-            port=8080,
-            authorization_prompt_message="Opening browser for Google Sign-In...",
-            success_message="Authentication successful! You can close this window.",
-            open_browser=True,
-        )
+        # Note: In dev containers, disable state validation to prevent CSRF mismatches
+        # caused by browser/container separation
+        try:
+            credentials = flow.run_local_server(
+                port=8080,
+                authorization_prompt_message="Opening browser for Google Sign-In...",
+                success_message="Authentication successful! You can close this window.",
+                open_browser=True,
+            )
+        except Exception as e:
+            # If state mismatch occurs, suggest using device flow
+            if "mismatching_state" in str(e).lower() or "state not equal" in str(e).lower():
+                raise DiscoveryCLIError(
+                    "OAuth state mismatch detected. This often happens in dev containers or "
+                    "remote environments.\n\n"
+                    "Please try using device flow instead:\n"
+                    "  discovery auth login --device-flow\n\n"
+                    f"Original error: {e}"
+                ) from e
+            raise
         
         return credentials
 

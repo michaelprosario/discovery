@@ -40,29 +40,52 @@ Configuration is stored in `~/.discovery/config.toml` (override with `DISCOVERY_
 
 ## Authentication
 
-All authentication is now handled through Firebase/Google Sign-In for secure access to the Discovery API.
+All authentication is handled through Firebase for secure access to the Discovery API.
 
-### Initial Setup
+### Authentication Methods
+
+**1. Email/Password (Recommended - Simple)**
+```bash
+# Create a new account
+discovery auth signup
+
+# Login with existing account
+discovery auth login-email
+```
+
+**2. Google Sign-In (Requires OAuth setup)**
+```bash
+# Login with Google account (opens browser)
+discovery auth login
+```
+
+### Initial Setup (Email/Password)
 
 ```bash
 # Initialize profile (creates profile without credentials)
 discovery config init --url https://api.example.com
 
-# Authenticate with Google (opens browser)
-discovery auth login
+# Create account or login
+discovery auth signup  # First time
+# OR
+discovery auth login-email  # Subsequent logins
 ```
 
 ### Authentication Commands
 
 ```bash
-# Check authentication status
-discovery auth status
+# Email/Password Authentication
+discovery auth signup              # Create new account
+discovery auth login-email         # Login with email/password
+discovery auth reset-password      # Send password reset email
 
-# Refresh token manually (usually automatic)
-discovery auth refresh
+# Google Sign-In (requires OAuth credentials)
+discovery auth login               # Login with Google
 
-# Logout (clear credentials)
-discovery auth logout
+# General Commands
+discovery auth status              # Check authentication status
+discovery auth refresh             # Refresh token manually (usually automatic)
+discovery auth logout              # Logout (clear credentials)
 ```
 
 ### Multiple Profiles
@@ -91,13 +114,17 @@ This will display a code to enter at a Google URL.
 
 ### Environment Setup
 
-Required environment variables for Firebase authentication:
+Required environment variable for Firebase authentication:
 
 ```bash
 # Firebase Web API Key (from Firebase Console)
 export FIREBASE_WEB_API_KEY="your-firebase-web-api-key"
+```
 
-# Google OAuth credentials (from Google Cloud Console)
+**Optional** (only needed for Google Sign-In):
+
+```bash
+# Google OAuth credentials (from Google Cloud Console) - OPTIONAL
 export GOOGLE_OAUTH_CLIENT_ID="your-oauth-client-id.apps.googleusercontent.com"
 export GOOGLE_OAUTH_CLIENT_SECRET="your-oauth-client-secret"
 ```

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 
 import typer
@@ -9,6 +10,7 @@ import typer
 from ..config_store import ConfigStore
 from ..exceptions import ConfigNotInitializedError, DiscoveryCLIError
 from ..firebase_client import FirebaseAuthClient
+from ..firebase_email_auth import FirebaseEmailAuthClient
 from ..http_client import DiscoveryApiClient
 from ..output import console
 from ..runtime import load_runtime
@@ -170,4 +172,178 @@ def refresh_token(
         raise typer.Exit(1)
     except DiscoveryCLIError as exc:
         console.print(f"[red]Failed to refresh token:[/red] {exc}", style="bold")
+        raise typer.Exit(1)
+
+
+@auth_app.command("login-email")
+def login_with_email(
+    email: str = typer.Option(None, "--email", "-e", help="Email address"),
+    password: str = typer.Option(None, "--password", "-p", help="Password (will prompt if not provided)"),
+    profile: str | None = typer.Option(None, "--profile", "-P", help="Profile to authenticate"),
+) -> None:
+    """Authenticate using email and password (no OAuth required)."""
+    try:
+        # Load the runtime to get the profile
+        runtime = load_runtime(profile)
+        profile_obj = runtime.profile
+        
+        # Get Firebase API key from environment
+        api_key = os.getenv("FIREBASE_WEB_API_KEY")
+        if not api_key:
+            console.print(
+                "[red]FIREBASE_WEB_API_KEY environment variable not set.[/red]\n"
+                "Get this from Firebase Console > Project Settings > Web API Key",
+                style="bold",
+            )
+            raise typer.Exit(1)
+        
+        # Prompt for credentials if not provided
+        if not email:
+            email = typer.prompt("Email")
+        if not password:
+            password = typer.prompt("Password", hide_input=True)
+        
+        # Initialize Firebase email auth client
+        client = FirebaseEmailAuthClient(api_key)
+        
+        console.print("[blue]Authenticating with Firebase...[/blue]")
+        
+        # Perform login
+        credentials = client.sign_in_with_email_password(email, password)
+        
+        # Update profile with new credentials
+        profile_obj.firebase_credentials = credentials
+        
+        # Save updated profile
+        store = ConfigStore()
+        config = store.load()
+        config.set_profile(profile_obj)
+        store.save(config)
+        
+        console.print(f"[green]✓ Successfully authenticated as {credentials.user_email}[/green]")
+        
+        # Verify connectivity with backend
+        try:
+            with DiscoveryApiClient(profile_obj) as api_client:
+                response = api_client.get_json("/health")
+                console.print(f"[green]✓ Connected to API successfully[/green]")
+        except Exception as exc:
+            console.print(f"[yellow]Warning: Could not verify API connection: {exc}[/yellow]")
+            
+    except ConfigNotInitializedError:
+        console.print(
+            "[red]No profile configured.[/red] Run 'discovery config init' first.",
+            style="bold",
+        )
+        raise typer.Exit(1)
+    except DiscoveryCLIError as exc:
+        console.print(f"[red]Authentication failed:[/red] {exc}", style="bold")
+        raise typer.Exit(1)
+
+
+@auth_app.command("signup")
+def signup_with_email(
+    email: str = typer.Option(None, "--email", "-e", help="Email address"),
+    password: str = typer.Option(None, "--password", "-p", help="Password (will prompt if not provided)"),
+    profile: str | None = typer.Option(None, "--profile", "-P", help="Profile to authenticate"),
+) -> None:
+    """Create a new account with email and password."""
+    try:
+        # Load the runtime to get the profile
+        runtime = load_runtime(profile)
+        profile_obj = runtime.profile
+        
+        # Get Firebase API key from environment
+        api_key = os.getenv("FIREBASE_WEB_API_KEY")
+        if not api_key:
+            console.print(
+                "[red]FIREBASE_WEB_API_KEY environment variable not set.[/red]\n"
+                "Get this from Firebase Console > Project Settings > Web API Key",
+                style="bold",
+            )
+            raise typer.Exit(1)
+        
+        # Prompt for credentials if not provided
+        if not email:
+            email = typer.prompt("Email")
+        if not password:
+            password = typer.prompt("Password", hide_input=True)
+            password_confirm = typer.prompt("Confirm password", hide_input=True)
+            if password != password_confirm:
+                console.print("[red]Passwords do not match.[/red]", style="bold")
+                raise typer.Exit(1)
+        
+        # Initialize Firebase email auth client
+        client = FirebaseEmailAuthClient(api_key)
+        
+        console.print("[blue]Creating Firebase account...[/blue]")
+        
+        # Perform signup
+        credentials = client.sign_up_with_email_password(email, password)
+        
+        # Update profile with new credentials
+        profile_obj.firebase_credentials = credentials
+        
+        # Save updated profile
+        store = ConfigStore()
+        config = store.load()
+        config.set_profile(profile_obj)
+        store.save(config)
+        
+        console.print(f"[green]✓ Account created and authenticated as {credentials.user_email}[/green]")
+        
+        # Verify connectivity with backend
+        try:
+            with DiscoveryApiClient(profile_obj) as api_client:
+                response = api_client.get_json("/health")
+                console.print(f"[green]✓ Connected to API successfully[/green]")
+        except Exception as exc:
+            console.print(f"[yellow]Warning: Could not verify API connection: {exc}[/yellow]")
+            
+    except ConfigNotInitializedError:
+        console.print(
+            "[red]No profile configured.[/red] Run 'discovery config init' first.",
+            style="bold",
+        )
+        raise typer.Exit(1)
+    except DiscoveryCLIError as exc:
+        console.print(f"[red]Signup failed:[/red] {exc}", style="bold")
+        raise typer.Exit(1)
+
+
+@auth_app.command("reset-password")
+def reset_password(
+    email: str = typer.Option(None, "--email", "-e", help="Email address"),
+) -> None:
+    """Send password reset email."""
+    try:
+        # Get Firebase API key from environment
+        api_key = os.getenv("FIREBASE_WEB_API_KEY")
+        if not api_key:
+            console.print(
+                "[red]FIREBASE_WEB_API_KEY environment variable not set.[/red]\n"
+                "Get this from Firebase Console > Project Settings > Web API Key",
+                style="bold",
+            )
+            raise typer.Exit(1)
+        
+        # Prompt for email if not provided
+        if not email:
+            email = typer.prompt("Email")
+        
+        # Initialize Firebase email auth client
+        client = FirebaseEmailAuthClient(api_key)
+        
+        console.print(f"[blue]Sending password reset email to {email}...[/blue]")
+        
+        # Send reset email
+        client.reset_password(email)
+        
+        console.print(
+            f"[green]✓ Password reset email sent to {email}[/green]\n"
+            "Check your inbox and follow the instructions to reset your password."
+        )
+        
+    except DiscoveryCLIError as exc:
+        console.print(f"[red]Password reset failed:[/red] {exc}", style="bold")
         raise typer.Exit(1)

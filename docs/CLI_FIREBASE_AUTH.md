@@ -300,6 +300,25 @@ Get these from Google Cloud Console > Credentials.
 discovery auth login --device-flow
 ```
 
+### OAuth State Mismatch Error
+
+**Error:** `MismatchingStateError: (mismatching_state) CSRF Warning! State not equal in request and response`
+
+**Cause:** This commonly occurs when running in dev containers, remote environments, or behind proxies where the browser (running on the host) and the OAuth callback server (running in the container) are in different contexts.
+
+**Solution:** Use device flow authentication instead:
+
+```bash
+discovery auth login --device-flow
+```
+
+Device flow doesn't require browser redirects and works reliably in:
+- Dev containers (VS Code Remote Containers, GitHub Codespaces)
+- SSH sessions
+- Virtual machines
+- Docker containers
+- Any headless or remote environment
+
 ### "Authentication service not configured" (API Error)
 
 This means the backend doesn't have Firebase configured. Ensure:
