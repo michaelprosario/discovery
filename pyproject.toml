@@ -27,6 +27,7 @@ dependencies = [
     "newspaper3k>=0.2.8",
     "lxml_html_clean>=0.1.0",
     "firebase-admin>=6.0.0",
+    "ddgs>=9.0.0",
 ]
 
 [project.optional-dependencies]
