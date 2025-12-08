@@ -7,6 +7,7 @@ from importlib.metadata import PackageNotFoundError, version
 import typer
 
 from .commands.articles import articles_app
+from .commands.auth import auth_app
 from .commands.config import config_app
 from .commands.notebooks import notebooks_app
 from .commands.outputs import outputs_app
@@ -43,6 +44,7 @@ def main_callback(
 
 
 app.add_typer(config_app, name="config", help="Configure API profiles.")
+app.add_typer(auth_app, name="auth", help="Manage authentication.")
 app.add_typer(notebooks_app, name="notebooks", help="Notebook management")
 app.add_typer(notebooks_app, name="nb")
 app.add_typer(sources_app, name="sources", help="Source ingestion")

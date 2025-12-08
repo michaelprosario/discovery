@@ -8,8 +8,8 @@ from typing import Any, Dict
 
 import httpx
 
-from .config_store import DiscoveryProfile
-from .exceptions import ApiRequestError
+from .config_store import ConfigStore, DiscoveryProfile
+from .exceptions import ApiRequestError, DiscoveryCLIError
 
 
 class DiscoveryApiClient(AbstractContextManager["DiscoveryApiClient"]):
@@ -21,14 +21,21 @@ class DiscoveryApiClient(AbstractContextManager["DiscoveryApiClient"]):
         *,
         timeout: float = 30.0,
         verbose: bool = False,
+        config_store: ConfigStore | None = None,
     ) -> None:
+        self.profile = profile
+        self.config_store = config_store or ConfigStore()
+        
         headers: Dict[str, str] = {
             "Accept": "application/json",
-            "User-Agent": "discovery-cli/0.1",
+            "User-Agent": "discovery-cli/0.2",
         }
-        if profile.api_key:
-            headers["Authorization"] = f"Bearer {profile.api_key}"
-            headers["X-API-Key"] = profile.api_key
+        
+        # Add authentication headers
+        auth_header = self._get_auth_header()
+        if auth_header:
+            headers["Authorization"] = auth_header
+        
         self._client = httpx.Client(
             base_url=profile.base_url,
             timeout=timeout,
@@ -36,6 +43,53 @@ class DiscoveryApiClient(AbstractContextManager["DiscoveryApiClient"]):
             headers=headers,
         )
         self.verbose = verbose
+
+    def _get_auth_header(self) -> str | None:
+        """Get authentication header value."""
+        # Prefer Firebase authentication
+        if self.profile.firebase_credentials:
+            token = self._get_firebase_token()
+            return f"Bearer {token}"
+        
+        # Fall back to API key (deprecated)
+        if self.profile.api_key:
+            return f"Bearer {self.profile.api_key}"
+        
+        return None
+
+    def _get_firebase_token(self) -> str:
+        """Get valid Firebase token, refreshing if needed."""
+        from .firebase_client import FirebaseAuthClient
+        
+        if not self.profile.firebase_credentials:
+            raise DiscoveryCLIError(
+                "Not authenticated. Run 'discovery auth login' to authenticate."
+            )
+        
+        try:
+            # Initialize Firebase client
+            client = FirebaseAuthClient()
+            
+            # Get valid token (will refresh if needed)
+            token = client.get_valid_token(self.profile.firebase_credentials)
+            
+            # If token was refreshed, we need to update the stored credentials
+            # This happens automatically in get_valid_token via the refresh_token call
+            # We should update the profile if the token changed
+            new_creds = self.profile.firebase_credentials
+            if token != self.profile.firebase_credentials.id_token:
+                # Token was refreshed, update profile
+                new_creds = client.refresh_token(self.profile.firebase_credentials)
+                self.profile.firebase_credentials = new_creds
+                
+                # Save updated profile
+                config = self.config_store.load()
+                config.set_profile(self.profile)
+                self.config_store.save(config)
+            
+            return token
+        except Exception as exc:
+            raise DiscoveryCLIError(f"Authentication failed: {exc}") from exc
 
     # Context manager ---------------------------------------------------------------
     def __enter__(self) -> "DiscoveryApiClient":

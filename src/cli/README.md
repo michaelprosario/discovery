@@ -19,18 +19,98 @@ The project publishes the console script `discovery` via the entry point declare
 1. Boot the Discovery FastAPI service (e.g., `scripts/dev.sh` or Docker).
 2. Point the CLI at the API by creating a profile:
    ```bash
-discovery config init --url http://localhost:8000 --api-key test
+   discovery config init --url http://localhost:8000
    ```
-3. Verify connectivity:
+3. Authenticate using Google Sign-In:
+   ```bash
+   discovery auth login
+   ```
+   This will open your browser for Google authentication and securely store your Firebase credentials.
+
+4. Verify connectivity:
    ```bash
    discovery config test
    ```
-4. List notebooks to confirm everything is wired up:
+5. List notebooks to confirm everything is wired up:
    ```bash
    discovery notebooks list
    ```
 
 Configuration is stored in `~/.discovery/config.toml` (override with `DISCOVERY_CONFIG_HOME`). Runtime state such as the most recently used notebook GUID lives in `state.json` in the same directory.
+
+## Authentication
+
+All authentication is now handled through Firebase/Google Sign-In for secure access to the Discovery API.
+
+### Initial Setup
+
+```bash
+# Initialize profile (creates profile without credentials)
+discovery config init --url https://api.example.com
+
+# Authenticate with Google (opens browser)
+discovery auth login
+```
+
+### Authentication Commands
+
+```bash
+# Check authentication status
+discovery auth status
+
+# Refresh token manually (usually automatic)
+discovery auth refresh
+
+# Logout (clear credentials)
+discovery auth logout
+```
+
+### Multiple Profiles
+
+```bash
+# Create and login to a new profile
+discovery config init --url https://api.staging.com --profile staging
+discovery auth login --profile staging
+
+# Use specific profile for commands
+discovery notebooks list --profile staging
+
+# Switch active profile
+discovery config use staging
+```
+
+### Headless Environments
+
+For environments without a browser (SSH, CI/CD), use device flow:
+
+```bash
+discovery auth login --device-flow
+```
+
+This will display a code to enter at a Google URL.
+
+### Environment Setup
+
+Required environment variables for Firebase authentication:
+
+```bash
+# Firebase Web API Key (from Firebase Console)
+export FIREBASE_WEB_API_KEY="your-firebase-web-api-key"
+
+# Google OAuth credentials (from Google Cloud Console)
+export GOOGLE_OAUTH_CLIENT_ID="your-oauth-client-id.apps.googleusercontent.com"
+export GOOGLE_OAUTH_CLIENT_SECRET="your-oauth-client-secret"
+```
+
+### Legacy API Key Support
+
+API key authentication is deprecated but still supported for backwards compatibility:
+
+```bash
+discovery config init --url http://localhost:8000 --api-key test --no-login
+```
+
+**Note:** This method will be removed in a future version. Migrate to Firebase authentication.
 
 ## Output Formats
 
@@ -41,6 +121,7 @@ Every resource listing command accepts `--format/--format json|yaml|text|table`.
 | Command | Alias | Highlights |
 | --- | --- | --- |
 | `discovery config` | — | Initialise profiles, switch `--profile`, emit `.env` snippets, run health checks. |
+| `discovery auth` | — | Manage Firebase/Google authentication: login, logout, status, refresh tokens. |
 | `discovery notebooks` | `discovery nb` | CRUD operations, tag management, recent notebook tracking, blog post generation. |
 | `discovery sources` | `discovery src` | Add URL/file/text sources, list or inspect sources, delete entries. |
 | `discovery vectors` | `discovery vec` | Ingest notebooks, run semantic similarity queries, count/purge vectors, create collections. |
