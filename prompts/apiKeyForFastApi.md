@@ -1,0 +1,4 @@
+- Make a specifiction for adding a static api key to authenticate all major fast api actions.
+- authentication should attempt to user firebase auth first.
+- alternatively, use api key authentication
+- static api key should be defined by environment variable

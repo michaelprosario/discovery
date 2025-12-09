@@ -15,14 +15,9 @@ config_app = typer.Typer(help="Configure Discovery CLI profiles.")
 @config_app.command("init")
 def init_config(
     url: str = typer.Option(None, "--url", prompt=False, help="Discovery API base URL"),
-    api_key: str | None = typer.Option(None, "--api-key", help="API key for authentication (deprecated)"),
+    api_key: str | None = typer.Option(None, "--api-key", help="API key for authentication"),
     profile: str = typer.Option("default", "--profile", "-p", help="Profile name"),
     default_notebook: str | None = typer.Option(None, "--default-notebook", help="Default notebook GUID"),
-    login: bool = typer.Option(
-        True,
-        "--login/--no-login",
-        help="Authenticate with Firebase after creating profile",
-    ),
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing configuration"),
 ) -> None:
     """Initialize a new CLI profile."""
@@ -31,13 +26,6 @@ def init_config(
         typer.confirm("Configuration already exists. Overwrite?", abort=True)
     if not url:
         url = typer.prompt("Discovery API URL", default="http://localhost:8000")
-    
-    # Show deprecation warning if API key is provided
-    if api_key:
-        console.print(
-            "[yellow]Warning: API key authentication is deprecated. "
-            "Consider using Firebase authentication instead.[/yellow]"
-        )
     
     profile_model = DiscoveryProfile(
         name=profile,
@@ -48,29 +36,10 @@ def init_config(
     store.upsert_profile(profile_model, make_active=True)
     console.print(f"[green]Profile '{profile}' saved.[/green]")
     
-    # Optionally trigger authentication flow
-    if login and not api_key:
-        console.print("\n[bold blue]Starting authentication...[/bold blue]")
-        try:
-            from .auth import login_firebase
-            from typer.testing import CliRunner
-            
-            # Import the auth client directly
-            from ..firebase_client import FirebaseAuthClient
-            
-            client = FirebaseAuthClient()
-            credentials = client.login(use_device_flow=False)
-            
-            # Update profile with credentials
-            profile_model.firebase_credentials = credentials
-            config = store.load()
-            config.set_profile(profile_model)
-            store.save(config)
-            
-            console.print(f"[green]✓ Successfully authenticated as {credentials.user_email}[/green]")
-        except Exception as exc:
-            console.print(f"[yellow]Authentication skipped: {exc}[/yellow]")
-            console.print("You can authenticate later with: discovery auth login")
+    if api_key:
+        console.print("[green]API key configured.[/green]")
+    else:
+        console.print("[yellow]No API key provided. Set one with: discovery auth set-api-key --key <your-key>[/yellow]")
     
     try:
         with DiscoveryApiClient(profile_model) as client:

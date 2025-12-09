@@ -46,50 +46,9 @@ class DiscoveryApiClient(AbstractContextManager["DiscoveryApiClient"]):
 
     def _get_auth_header(self) -> str | None:
         """Get authentication header value."""
-        # Prefer Firebase authentication
-        if self.profile.firebase_credentials:
-            token = self._get_firebase_token()
-            return f"Bearer {token}"
-        
-        # Fall back to API key (deprecated)
         if self.profile.api_key:
             return f"Bearer {self.profile.api_key}"
-        
         return None
-
-    def _get_firebase_token(self) -> str:
-        """Get valid Firebase token, refreshing if needed."""
-        from .firebase_client import FirebaseAuthClient
-        
-        if not self.profile.firebase_credentials:
-            raise DiscoveryCLIError(
-                "Not authenticated. Run 'discovery auth login' to authenticate."
-            )
-        
-        try:
-            # Initialize Firebase client
-            client = FirebaseAuthClient()
-            
-            # Get valid token (will refresh if needed)
-            token = client.get_valid_token(self.profile.firebase_credentials)
-            
-            # If token was refreshed, we need to update the stored credentials
-            # This happens automatically in get_valid_token via the refresh_token call
-            # We should update the profile if the token changed
-            new_creds = self.profile.firebase_credentials
-            if token != self.profile.firebase_credentials.id_token:
-                # Token was refreshed, update profile
-                new_creds = client.refresh_token(self.profile.firebase_credentials)
-                self.profile.firebase_credentials = new_creds
-                
-                # Save updated profile
-                config = self.config_store.load()
-                config.set_profile(self.profile)
-                self.config_store.save(config)
-            
-            return token
-        except Exception as exc:
-            raise DiscoveryCLIError(f"Authentication failed: {exc}") from exc
 
     # Context manager ---------------------------------------------------------------
     def __enter__(self) -> "DiscoveryApiClient":

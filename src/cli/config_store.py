@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import tomllib
-from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
@@ -19,22 +18,12 @@ CONFIG_FILENAME = "config.toml"
 STATE_FILENAME = "state.json"
 
 
-class FirebaseCredentials(BaseModel):
-    """Firebase authentication credentials."""
-
-    id_token: str
-    refresh_token: str
-    token_expiry: datetime
-    user_email: str
-
-
 class DiscoveryProfile(BaseModel):
     """Connection details for a Discovery API profile."""
 
     name: str = Field(..., min_length=1)
     url: AnyHttpUrl
-    api_key: str | None = None  # Deprecated: kept for backwards compatibility
-    firebase_credentials: FirebaseCredentials | None = None
+    api_key: str | None = None
     default_notebook: str | None = None
 
     @property
@@ -44,7 +33,7 @@ class DiscoveryProfile(BaseModel):
     @property
     def is_authenticated(self) -> bool:
         """Check if profile has valid authentication."""
-        return self.firebase_credentials is not None or self.api_key is not None
+        return self.api_key is not None
 
 
 class DiscoveryConfig(BaseModel):
@@ -175,7 +164,6 @@ __all__ = [
     "ConfigStore",
     "DiscoveryConfig",
     "DiscoveryProfile",
-    "FirebaseCredentials",
     "CLIState",
     "CONFIG_ENV_VAR",
     "CONFIG_FILENAME",
