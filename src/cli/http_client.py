@@ -31,10 +31,9 @@ class DiscoveryApiClient(AbstractContextManager["DiscoveryApiClient"]):
             "User-Agent": "discovery-cli/0.2",
         }
         
-        # Add authentication headers
-        auth_header = self._get_auth_header()
-        if auth_header:
-            headers["Authorization"] = auth_header
+        # Add API key if present
+        if profile.api_key:
+            headers["X-API-Key"] = profile.api_key
         
         self._client = httpx.Client(
             base_url=profile.base_url,
@@ -43,12 +42,6 @@ class DiscoveryApiClient(AbstractContextManager["DiscoveryApiClient"]):
             headers=headers,
         )
         self.verbose = verbose
-
-    def _get_auth_header(self) -> str | None:
-        """Get authentication header value."""
-        if self.profile.api_key:
-            return f"Bearer {self.profile.api_key}"
-        return None
 
     # Context manager ---------------------------------------------------------------
     def __enter__(self) -> "DiscoveryApiClient":
