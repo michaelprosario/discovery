@@ -4,11 +4,14 @@ import os
 from functools import lru_cache
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 security = HTTPBearer()
 optional_security = HTTPBearer(auto_error=False)
+
+# System user email for API key authentication
+SYSTEM_USER_EMAIL = "api_key_user@system"
 
 # Firebase admin is imported lazily to allow the app to start without Firebase configured
 _firebase_initialized = False
@@ -159,3 +162,53 @@ async def get_optional_user_email(
         return decoded_token.get('email')
     except Exception:
         return None
+
+
+async def get_current_user_email_with_api_key(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security),
+    x_api_key: Optional[str] = Header(None)
+) -> str:
+    """
+    Dual authentication: Firebase ID token (primary) or static API key (fallback).
+    
+    Attempts Firebase authentication first. If no token or token is invalid,
+    checks for X-API-Key header against STATIC_API_KEY environment variable.
+    
+    Args:
+        credentials: HTTP Bearer token from request header (optional)
+        x_api_key: API key from X-API-Key header (optional)
+        
+    Returns:
+        str: User's email from Firebase token, or system user email for API key
+        
+    Raises:
+        HTTPException: If both authentication methods fail
+    """
+    # Try Firebase authentication first
+    if credentials:
+        if initialize_firebase():
+            try:
+                from firebase_admin import auth
+                
+                decoded_token = auth.verify_id_token(credentials.credentials)
+                email = decoded_token.get('email')
+                
+                if email:
+                    return email
+            except Exception:
+                # Firebase auth failed, will try API key next
+                pass
+    
+    # Try API key authentication as fallback
+    static_api_key = os.getenv('STATIC_API_KEY')
+    
+    if static_api_key and x_api_key and x_api_key == static_api_key:
+        return SYSTEM_USER_EMAIL
+    
+    # Both authentication methods failed
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Authentication required. Provide either a valid Firebase ID token or X-API-Key header.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+

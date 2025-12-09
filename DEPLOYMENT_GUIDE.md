@@ -274,6 +274,55 @@ gcloud run deploy ${SERVICE_NAME} \
   --set-secrets="DATABASE_PASSWORD=db-password:latest"
 ```
 
+#### Static API Key Authentication
+
+The backend supports dual authentication: Firebase ID tokens (primary) and a static API key (fallback). This allows backend-to-backend communication or simple API access without Firebase.
+
+**Generating a secure API key:**
+
+```bash
+# Generate a cryptographically secure API key
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+**Setting the API key:**
+
+1. For local development, add to `.env`:
+   ```
+   STATIC_API_KEY=your-generated-secure-key-here
+   ```
+
+2. For Cloud Run deployment:
+   ```bash
+   # Create secret
+   python -c "import secrets; print(secrets.token_urlsafe(32))" | \
+     gcloud secrets create static-api-key --data-file=-
+   
+   # Grant access
+   gcloud secrets add-iam-policy-binding static-api-key \
+     --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+     --role="roles/secretmanager.secretAccessor"
+   
+   # Deploy with secret
+   gcloud run deploy ${SERVICE_NAME} \
+     --set-secrets="STATIC_API_KEY=static-api-key:latest"
+   ```
+
+**Using the API key:**
+
+Include the API key in the `X-API-Key` header:
+
+```bash
+curl -H "X-API-Key: your-api-key-here" \
+  https://your-backend-url/api/notebooks/search
+```
+
+**Security notes:**
+- Keep the API key secret and rotate it periodically
+- The API key grants full access to all resources (system-level permissions)
+- For user-specific access, use Firebase authentication instead
+
+
 ### Frontend Environment Variables
 
 For Firebase config, you can use:

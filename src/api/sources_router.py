@@ -23,7 +23,7 @@ from ..core.queries.source_queries import (
 )
 from ..core.queries.article_search_queries import ArticleSearchQuery
 from ..core.value_objects.enums import SourceType, FileType, SortOption, SortOrder
-from .auth.firebase_auth import get_current_user_email
+from .auth.firebase_auth import get_current_user_email, get_current_user_email_with_api_key
 from .auth.authorization import require_resource_owner_or_fail
 from .dependencies.article_search import get_article_search_service
 from .dtos import (
@@ -174,7 +174,7 @@ def summary_to_source_response(summary) -> SourceResponse:
 )
 def import_file_source(
     request: ImportFileSourceRequest,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: SourceIngestionService = Depends(get_source_service)
 ):
     """
@@ -276,7 +276,7 @@ def import_file_source(
 )
 def import_url_source(
     request: ImportUrlSourceRequest,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: SourceIngestionService = Depends(get_source_service)
 ):
     """
@@ -359,7 +359,7 @@ def import_url_source(
 )
 def import_text_source(
     request: ImportTextSourceRequest,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: SourceIngestionService = Depends(get_source_service)
 ):
     """
@@ -436,7 +436,8 @@ def import_text_source(
 def get_source(
     source_id: UUID,
     include_deleted: bool = False,
-    service: SourceIngestionService = Depends(get_source_service)
+    service: SourceIngestionService = Depends(get_source_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Get a source by its ID.
@@ -483,7 +484,8 @@ def list_sources_by_notebook(
     sort_order: SortOrder = SortOrder.DESC,
     limit: Optional[int] = None,
     offset: int = 0,
-    service: SourceIngestionService = Depends(get_source_service)
+    service: SourceIngestionService = Depends(get_source_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     List all sources for a notebook with optional filtering and sorting.
@@ -563,7 +565,8 @@ def list_sources_by_notebook(
 def rename_source(
     source_id: UUID,
     request: RenameSourceRequest,
-    service: SourceIngestionService = Depends(get_source_service)
+    service: SourceIngestionService = Depends(get_source_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Rename a source.
@@ -637,7 +640,8 @@ def rename_source(
 def delete_source(
     source_id: UUID,
     notebook_id: UUID,
-    service: SourceIngestionService = Depends(get_source_service)
+    service: SourceIngestionService = Depends(get_source_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Soft delete a source.
@@ -680,7 +684,8 @@ def delete_source(
 def restore_source(
     source_id: UUID,
     notebook_id: UUID,
-    service: SourceIngestionService = Depends(get_source_service)
+    service: SourceIngestionService = Depends(get_source_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Restore a soft-deleted source.
@@ -727,8 +732,9 @@ def restore_source(
 )
 def extract_content(
     source_id: UUID,
-    request: ExtractContentRequest,
-    service: SourceIngestionService = Depends(get_source_service)
+    request: ExtractContentRequest = ExtractContentRequest(),
+    service: SourceIngestionService = Depends(get_source_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Extract content from a source.
@@ -786,7 +792,8 @@ def extract_content(
 def get_source_preview(
     source_id: UUID,
     length: int = 500,
-    service: SourceIngestionService = Depends(get_source_service)
+    service: SourceIngestionService = Depends(get_source_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Get a preview of source content.
@@ -834,7 +841,7 @@ def get_source_preview(
 )
 def add_sources_by_search(
     request: AddSourcesBySearchRequest,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     source_service: SourceIngestionService = Depends(get_source_service),
     article_service: ArticleSearchService = Depends(get_article_search_service)
 ):
