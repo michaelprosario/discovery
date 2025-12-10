@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, status, Depends, Query
 from pydantic import BaseModel, Field
 
 from src.core.entities.notebook import Notebook
+from .auth.firebase_auth import get_current_user_email_with_api_key
 
 from ..core.services.qa_rag_service import QaRagService
 from ..core.commands.qa_commands import AskQuestionCommand
@@ -118,7 +119,8 @@ def get_collection_name(notebook: Notebook) -> str:
 def ask_question(
     notebook_id: UUID,
     request: AskQuestionRequest,
-    service: QaRagService = Depends(get_qa_rag_service)
+    service: QaRagService = Depends(get_qa_rag_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Ask a question about notebook content using RAG (Retrieval-Augmented Generation).

@@ -5,6 +5,8 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel, Field
 
+from .auth.firebase_auth import get_current_user_email_with_api_key
+
 from ..core.services.mindmap_service import MindMapService
 from ..core.interfaces.repositories.i_notebook_repository import INotebookRepository
 from ..core.interfaces.providers.i_vector_database_provider import IVectorDatabaseProvider
@@ -112,7 +114,8 @@ def get_mindmap_service(
 def generate_mindmap(
     notebook_id: UUID,
     request: GenerateMindMapRequest,
-    service: MindMapService = Depends(get_mindmap_service)
+    service: MindMapService = Depends(get_mindmap_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Generate a mind map outline from notebook content using RAG.
@@ -207,7 +210,10 @@ def generate_mindmap(
         404: {"model": ErrorResponse, "description": "Notebook not found"}
     }
 )
-def get_mindmap_viewer(notebook_id: UUID):
+def get_mindmap_viewer(
+    notebook_id: UUID,
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
+):
     """
     Get the mind map viewer HTML page for a notebook.
 

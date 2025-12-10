@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, status, Depends, Query
 from pydantic import BaseModel, Field
 
 from src.core.interfaces.repositories.i_notebook_repository import INotebookRepository
+from .auth.firebase_auth import get_current_user_email_with_api_key
 
 from ..core.services.vector_ingestion_service import VectorIngestionService
 from ..core.services.content_similarity_service import ContentSimilarityService
@@ -199,7 +200,8 @@ def get_collection_name(notebook_id: UUID, notebook_repo: INotebookRepository) -
 def ingest_notebook(
     notebook_id: UUID,
     request: IngestNotebookRequest = IngestNotebookRequest(),
-    service: VectorIngestionService = Depends(get_vector_ingestion_service)
+    service: VectorIngestionService = Depends(get_vector_ingestion_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Ingest a notebook and its sources into the vector database.
@@ -260,7 +262,8 @@ def search_similar_content(
     notebook_id: UUID,
     query: str = Query(..., min_length=1, max_length=10000, description="Search query text"),
     limit: int = Query(default=10, ge=1, le=100, description="Maximum number of results"),
-    service: ContentSimilarityService = Depends(get_content_similarity_service)
+    service: ContentSimilarityService = Depends(get_content_similarity_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Search for similar content within a notebook using semantic similarity.
@@ -329,7 +332,8 @@ def search_similar_content(
 )
 def get_vector_count(
     notebook_id: UUID,
-    service: ContentSimilarityService = Depends(get_content_similarity_service)
+    service: ContentSimilarityService = Depends(get_content_similarity_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Get the count of vectors stored for a notebook.
@@ -378,7 +382,8 @@ def get_vector_count(
 )
 def delete_notebook_vectors(
     notebook_id: UUID,
-    service: VectorIngestionService = Depends(get_vector_ingestion_service)
+    service: VectorIngestionService = Depends(get_vector_ingestion_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Delete all vectors associated with a notebook.
@@ -427,7 +432,8 @@ def delete_notebook_vectors(
 def create_collection(
     notebook_id: UUID,
     request: CreateCollectionRequest = CreateCollectionRequest(),
-    service: VectorIngestionService = Depends(get_vector_ingestion_service)
+    service: VectorIngestionService = Depends(get_vector_ingestion_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ):
     """
     Create a vector collection for a notebook.

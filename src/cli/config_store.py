@@ -29,6 +29,11 @@ class DiscoveryProfile(BaseModel):
     @property
     def base_url(self) -> str:
         return str(self.url).rstrip("/")
+    
+    @property
+    def is_authenticated(self) -> bool:
+        """Check if profile has valid authentication."""
+        return self.api_key is not None
 
 
 class DiscoveryConfig(BaseModel):

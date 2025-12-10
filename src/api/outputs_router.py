@@ -18,7 +18,7 @@ from ..core.queries.output_queries import (
     SearchOutputsQuery
 )
 from ..core.value_objects.enums import SortOption, SortOrder, OutputType, OutputStatus
-from .auth.firebase_auth import get_current_user_email
+from .auth.firebase_auth import get_current_user_email, get_current_user_email_with_api_key
 from .auth.authorization import require_resource_owner_or_fail
 from .dtos import (
     CreateOutputRequest,
@@ -177,7 +177,7 @@ def to_output_summary_response(summary) -> OutputSummaryResponse:
 def create_output(
     request: CreateOutputRequest,
     notebook_id: UUID = Query(..., description="UUID of the parent notebook"),
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
@@ -243,7 +243,7 @@ def create_output(
 )
 def get_output(
     output_id: UUID,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
@@ -293,7 +293,7 @@ def list_outputs(
     sort_order: SortOrder = SortOrder.DESC,
     limit: Optional[int] = None,
     offset: int = 0,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
@@ -369,7 +369,7 @@ def list_outputs(
 def update_output(
     output_id: UUID,
     request: UpdateOutputRequest,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
@@ -448,7 +448,7 @@ def update_output(
 )
 def delete_output(
     output_id: UUID,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
@@ -512,7 +512,7 @@ def search_outputs(
     sort_order: SortOrder = SortOrder.DESC,
     limit: Optional[int] = None,
     offset: int = 0,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """
@@ -574,7 +574,7 @@ def search_outputs(
 def get_output_preview(
     output_id: UUID,
     length: int = Query(300, ge=50, le=1000, description="Preview length in characters"),
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: OutputManagementService = Depends(get_output_service)
 ):
     """

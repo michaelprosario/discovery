@@ -19,7 +19,7 @@ from ..core.queries.notebook_queries import (
     ListNotebooksQuery
 )
 from ..core.value_objects.enums import SortOption, SortOrder
-from .auth.firebase_auth import get_current_user_email
+from .auth.firebase_auth import get_current_user_email, get_current_user_email_with_api_key, SYSTEM_USER_EMAIL
 from .auth.authorization import require_resource_owner_or_fail
 from .dtos import (
     CreateNotebookRequest,
@@ -180,7 +180,7 @@ def to_notebook_response(notebook) -> NotebookResponse:
 )
 def create_notebook(
     request: CreateNotebookRequest,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: NotebookManagementService = Depends(get_notebook_service)
 ):
     """
@@ -243,7 +243,7 @@ def create_notebook(
 )
 def get_notebook(
     notebook_id: UUID,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: NotebookManagementService = Depends(get_notebook_service)
 ):
     """
@@ -291,7 +291,7 @@ def list_notebooks(
     sort_order: SortOrder = SortOrder.DESC,
     limit: Optional[int] = None,
     offset: int = 0,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: NotebookManagementService = Depends(get_notebook_service)
 ):
     """
@@ -327,8 +327,12 @@ def list_notebooks(
             detail={"error": result.error}
         )
 
-    # Filter notebooks by owner
-    notebooks = [nb for nb in result.value if nb.created_by == current_user_email]
+    # System user (API key) sees all notebooks; regular users see only their own
+    if current_user_email == SYSTEM_USER_EMAIL:
+        notebooks = result.value
+    else:
+        notebooks = [nb for nb in result.value if nb.created_by == current_user_email]
+    
     total = len(notebooks)
 
     return NotebookListResponse(
@@ -350,7 +354,7 @@ def list_notebooks(
 def update_notebook(
     notebook_id: UUID,
     request: UpdateNotebookRequest,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: NotebookManagementService = Depends(get_notebook_service)
 ):
     """
@@ -432,7 +436,7 @@ def update_notebook(
 def rename_notebook(
     notebook_id: UUID,
     request: RenameNotebookRequest,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: NotebookManagementService = Depends(get_notebook_service)
 ):
     """
@@ -511,7 +515,7 @@ def rename_notebook(
 def delete_notebook(
     notebook_id: UUID,
     cascade: bool = False,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: NotebookManagementService = Depends(get_notebook_service)
 ):
     """
@@ -584,7 +588,7 @@ def delete_notebook(
 def add_tags(
     notebook_id: UUID,
     request: AddTagsRequest,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: NotebookManagementService = Depends(get_notebook_service)
 ):
     """
@@ -641,7 +645,7 @@ def add_tags(
 def remove_tags(
     notebook_id: UUID,
     request: RemoveTagsRequest,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     service: NotebookManagementService = Depends(get_notebook_service)
 ):
     """
@@ -701,7 +705,7 @@ def remove_tags(
 def generate_blog_post(
     notebook_id: UUID,
     request: GenerateBlogPostRequest,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(get_current_user_email_with_api_key),
     notebook_service: NotebookManagementService = Depends(get_notebook_service),
     service: BlogGenerationService = Depends(get_blog_generation_service)
 ):

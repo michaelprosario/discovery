@@ -8,8 +8,8 @@ from typing import Any, Dict
 
 import httpx
 
-from .config_store import DiscoveryProfile
-from .exceptions import ApiRequestError
+from .config_store import ConfigStore, DiscoveryProfile
+from .exceptions import ApiRequestError, DiscoveryCLIError
 
 
 class DiscoveryApiClient(AbstractContextManager["DiscoveryApiClient"]):
@@ -21,14 +21,20 @@ class DiscoveryApiClient(AbstractContextManager["DiscoveryApiClient"]):
         *,
         timeout: float = 30.0,
         verbose: bool = False,
+        config_store: ConfigStore | None = None,
     ) -> None:
+        self.profile = profile
+        self.config_store = config_store or ConfigStore()
+        
         headers: Dict[str, str] = {
             "Accept": "application/json",
-            "User-Agent": "discovery-cli/0.1",
+            "User-Agent": "discovery-cli/0.2",
         }
+        
+        # Add API key if present
         if profile.api_key:
-            headers["Authorization"] = f"Bearer {profile.api_key}"
             headers["X-API-Key"] = profile.api_key
+        
         self._client = httpx.Client(
             base_url=profile.base_url,
             timeout=timeout,

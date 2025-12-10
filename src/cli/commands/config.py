@@ -20,11 +20,13 @@ def init_config(
     default_notebook: str | None = typer.Option(None, "--default-notebook", help="Default notebook GUID"),
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing configuration"),
 ) -> None:
+    """Initialize a new CLI profile."""
     store = ConfigStore()
     if store.config_path.exists() and not overwrite:
         typer.confirm("Configuration already exists. Overwrite?", abort=True)
     if not url:
         url = typer.prompt("Discovery API URL", default="http://localhost:8000")
+    
     profile_model = DiscoveryProfile(
         name=profile,
         url=url,
@@ -33,6 +35,12 @@ def init_config(
     )
     store.upsert_profile(profile_model, make_active=True)
     console.print(f"[green]Profile '{profile}' saved.[/green]")
+    
+    if api_key:
+        console.print("[green]API key configured.[/green]")
+    else:
+        console.print("[yellow]No API key provided. Set one with: discovery auth set-api-key --key <your-key>[/yellow]")
+    
     try:
         with DiscoveryApiClient(profile_model) as client:
             response = client.get_json("/health")

@@ -3,6 +3,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Dict, List
 
+from .auth.firebase_auth import get_current_user_email_with_api_key
+
 from ..core.services.article_search_service import ArticleSearchService
 from ..core.queries.article_search_queries import ArticleSearchQuery
 from .dependencies.article_search import get_article_search_service
@@ -34,7 +36,8 @@ class ArticleSearchResponse(BaseModel):
 @router.post("/search", response_model=ArticleSearchResponse)
 async def search_articles(
     request: ArticleSearchRequest,
-    service: ArticleSearchService = Depends(get_article_search_service)
+    service: ArticleSearchService = Depends(get_article_search_service),
+    current_user_email: str = Depends(get_current_user_email_with_api_key)
 ) -> ArticleSearchResponse:
     """
     Search for high-quality blog articles that answer a specific question.

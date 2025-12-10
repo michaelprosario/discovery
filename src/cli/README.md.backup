@@ -21,15 +21,11 @@ The project publishes the console script `discovery` via the entry point declare
    ```bash
    discovery config init --url http://localhost:8000
    ```
-3. Set your API key for authentication:
+3. Authenticate using Google Sign-In:
    ```bash
-   discovery auth set-api-key --key your-api-key-here
+   discovery auth login
    ```
-   
-   Or combine both steps:
-   ```bash
-   discovery config init --url http://localhost:8000 --api-key your-api-key-here
-   ```
+   This will open your browser for Google authentication and securely store your Firebase credentials.
 
 4. Verify connectivity:
    ```bash
@@ -44,50 +40,104 @@ Configuration is stored in `~/.discovery/config.toml` (override with `DISCOVERY_
 
 ## Authentication
 
-The Discovery CLI uses API key authentication to communicate with the FastAPI backend.
+All authentication is handled through Firebase for secure access to the Discovery API.
 
-### Setup
+### Authentication Methods
 
-1. Initialize your profile with API URL:
-   ```bash
-   discovery config init --url http://localhost:8000
-   ```
-
-2. Set your API key:
-   ```bash
-   discovery auth set-api-key --key your-api-key-here
-   ```
-
-Or combine both steps:
+**1. Email/Password (Recommended - Simple)**
 ```bash
-discovery config init --url http://localhost:8000 --api-key your-api-key-here
+# Create a new account
+discovery auth signup
+
+# Login with existing account
+discovery auth login-email
+```
+
+**2. Google Sign-In (Requires OAuth setup)**
+```bash
+# Login with Google account (opens browser)
+discovery auth login
+```
+
+### Initial Setup (Email/Password)
+
+```bash
+# Initialize profile (creates profile without credentials)
+discovery config init --url https://api.example.com
+
+# Create account or login
+discovery auth signup  # First time
+# OR
+discovery auth login-email  # Subsequent logins
 ```
 
 ### Authentication Commands
 
 ```bash
-discovery auth set-api-key --key <your-key>   # Set API key for authentication
-discovery auth status                          # Check authentication status
-discovery auth logout                          # Clear API key
+# Email/Password Authentication
+discovery auth signup              # Create new account
+discovery auth login-email         # Login with email/password
+discovery auth reset-password      # Send password reset email
+
+# Google Sign-In (requires OAuth credentials)
+discovery auth login               # Login with Google
+
+# General Commands
+discovery auth status              # Check authentication status
+discovery auth refresh             # Refresh token manually (usually automatic)
+discovery auth logout              # Logout (clear credentials)
 ```
 
 ### Multiple Profiles
 
-Work with different API environments using profiles:
-
 ```bash
-# Create profile with API key
-discovery config init --url https://api.staging.com --api-key <key> --profile staging
+# Create and login to a new profile
+discovery config init --url https://api.staging.com --profile staging
+discovery auth login --profile staging
 
 # Use specific profile for commands
 discovery notebooks list --profile staging
 
 # Switch active profile
 discovery config use staging
-
-# Check status of a specific profile
-discovery auth status --profile staging
 ```
+
+### Headless Environments
+
+For environments without a browser (SSH, CI/CD), use device flow:
+
+```bash
+discovery auth login --device-flow
+```
+
+This will display a code to enter at a Google URL.
+
+### Environment Setup
+
+Required environment variable for Firebase authentication:
+
+```bash
+# Firebase Web API Key (from Firebase Console)
+export FIREBASE_WEB_API_KEY="your-firebase-web-api-key"
+```
+
+**Optional** (only needed for Google Sign-In):
+
+```bash
+# Google OAuth credentials (from Google Cloud Console) - OPTIONAL
+export GOOGLE_OAUTH_CLIENT_ID="your-oauth-client-id.apps.googleusercontent.com"
+export GOOGLE_OAUTH_CLIENT_SECRET="your-oauth-client-secret"
+```
+
+### Legacy API Key Support
+
+API key authentication is deprecated but still supported for backwards compatibility:
+
+```bash
+discovery config init --url http://localhost:8000 --api-key test --no-login
+```
+
+**Note:** This method will be removed in a future version. Migrate to Firebase authentication.
 
 ## Output Formats
 
@@ -97,8 +147,8 @@ Every resource listing command accepts `--format/--format json|yaml|text|table`.
 
 | Command | Alias | Highlights |
 | --- | --- | --- |
-| `discovery config` | — | Initialize profiles, switch `--profile`, emit `.env` snippets, run health checks. |
-| `discovery auth` | — | Manage API key authentication: set-api-key, status, logout. |
+| `discovery config` | — | Initialise profiles, switch `--profile`, emit `.env` snippets, run health checks. |
+| `discovery auth` | — | Manage Firebase/Google authentication: login, logout, status, refresh tokens. |
 | `discovery notebooks` | `discovery nb` | CRUD operations, tag management, recent notebook tracking, blog post generation. |
 | `discovery sources` | `discovery src` | Add URL/file/text sources, list or inspect sources, delete entries. |
 | `discovery vectors` | `discovery vec` | Ingest notebooks, run semantic similarity queries, count/purge vectors, create collections. |
@@ -125,26 +175,16 @@ All commands respect `--profile` to target a specific configuration profile. Whe
 - Add new command groups by creating a Typer app and registering it in `src/cli/__main__.py`.
 - Integration tests can mock the API using `httpx.MockTransport` or `respx`; see `tests/cli/` (create as needed).
 
-## Discovery CLI Examples
+
+
+
+## discovery cli examples
   
-```bash
-# General help
 discovery --help
 discovery notebooks --help
-
-# Initialize and authenticate
 discovery config init --url http://localhost:8000
-discovery auth set-api-key --key your-api-key-here
-
-# Work with notebooks
-discovery notebooks list --format json
-
-# Add sources
+discovery notebooks list--format json
 discovery src add url --notebook 380fe8dc-73ff-4b7b-a2a2-0025905a12da --format json --url https://en.wikipedia.org/wiki/Bill_Gates
-
-# Ingest vectors
 discovery vectors ingest --notebook 380fe8dc-73ff-4b7b-a2a2-0025905a12da
-
-# Ask questions
 discovery qa ask --notebook 380fe8dc-73ff-4b7b-a2a2-0025905a12da --format json --question "When was bill gates born?"
-```
+  
