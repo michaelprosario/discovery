@@ -35,6 +35,7 @@ class Source:
     content_hash: str = ""
     extracted_text: str = ""
     metadata: Dict[str, Any] = field(default_factory=dict)
+    created_by: str = ""  # Email address of the user who created the source
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
     deleted_at: Optional[datetime] = None
@@ -55,6 +56,7 @@ class Source:
         file_type: FileType,
         file_size: int,
         content: bytes,
+        created_by: str,
         metadata: Optional[Dict[str, Any]] = None
     ) -> Result['Source']:
         """
@@ -66,6 +68,7 @@ class Source:
             file_type: Type of file (PDF, DOCX, etc.)
             file_size: Size in bytes
             content: File content for hash calculation
+            created_by: Email of the user creating the source (required)
             metadata: Optional metadata dictionary
 
         Returns:
@@ -102,6 +105,21 @@ class Source:
                 code="MAX_SIZE"
             ))
 
+        # Validate created_by (email)
+        created_by = created_by.strip() if created_by else ""
+        if not created_by:
+            errors.append(ValidationError(
+                field="created_by",
+                message="Created by (user email) is required",
+                code="REQUIRED"
+            ))
+        elif "@" not in created_by:
+            errors.append(ValidationError(
+                field="created_by",
+                message="Created by must be a valid email address",
+                code="INVALID_FORMAT"
+            ))
+
         if errors:
             return Result.validation_failure(errors)
 
@@ -116,6 +134,7 @@ class Source:
             file_type=file_type,
             file_size=file_size,
             content_hash=content_hash,
+            created_by=created_by,
             metadata=metadata or {}
         )
 
@@ -127,6 +146,7 @@ class Source:
         name: str,
         url: str,
         content: str,
+        created_by: str,
         metadata: Optional[Dict[str, Any]] = None
     ) -> Result['Source']:
         """
@@ -137,6 +157,7 @@ class Source:
             name: Display name for the source
             url: Source URL
             content: Fetched content for hash calculation
+            created_by: Email of the user creating the source (required)
             metadata: Optional metadata dictionary
 
         Returns:
@@ -159,8 +180,16 @@ class Source:
                 code="MAX_LENGTH"
             ))
 
-        # Validate URL
-        if not url or not url.strip():
+        # Validate and normalize URL
+        url = url.strip() if url else ""
+        
+        # Normalize URL protocol to lowercase (e.g., Https:// -> https://)
+        if url.startswith('Https://'):
+            url = 'https://' + url[8:]
+        elif url.startswith('Http://'):
+            url = 'http://' + url[7:]
+        
+        if not url:
             errors.append(ValidationError(
                 field="url",
                 message="URL is required for URL sources",
@@ -170,6 +199,21 @@ class Source:
             errors.append(ValidationError(
                 field="url",
                 message="URL must start with http:// or https://",
+                code="INVALID_FORMAT"
+            ))
+
+        # Validate created_by (email)
+        created_by = created_by.strip() if created_by else ""
+        if not created_by:
+            errors.append(ValidationError(
+                field="created_by",
+                message="Created by (user email) is required",
+                code="REQUIRED"
+            ))
+        elif "@" not in created_by:
+            errors.append(ValidationError(
+                field="created_by",
+                message="Created by must be a valid email address",
                 code="INVALID_FORMAT"
             ))
 
@@ -186,6 +230,7 @@ class Source:
             source_type=SourceType.URL,
             url=url,
             content_hash=content_hash,
+            created_by=created_by,
             metadata=metadata or {}
         )
 
@@ -196,6 +241,7 @@ class Source:
         notebook_id: UUID,
         name: str,
         content: str,
+        created_by: str,
         metadata: Optional[Dict[str, Any]] = None
     ) -> Result['Source']:
         """
@@ -205,6 +251,7 @@ class Source:
             notebook_id: Parent notebook UUID
             name: Display name for the source
             content: Text content
+            created_by: Email of the user creating the source (required)
             metadata: Optional metadata dictionary
 
         Returns:
@@ -241,6 +288,21 @@ class Source:
                 code="MAX_LENGTH"
             ))
 
+        # Validate created_by (email)
+        created_by = created_by.strip() if created_by else ""
+        if not created_by:
+            errors.append(ValidationError(
+                field="created_by",
+                message="Created by (user email) is required",
+                code="REQUIRED"
+            ))
+        elif "@" not in created_by:
+            errors.append(ValidationError(
+                field="created_by",
+                message="Created by must be a valid email address",
+                code="INVALID_FORMAT"
+            ))
+
         if errors:
             return Result.validation_failure(errors)
 
@@ -254,6 +316,7 @@ class Source:
             source_type=SourceType.TEXT,
             content_hash=content_hash,
             extracted_text=content.strip(),
+            created_by=created_by,
             metadata=metadata or {}
         )
 

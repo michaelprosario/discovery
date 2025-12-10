@@ -105,6 +105,7 @@ class SourceIngestionService:
             file_type=command.file_type,
             file_size=file_size,
             content=command.file_content,
+            created_by=command.created_by,
             metadata=command.metadata
         )
 
@@ -216,6 +217,7 @@ class SourceIngestionService:
             name=name,
             url=command.url,
             content=web_content.text,
+            created_by=command.created_by,
             metadata=web_content.metadata
         )
 
@@ -290,6 +292,7 @@ class SourceIngestionService:
             notebook_id=command.notebook_id,
             name=command.title,
             content=command.content,
+            created_by=command.created_by,
             metadata=command.metadata
         )
 

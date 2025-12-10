@@ -53,6 +53,13 @@ export class AddUrlSource implements OnInit {
       return;
     }
 
+    // Normalize URL protocol to lowercase
+    if (this.url.startsWith('Https://')) {
+      this.url = 'https://' + this.url.substring(8);
+    } else if (this.url.startsWith('Http://')) {
+      this.url = 'http://' + this.url.substring(7);
+    }
+
     this.isSubmitting = true;
     const request: ImportUrlSourceRequest = {
       notebook_id: this.notebookId,

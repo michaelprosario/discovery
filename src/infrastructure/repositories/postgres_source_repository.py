@@ -56,6 +56,7 @@ class PostgresSourceRepository(ISourceRepository):
             content_hash=model.content_hash,
             extracted_text=model.extracted_text,
             metadata=dict(model.source_metadata) if model.source_metadata else {},
+            created_by=model.created_by,
             created_at=model.created_at,
             updated_at=model.updated_at,
             deleted_at=model.deleted_at
@@ -83,6 +84,7 @@ class PostgresSourceRepository(ISourceRepository):
             content_hash=entity.content_hash,
             extracted_text=entity.extracted_text,
             source_metadata=entity.metadata,
+            created_by=entity.created_by,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
             deleted_at=entity.deleted_at

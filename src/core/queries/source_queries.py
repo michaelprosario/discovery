@@ -65,6 +65,7 @@ class SourceSummary:
     url: Optional[str]
     file_size: Optional[int]
     has_extracted_text: bool
+    created_by: str
     created_at: datetime
     updated_at: datetime
     deleted_at: Optional[datetime]
@@ -81,6 +82,7 @@ class SourceSummary:
             url=source.url,
             file_size=source.file_size,
             has_extracted_text=bool(source.extracted_text),
+            created_by=source.created_by,
             created_at=source.created_at,
             updated_at=source.updated_at,
             deleted_at=source.deleted_at

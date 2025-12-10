@@ -97,4 +97,16 @@ export class NotebookOutputs implements OnInit {
       }
     });
   }
+
+  createBlogPost() {
+    if (this.notebookId) {
+      this.router.navigate(['/edit-notebook', this.notebookId, 'new-blog-post']);
+    }
+  }
+
+  createMindMap() {
+    if (this.notebookId) {
+      this.router.navigate(['/edit-notebook', this.notebookId, 'new-mindmap']);
+    }
+  }
 }

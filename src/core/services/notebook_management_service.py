@@ -74,6 +74,7 @@ class NotebookManagementService:
         # Create notebook entity (with validation)
         create_result = Notebook.create(
             name=command.name,
+            created_by=command.created_by,
             description=command.description,
             tags=command.tags
         )

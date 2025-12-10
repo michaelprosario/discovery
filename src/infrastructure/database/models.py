@@ -83,6 +83,7 @@ class NotebookModel(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     tags = Column(JSONEncodedList, nullable=False, default=[])
+    created_by = Column(String(255), nullable=False, index=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     source_count = Column(Integer, nullable=False, default=0)
@@ -112,6 +113,7 @@ class SourceModel(Base):
     content_hash = Column(String(64), nullable=False, index=True)  # SHA256 hash
     extracted_text = Column(Text, nullable=False, default="")
     source_metadata = Column(JSONEncodedDict, nullable=False, default={})
+    created_by = Column(String(255), nullable=False, index=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     deleted_at = Column(DateTime, nullable=True, index=True)
@@ -144,6 +146,7 @@ class OutputModel(Base):
     output_metadata = Column(JSONEncodedDict, nullable=False, default={})
     source_references = Column(JSONEncodedList, nullable=False, default=[])
     word_count = Column(Integer, nullable=False, default=0)
+    created_by = Column(String(255), nullable=False, index=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)

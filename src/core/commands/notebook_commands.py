@@ -9,6 +9,7 @@ class CreateNotebookCommand:
     """Command to create a new notebook."""
 
     name: str
+    created_by: str
     description: Optional[str] = None
     tags: Optional[List[str]] = None
 

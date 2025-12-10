@@ -1,0 +1,37 @@
+<div class="user-menu">
+  @if (user$ | async; as user) {
+    <button class="user-menu-trigger" (click)="toggleMenu()">
+      @if (user.photoURL) {
+        <img [src]="user.photoURL" [alt]="getDisplayName(user)" class="user-avatar" />
+      } @else {
+        <div class="user-avatar-placeholder">
+          {{ getInitials(user) }}
+        </div>
+      }
+      <span class="user-name">{{ getDisplayName(user) }}</span>
+      <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 16 16">
+        <path d="M4 6l4 4 4-4" stroke="currentColor" fill="none" stroke-width="2"/>
+      </svg>
+    </button>
+
+    @if (isMenuOpen()) {
+      <div class="user-menu-dropdown">
+        <div class="user-menu-header">
+          <div class="user-email">{{ user.email }}</div>
+        </div>
+        <div class="user-menu-divider"></div>
+        <button class="user-menu-item" (click)="logout()">
+          <svg width="16" height="16" viewBox="0 0 16 16" class="menu-icon">
+            <path d="M6 14H2V2h4M11 11l3-3-3-3M4 8h10" stroke="currentColor" fill="none" stroke-width="2"/>
+          </svg>
+          Sign Out
+        </button>
+      </div>
+    }
+  }
+</div>
+
+<!-- Backdrop to close menu when clicking outside -->
+@if (isMenuOpen()) {
+  <div class="menu-backdrop" (click)="closeMenu()"></div>
+}

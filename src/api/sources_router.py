@@ -23,6 +23,8 @@ from ..core.queries.source_queries import (
 )
 from ..core.queries.article_search_queries import ArticleSearchQuery
 from ..core.value_objects.enums import SourceType, FileType, SortOption, SortOrder
+from .auth.firebase_auth import get_current_user_email
+from .auth.authorization import require_resource_owner_or_fail
 from .dependencies.article_search import get_article_search_service
 from .dtos import (
     ImportFileSourceRequest,
@@ -131,6 +133,7 @@ def to_source_response(source) -> SourceResponse:
         content_hash=source.content_hash,
         extracted_text=source.extracted_text,
         metadata=source.metadata,
+        created_by=source.created_by,
         created_at=source.created_at,
         updated_at=source.updated_at,
         deleted_at=source.deleted_at
@@ -151,6 +154,7 @@ def summary_to_source_response(summary) -> SourceResponse:
         content_hash="",  # SourceSummary doesn't include content_hash
         extracted_text="",  # SourceSummary only has has_extracted_text flag
         metadata={},  # SourceSummary doesn't include metadata
+        created_by=summary.created_by,
         created_at=summary.created_at,
         updated_at=summary.updated_at,
         deleted_at=summary.deleted_at
@@ -163,28 +167,32 @@ def summary_to_source_response(summary) -> SourceResponse:
     status_code=status.HTTP_201_CREATED,
     responses={
         400: {"model": ValidationErrorResponse, "description": "Validation error"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Notebook not found"},
         409: {"model": ErrorResponse, "description": "Duplicate content"}
     }
 )
 def import_file_source(
     request: ImportFileSourceRequest,
+    current_user_email: str = Depends(get_current_user_email),
     service: SourceIngestionService = Depends(get_source_service)
 ):
     """
     Import a file source into a notebook.
 
+    Requires authentication. The source will be owned by the authenticated user.
     The content is sent as a base64 encoded string.
 
     Args:
         request: File source import data (name, file_content, file_type, notebook_id)
+        current_user_email: Email of the authenticated user
         service: Injected source service
 
     Returns:
         Created source
 
     Raises:
-        HTTPException: 400 for validation/extraction errors, 404 if notebook not found, 409 for duplicates
+        HTTPException: 400 for validation/extraction errors, 401 for unauthorized, 404 if notebook not found, 409 for duplicates
     """
     # Convert file_type string to enum
     try:
@@ -214,6 +222,7 @@ def import_file_source(
         file_name=request.name,
         file_type=file_type_enum,
         file_content=content_bytes,
+        created_by=current_user_email,
         metadata=metadata
     )
 
@@ -260,30 +269,33 @@ def import_file_source(
     status_code=status.HTTP_201_CREATED,
     responses={
         400: {"model": ValidationErrorResponse, "description": "Validation error"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Notebook not found"},
         409: {"model": ErrorResponse, "description": "Duplicate content"}
     }
 )
 def import_url_source(
     request: ImportUrlSourceRequest,
+    current_user_email: str = Depends(get_current_user_email),
     service: SourceIngestionService = Depends(get_source_service)
 ):
     """
     Import a URL source into a notebook.
 
+    Requires authentication. The source will be owned by the authenticated user.
     The content will be automatically fetched from the URL.
     The name/title will be extracted from the page if not provided.
 
     Args:
         request: URL source import data (url, notebook_id, optional title)
+        current_user_email: Email of the authenticated user
         service: Injected source service
-        web_fetch_provider: Injected web fetch provider
 
     Returns:
         Created source
 
     Raises:
-        HTTPException: 400 for validation/fetch errors, 404 if notebook not found, 409 for duplicates
+        HTTPException: 400 for validation/fetch errors, 401 for unauthorized, 404 if notebook not found, 409 for duplicates
     """
 
     # Use provided title or extracted title as the name
@@ -293,7 +305,8 @@ def import_url_source(
     command = ImportUrlSourceCommand(
         notebook_id=request.notebook_id,
         title=name,  # Use title as name
-        url=request.url
+        url=request.url,
+        created_by=current_user_email
     )
 
     result = service.import_url_source(command)
@@ -339,34 +352,39 @@ def import_url_source(
     status_code=status.HTTP_201_CREATED,
     responses={
         400: {"model": ValidationErrorResponse, "description": "Validation error"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Notebook not found"},
         409: {"model": ErrorResponse, "description": "Duplicate content"}
     }
 )
 def import_text_source(
     request: ImportTextSourceRequest,
+    current_user_email: str = Depends(get_current_user_email),
     service: SourceIngestionService = Depends(get_source_service)
 ):
     """
     Import a text source into a notebook.
 
+    Requires authentication. The source will be owned by the authenticated user.
     The text content is provided directly in the request.
     This is useful for pasting text snippets or notes directly into the notebook.
 
     Args:
         request: Text source import data (title, content, notebook_id)
+        current_user_email: Email of the authenticated user
         service: Injected source service
 
     Returns:
         Created source
 
     Raises:
-        HTTPException: 400 for validation errors, 404 if notebook not found, 409 for duplicates
+        HTTPException: 400 for validation errors, 401 for unauthorized, 404 if notebook not found, 409 for duplicates
     """
     command = ImportTextSourceCommand(
         notebook_id=request.notebook_id,
         title=request.title,
         content=request.content,
+        created_by=current_user_email,
         metadata={"content_length": len(request.content)}
     )
 
@@ -411,6 +429,7 @@ def import_text_source(
     "/{source_id}",
     response_model=SourceResponse,
     responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         404: {"model": ErrorResponse, "description": "Source not found"}
     }
 )
@@ -815,6 +834,7 @@ def get_source_preview(
 )
 def add_sources_by_search(
     request: AddSourcesBySearchRequest,
+    current_user_email: str = Depends(get_current_user_email),
     source_service: SourceIngestionService = Depends(get_source_service),
     article_service: ArticleSearchService = Depends(get_article_search_service)
 ):
@@ -826,6 +846,7 @@ def add_sources_by_search(
 
     Args:
         request: Search phrase and notebook information
+        current_user_email: Email of the authenticated user
         source_service: Injected source ingestion service
         article_service: Injected article search service
 
@@ -860,7 +881,8 @@ def add_sources_by_search(
             import_command = ImportUrlSourceCommand(
                 notebook_id=request.notebook_id,
                 title=article.title,
-                url=article.link
+                url=article.link,
+                created_by=current_user_email
             )
 
             # Attempt to import the URL source

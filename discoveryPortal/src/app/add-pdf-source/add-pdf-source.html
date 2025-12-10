@@ -1,33 +1,33 @@
 <div class="flex h-screen" *ngIf="notebookId">
   <main class="flex-1 overflow-y-auto">
-    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div class="flex flex-wrap gap-2 pb-4">
-        <a class="text-slate-500 dark:text-[#92adc9] text-base font-medium leading-normal hover:text-primary"
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div class="flex flex-wrap gap-2 pb-4 text-sm sm:text-base">
+        <a class="text-slate-500 dark:text-[#92adc9] font-medium leading-normal hover:text-primary"
           routerLink="/list-notebooks">
           All Notebooks
         </a>
-        <span class="text-slate-400 dark:text-[#92adc9] text-base font-medium leading-normal">/</span>
-        <a class="text-slate-500 dark:text-[#92adc9] text-base font-medium leading-normal hover:text-primary"
+        <span class="text-slate-400 dark:text-[#92adc9] font-medium leading-normal">/</span>
+        <a class="text-slate-500 dark:text-[#92adc9] font-medium leading-normal hover:text-primary"
           [routerLink]="['/edit-notebook', notebookId]">
           Notebook
         </a>
-        <span class="text-slate-400 dark:text-[#92adc9] text-base font-medium leading-normal">/</span>
-        <span class="text-slate-800 dark:text-white text-base font-medium leading-normal">Add Source</span>
+        <span class="text-slate-400 dark:text-[#92adc9] font-medium leading-normal">/</span>
+        <span class="text-slate-800 dark:text-white font-medium leading-normal">Add Source</span>
       </div>
 
-      <header class="pb-8">
-        <h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
+      <header class="pb-6 sm:pb-8">
+        <h1 class="text-slate-900 dark:text-white text-2xl sm:text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">
           Add Source
         </h1>
-        <p class="text-slate-500 dark:text-[#92adc9] text-base font-normal leading-normal mt-2">
+        <p class="text-slate-500 dark:text-[#92adc9] text-sm sm:text-base font-normal leading-normal mt-2">
           Add a new PDF source to your notebook
         </p>
       </header>
 
       <div class="max-w-3xl">
         <form (ngSubmit)="onSubmit()">
-          <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22] p-6">
-            <div class="flex flex-col gap-6">
+          <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111a22] p-4 sm:p-6">
+            <div class="flex flex-col gap-4 sm:gap-6">
               <div>
                 <label for="name" class="block text-slate-900 dark:text-white text-sm font-medium leading-normal pb-2">
                   Source Name
@@ -122,18 +122,18 @@
             </div>
           </div>
 
-          <div class="flex gap-3 pt-6 justify-end">
+          <div class="flex flex-col sm:flex-row gap-3 pt-4 sm:pt-6 sm:justify-end">
             <button 
               type="button" 
               (click)="onCancel()"
               [disabled]="isSubmitting"
-              class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              class="w-full sm:w-auto flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 sm:h-10 px-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
               <span class="truncate">Cancel</span>
             </button>
             <button 
               type="submit" 
               [disabled]="!name || !selectedFile || isSubmitting"
-              class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
+              class="w-full sm:w-auto flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 sm:h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
               <span class="truncate">{{ isSubmitting ? 'Uploading...' : 'Upload and Add Source' }}</span>
             </button>
           </div>

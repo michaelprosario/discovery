@@ -14,19 +14,33 @@
                 <span class="text-slate-400 dark:text-[#92adc9] text-base font-medium leading-normal">/</span>
                 <span class="text-slate-800 dark:text-white text-base font-medium leading-normal">Outputs</span>
             </div>
-            <header class="flex flex-wrap items-start justify-between gap-4 pb-8">
-                <div class="flex min-w-72 flex-col gap-2">
-                    <h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
-                        Output Records</h1>
-                    <p class="text-slate-500 dark:text-[#92adc9] text-base font-normal leading-normal">
-                        Generated outputs for {{ notebook.name }}
-                    </p>
+            <header class="flex flex-col gap-4 pb-8">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="flex min-w-72 flex-col gap-2">
+                        <h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
+                            Output Records</h1>
+                        <p class="text-slate-500 dark:text-[#92adc9] text-base font-normal leading-normal">
+                            Generated outputs for {{ notebook.name }}
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button [routerLink]="['/edit-notebook', notebook.id]"
+                            class="flex h-10 items-center justify-center gap-2 rounded-lg px-4 bg-slate-200 text-slate-800 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-slate-300 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">
+                            <span class="material-symbols-outlined">arrow_back</span>
+                            <span class="truncate">Back to Notebook</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button [routerLink]="['/edit-notebook', notebook.id]"
-                        class="flex h-10 items-center justify-center gap-2 rounded-lg px-4 bg-slate-200 text-slate-800 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-slate-300 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">
-                        <span class="material-symbols-outlined">arrow_back</span>
-                        <span class="truncate">Back to Notebook</span>
+                    <button (click)="createBlogPost()"
+                        class="flex h-10 items-center justify-center gap-2 rounded-lg px-4 bg-green-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-green-700">
+                        <span class="material-symbols-outlined">article</span>
+                        <span class="truncate">New Blog Post</span>
+                    </button>
+                    <button (click)="createMindMap()"
+                        class="flex h-10 items-center justify-center gap-2 rounded-lg px-4 bg-blue-600 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-blue-700">
+                        <span class="material-symbols-outlined">account_tree</span>
+                        <span class="truncate">New Mind Map</span>
                     </button>
                 </div>
             </header>

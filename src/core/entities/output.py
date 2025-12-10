@@ -29,6 +29,7 @@ class Output:
     metadata: Dict[str, Any] = field(default_factory=dict)
     source_references: list[str] = field(default_factory=list)
     word_count: int = 0
+    created_by: str = ""  # Email address of the user who created the output
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
     completed_at: Optional[datetime] = None
@@ -51,6 +52,7 @@ class Output:
     def create(
         notebook_id: UUID,
         title: str,
+        created_by: str,
         output_type: OutputType = OutputType.BLOG_POST,
         prompt: Optional[str] = None,
         template_name: Optional[str] = None
@@ -61,6 +63,7 @@ class Output:
         Args:
             notebook_id: ID of the parent notebook
             title: Title for the output
+            created_by: Email of the user creating the output (required)
             output_type: Type of output (default: BLOG_POST)
             prompt: Optional custom prompt used for generation
             template_name: Optional template name used
@@ -93,6 +96,21 @@ class Output:
                 code="REQUIRED"
             ))
 
+        # Validate created_by (email)
+        created_by = created_by.strip() if created_by else ""
+        if not created_by:
+            errors.append(ValidationError(
+                field="created_by",
+                message="Created by (user email) is required",
+                code="REQUIRED"
+            ))
+        elif "@" not in created_by:
+            errors.append(ValidationError(
+                field="created_by",
+                message="Created by must be a valid email address",
+                code="INVALID_FORMAT"
+            ))
+
         # Validate prompt length if provided
         if prompt and len(prompt) > 5000:
             errors.append(ValidationError(
@@ -109,6 +127,7 @@ class Output:
         output = Output(
             notebook_id=notebook_id,
             title=title,
+            created_by=created_by,
             output_type=output_type,
             prompt=prompt,
             template_name=template_name,

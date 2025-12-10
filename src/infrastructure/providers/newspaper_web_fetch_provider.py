@@ -195,6 +195,12 @@ class Newspaper3kWebFetchProvider(IWebFetchProvider):
                 return Result.failure("URL cannot be empty")
 
             url = url.strip()
+            
+            # Normalize URL protocol to lowercase (e.g., Https:// -> https://)
+            if url.startswith('Https://'):
+                url = 'https://' + url[8:]
+            elif url.startswith('Http://'):
+                url = 'http://' + url[7:]
 
             # Check protocol
             if not (url.startswith('http://') or url.startswith('https://')):
