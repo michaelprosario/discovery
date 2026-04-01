@@ -1,6 +1,6 @@
 {
   "/api": {
-    "target": "https://musical-zebra-pj6xv5g7vwh7wxw-8000.app.github.dev",
+    "target": "https://legendary-trout-97xpvgqjgg297ww-8000.app.github.dev",
     "secure": true,
     "changeOrigin": true,
     "logLevel": "debug",
