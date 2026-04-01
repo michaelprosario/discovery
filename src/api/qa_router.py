@@ -26,7 +26,7 @@ class AskQuestionRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=10000, description="Question to ask about the notebook content")
     max_sources: int = Field(default=5, ge=1, le=20, description="Maximum number of source chunks to retrieve")
     temperature: float = Field(default=0.3, ge=0.0, le=2.0, description="LLM temperature for response generation")
-    max_tokens: int = Field(default=1500, ge=100, le=4000, description="Maximum tokens for LLM response")
+    max_tokens: int = Field(default=4096, ge=100, le=8192, description="Maximum tokens for LLM response")
 
 
 class QaSourceItem(BaseModel):

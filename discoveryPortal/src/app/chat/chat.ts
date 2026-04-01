@@ -112,7 +112,7 @@ export class ChatComponent implements OnInit {
       question: question,
       max_sources: 5,
       temperature: 0.3,
-      max_tokens: 1500
+      max_tokens: 4096
     }).subscribe({
       next: (response) => {
         this.removeLoadingMessage(loadingMessageId);

@@ -154,7 +154,7 @@ class QaRagService:
             # Set default LLM parameters if not provided
             llm_params = command.llm_parameters or LlmGenerationParameters(
                 temperature=0.3,  # Lower temperature for more factual responses
-                max_tokens=1500,
+                max_tokens=4096,
                 top_p=0.9
             )
 
@@ -187,7 +187,7 @@ class QaRagService:
             citation_instruction = """
 When referencing information from the context, please cite the source using the format [1], [2], etc. to indicate which context chunk the information came from."""
 
-        prompt = f"""You are a helpful assistant that answers questions based on the provided context. Provide answers around 400 words.  Use only the information from the context to answer the question. If the context doesn't contain enough information to answer the question completely, say so.{citation_instruction}
+        prompt = f"""You are a helpful assistant that answers questions based on the provided context. Provide thorough, complete answers. Use only the information from the context to answer the question. If the context doesn't contain enough information to answer the question completely, say so.{citation_instruction}
 
 Context:
 {context_section}
