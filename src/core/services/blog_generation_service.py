@@ -310,7 +310,7 @@ class BlogGenerationService:
             # Set LLM parameters for blog generation
             llm_params = LlmGenerationParameters(
                 temperature=0.7,  # Balanced creativity and consistency
-                max_tokens=2000,  # Allow for longer content
+                max_tokens=60000,  # Allow for longer content
                 top_p=0.9
             )
 
