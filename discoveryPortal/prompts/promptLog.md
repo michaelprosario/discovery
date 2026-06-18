@@ -159,3 +159,48 @@ The system should focus upon the following use cases
 - Generation of blog posts
 - Question and answer with notebook
     - make sure to cite sources
+===
+
+Given
+- I am using the view blog output page
+
+When 
+- I click the "read" button
+
+Then
+- The system should do text to speech to enable me to listen to the article.
+- The system should give me the following functions too
+    - pause reading
+    - resume reading
+    - restart reading
+
+===
+
+Given 
+- I am using article search
+
+When 
+- I click "create notebook"
+
+Then
+- The system should note all the articles in the search results
+- The system should enable me to create a notebook and select which articles should be added as sources to the notebook.
+
+===
+
+Given
+- I am creating a notebook from sources from article search
+- I have selected 1 or many sources for notebook creation
+
+When
+- I click "Create notebook"
+
+Then
+- The system should do the following
+    - Create notebook record
+    - Create notebook source records for each source
+    - When the process finishes, the system should report the following:
+        - articles added with no issues
+        - list articles that could not be ingested
+
+Think about these requirements and document in buildNotebookFromSearch.md

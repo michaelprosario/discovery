@@ -3,6 +3,7 @@ import { useOutput } from '../hooks/queries';
 import { Spinner } from '../components/Spinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Markdown } from '../components/Markdown';
+import { ReadAloud } from '../components/ReadAloud';
 
 export function ViewOutputPage() {
   const { id = '', outputId = '' } = useParams();
@@ -17,12 +18,15 @@ export function ViewOutputPage() {
       <Link to={`/notebooks/${id}`} className="text-sm muted">
         ← Back to notebook
       </Link>
-      <div>
-        <h1 style={{ marginBottom: 4 }}>{output.title}</h1>
-        <p className="text-sm muted" style={{ margin: 0 }}>
-          <span className="tag">{output.output_type}</span>
-          {output.status} · {output.word_count.toLocaleString()} words
-        </p>
+      <div className="row-between" style={{ alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={{ marginBottom: 4 }}>{output.title}</h1>
+          <p className="text-sm muted" style={{ margin: 0 }}>
+            <span className="tag">{output.output_type}</span>
+            {output.status} · {output.word_count.toLocaleString()} words
+          </p>
+        </div>
+        <ReadAloud content={output.content} />
       </div>
 
       <div className="card">
