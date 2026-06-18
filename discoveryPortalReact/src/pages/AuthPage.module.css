@@ -1,0 +1,17 @@
+.wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  /* Spotify-style dark vertical gradient backdrop */
+  background: linear-gradient(180deg, #1f1f1f 0%, var(--color-bg-deep) 100%);
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--color-border);
+  padding: 2rem;
+}

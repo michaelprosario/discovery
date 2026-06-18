@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, status, Depends, Query
 from pydantic import BaseModel, Field
 
 from src.core.entities.notebook import Notebook
-from .auth.firebase_auth import get_current_user_email_with_api_key
+from .auth.jwt_auth import get_current_user_email_with_api_key
 
 from ..core.services.qa_rag_service import QaRagService
 from ..core.commands.qa_commands import AskQuestionCommand

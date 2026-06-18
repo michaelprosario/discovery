@@ -121,3 +121,96 @@ As a user, I should be able to chat with an agent
 - the agent should promote a conversational way to explore the sources in the notebook
 - The system should show related sources to help me gain trust in the answers of the agent. 
 - I should be able to open source reference links with a click
+
+### 6/18
+
+- review src backend.
+- need to remove all firebase auth code
+- think about changes and document in removeFirebaseAuth.md
+===
+- review removeFirebaseAuth.md
+- think about adding a registration and auth system internal to the backend
+- the system should use oauth patterns and jwt tokens
+- document proposal in oauth_local.md
+===
+-Review to get context of app goals: specs/domain_model.md
+-Think about making a new front-end using React.
+-Implement react project in discoveryPortalReact
+-Make sure that discoveryPortalReact properly proxies to local backend for local dev
+-We will probably host a static build of the react front end on the FAST API (in the future)
+
+The system should focus upon the following use cases
+- User registration
+- User login
+- CreateNotebookCommand
+- UpdateNotebookCommand
+- RenameNotebookCommand
+- ImportFileSource
+- ImportUrlSource
+- DeleteSource
+- ExtractContent
+- GenerateSummary
+- IndexContentCommand
+- ArticleSearchQuery
+- GetNotebookByIdQuery
+- ListNotebooksQuery
+- ListSources
+- GetSource
+- Generation of blog posts
+- Question and answer with notebook
+    - make sure to cite sources
+===
+
+Given
+- I am using the view blog output page
+
+When 
+- I click the "read" button
+
+Then
+- The system should do text to speech to enable me to listen to the article.
+- The system should give me the following functions too
+    - pause reading
+    - resume reading
+    - restart reading
+
+===
+
+Given 
+- I am using article search
+
+When 
+- I click "create notebook"
+
+Then
+- The system should note all the articles in the search results
+- The system should enable me to create a notebook and select which articles should be added as sources to the notebook.
+
+===
+
+Given
+- I am creating a notebook from sources from article search
+- I have selected 1 or many sources for notebook creation
+
+When
+- I click "Create notebook"
+
+Then
+- The system should do the following
+    - Create notebook record
+    - Create notebook source records for each source
+    - When the process finishes, the system should report the following:
+        - articles added with no issues
+        - list articles that could not be ingested
+
+Think about these requirements and document in buildNotebookFromSearch.md
+
+===
+
+Write a script
+- explore discoveryPortalReact
+- do a build so that we have html/js that we can deploy
+- move the dist directory content to src/api/static
+===
+- Update discoveryPortalReact
+- Make screens responsive and more mobile friendly.

@@ -18,7 +18,7 @@ from ..core.queries.output_queries import (
     SearchOutputsQuery
 )
 from ..core.value_objects.enums import SortOption, SortOrder, OutputType, OutputStatus
-from .auth.firebase_auth import get_current_user_email, get_current_user_email_with_api_key
+from .auth.jwt_auth import get_current_user_email, get_current_user_email_with_api_key
 from .auth.authorization import require_resource_owner_or_fail
 from .dtos import (
     CreateOutputRequest,

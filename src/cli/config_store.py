@@ -24,16 +24,18 @@ class DiscoveryProfile(BaseModel):
     name: str = Field(..., min_length=1)
     url: AnyHttpUrl
     api_key: str | None = None
+    access_token: str | None = None
+    refresh_token: str | None = None
     default_notebook: str | None = None
 
     @property
     def base_url(self) -> str:
         return str(self.url).rstrip("/")
-    
+
     @property
     def is_authenticated(self) -> bool:
-        """Check if profile has valid authentication."""
-        return self.api_key is not None
+        """Check if profile has valid authentication (JWT access token or legacy API key)."""
+        return self.access_token is not None or self.api_key is not None
 
 
 class DiscoveryConfig(BaseModel):

@@ -376,3 +376,52 @@ class OutputPreviewResponse(BaseModel):
     preview: str
     full_content_length: int
     word_count: int
+
+
+# --- Authentication DTOs -----------------------------------------------------
+
+class RegisterRequest(BaseModel):
+    """Request model for registering a new user."""
+
+    email: str = Field(..., max_length=255, description="Login email")
+    password: str = Field(..., min_length=8, max_length=128, description="Plaintext password")
+    display_name: Optional[str] = Field(None, max_length=255, description="Display name")
+
+
+class UserResponse(BaseModel):
+    """Public representation of a user (never includes the password hash)."""
+
+    id: UUID
+    email: str
+    display_name: Optional[str] = None
+    roles: List[str] = Field(default_factory=list)
+    is_active: bool = True
+    created_at: datetime
+
+
+class TokenResponse(BaseModel):
+    """OAuth2 token response (access + refresh)."""
+
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int = Field(..., description="Access token lifetime in seconds")
+
+
+class RefreshRequest(BaseModel):
+    """Request model for exchanging a refresh token."""
+
+    refresh_token: str = Field(..., description="A valid refresh token")
+
+
+class LogoutRequest(BaseModel):
+    """Request model for revoking a refresh token."""
+
+    refresh_token: str = Field(..., description="The refresh token to revoke")
+
+
+class ChangePasswordRequest(BaseModel):
+    """Request model for changing the authenticated user's password."""
+
+    old_password: str = Field(..., max_length=128)
+    new_password: str = Field(..., min_length=8, max_length=128)

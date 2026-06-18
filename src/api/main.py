@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+from .auth_router import router as auth_router
 from .notebooks_router import router as notebooks_router
 from .sources_router import router as sources_router
 from .outputs_router import router as outputs_router
@@ -39,7 +40,14 @@ app.add_middleware(
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+# Mount assets folder to support relative paths when index.html is served at /
+assets_dir = os.path.join(static_dir, "assets")
+os.makedirs(assets_dir, exist_ok=True)
+app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+
 # Include routers
+app.include_router(auth_router)
 app.include_router(notebooks_router)
 app.include_router(sources_router)
 app.include_router(outputs_router)

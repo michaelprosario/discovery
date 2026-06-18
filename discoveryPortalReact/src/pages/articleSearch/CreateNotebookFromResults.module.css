@@ -1,0 +1,49 @@
+.articleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  margin-bottom: 0.5rem;
+  background: var(--color-elevated);
+}
+
+.articleRow input[type='checkbox'] {
+  margin-top: 0.2rem;
+}
+
+.articleBody {
+  min-width: 0;
+}
+
+.articleTitle {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.articleLink {
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+.reportItem {
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius);
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.added {
+  background: rgba(30, 215, 96, 0.1);
+  border: 1px solid rgba(30, 215, 96, 0.35);
+}
+
+.failed {
+  background: rgba(240, 97, 109, 0.1);
+  border: 1px solid rgba(240, 97, 109, 0.35);
+}
+
+.reason {
+  color: var(--color-danger-hover);
+}
