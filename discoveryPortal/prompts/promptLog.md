@@ -204,3 +204,13 @@ Then
         - list articles that could not be ingested
 
 Think about these requirements and document in buildNotebookFromSearch.md
+
+===
+
+Write a script
+- explore discoveryPortalReact
+- do a build so that we have html/js that we can deploy
+- move the dist directory content to src/api/static
+===
+- Update discoveryPortalReact
+- Make screens responsive and more mobile friendly.

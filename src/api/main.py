@@ -40,6 +40,12 @@ app.add_middleware(
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+# Mount assets folder to support relative paths when index.html is served at /
+assets_dir = os.path.join(static_dir, "assets")
+os.makedirs(assets_dir, exist_ok=True)
+app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+
 # Include routers
 app.include_router(auth_router)
 app.include_router(notebooks_router)
