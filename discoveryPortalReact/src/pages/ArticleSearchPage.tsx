@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { articleApi } from '../api/services';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { CreateNotebookFromResults } from './articleSearch/CreateNotebookFromResults';
 
 export function ArticleSearchPage() {
   const [question, setQuestion] = useState('');
   const [maxResults, setMaxResults] = useState(10);
+  // The question that produced the current results (for prefilling the notebook).
+  const [submittedQuestion, setSubmittedQuestion] = useState('');
+  const [building, setBuilding] = useState(false);
 
   const search = useMutation({
     mutationFn: () => articleApi.search({ question: question.trim(), max_results: maxResults }),
@@ -13,7 +17,10 @@ export function ArticleSearchPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (question.trim()) search.mutate();
+    if (!question.trim()) return;
+    setBuilding(false);
+    setSubmittedQuestion(question.trim());
+    search.mutate();
   }
 
   const articles = search.data?.robust_articles ?? [];
@@ -59,13 +66,26 @@ export function ArticleSearchPage() {
 
       <ErrorMessage error={search.error} />
 
-      {search.isSuccess &&
+      {building ? (
+        <CreateNotebookFromResults
+          articles={articles}
+          question={submittedQuestion}
+          onClose={() => setBuilding(false)}
+        />
+      ) : (
+        search.isSuccess &&
         (articles.length === 0 ? (
           <div className="card">
             <p className="muted">No articles found.</p>
           </div>
         ) : (
           <div className="stack">
+            <div className="row-between">
+              <h2 style={{ margin: 0, fontSize: '1.1rem' }}>{articles.length} result(s)</h2>
+              <button className="btn" onClick={() => setBuilding(true)}>
+                + Create notebook
+              </button>
+            </div>
             {articles.map((a, i) => (
               <div key={i} className="card">
                 <h3 style={{ fontSize: '1rem', marginBottom: 2 }}>
@@ -79,7 +99,8 @@ export function ArticleSearchPage() {
               </div>
             ))}
           </div>
-        ))}
+        ))
+      )}
     </div>
   );
 }
