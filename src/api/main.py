@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+from .auth_router import router as auth_router
 from .notebooks_router import router as notebooks_router
 from .sources_router import router as sources_router
 from .outputs_router import router as outputs_router
@@ -40,6 +41,7 @@ static_dir = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Include routers
+app.include_router(auth_router)
 app.include_router(notebooks_router)
 app.include_router(sources_router)
 app.include_router(outputs_router)

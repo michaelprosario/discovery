@@ -30,11 +30,13 @@ class DiscoveryApiClient(AbstractContextManager["DiscoveryApiClient"]):
             "Accept": "application/json",
             "User-Agent": "discovery-cli/0.2",
         }
-        
-        # Add API key if present
-        if profile.api_key:
+
+        # Prefer the JWT bearer token; fall back to a legacy API key if present.
+        if profile.access_token:
+            headers["Authorization"] = f"Bearer {profile.access_token}"
+        elif profile.api_key:
             headers["X-API-Key"] = profile.api_key
-        
+
         self._client = httpx.Client(
             base_url=profile.base_url,
             timeout=timeout,
@@ -42,6 +44,7 @@ class DiscoveryApiClient(AbstractContextManager["DiscoveryApiClient"]):
             headers=headers,
         )
         self.verbose = verbose
+        self._refreshed = False
 
     # Context manager ---------------------------------------------------------------
     def __enter__(self) -> "DiscoveryApiClient":
@@ -59,9 +62,50 @@ class DiscoveryApiClient(AbstractContextManager["DiscoveryApiClient"]):
             response = self._client.request(method, path, **kwargs)
         except httpx.RequestError as exc:  # pragma: no cover - network failures
             raise ApiRequestError(f"Failed to reach API: {exc}") from exc
+
+        # On expiry, transparently refresh the access token once and retry.
+        if response.status_code == 401 and not self._refreshed and self.profile.refresh_token:
+            if self._try_refresh():
+                try:
+                    response = self._client.request(method, path, **kwargs)
+                except httpx.RequestError as exc:  # pragma: no cover - network failures
+                    raise ApiRequestError(f"Failed to reach API: {exc}") from exc
+
         if response.status_code >= 400:
             raise ApiRequestError(self._extract_error(response), response.status_code)
         return response
+
+    def _try_refresh(self) -> bool:
+        """Exchange the stored refresh token for a new access token. Returns success."""
+        self._refreshed = True
+        try:
+            resp = self._client.post("/api/auth/refresh", json={"refresh_token": self.profile.refresh_token})
+        except httpx.RequestError:  # pragma: no cover - network failures
+            return False
+        if resp.status_code >= 400:
+            return False
+        try:
+            tokens = resp.json()
+        except json.JSONDecodeError:  # pragma: no cover
+            return False
+
+        access = tokens.get("access_token")
+        refresh = tokens.get("refresh_token")
+        if not access:
+            return False
+
+        # Update in-memory client + persist the rotated tokens to the profile.
+        self._client.headers["Authorization"] = f"Bearer {access}"
+        self.profile.access_token = access
+        if refresh:
+            self.profile.refresh_token = refresh
+        try:
+            config = self.config_store.load()
+            config.set_profile(self.profile)
+            self.config_store.save(config)
+        except DiscoveryCLIError:  # pragma: no cover - persistence best-effort
+            pass
+        return True
 
     def get_json(self, path: str, **kwargs) -> Any:
         response = self.request("GET", path, **kwargs)

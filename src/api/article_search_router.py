@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Dict, List
 
-from .auth.firebase_auth import get_current_user_email_with_api_key
+from .auth.jwt_auth import get_current_user_email_with_api_key
 
 from ..core.services.article_search_service import ArticleSearchService
 from ..core.queries.article_search_queries import ArticleSearchQuery

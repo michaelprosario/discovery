@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel, Field
 
-from .auth.firebase_auth import get_current_user_email_with_api_key
+from .auth.jwt_auth import get_current_user_email_with_api_key
 
 from ..core.services.mindmap_service import MindMapService
 from ..core.interfaces.repositories.i_notebook_repository import INotebookRepository

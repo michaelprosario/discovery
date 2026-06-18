@@ -19,7 +19,7 @@ from ..core.queries.notebook_queries import (
     ListNotebooksQuery
 )
 from ..core.value_objects.enums import SortOption, SortOrder
-from .auth.firebase_auth import get_current_user_email, get_current_user_email_with_api_key, SYSTEM_USER_EMAIL
+from .auth.jwt_auth import get_current_user_email, get_current_user_email_with_api_key, SYSTEM_USER_EMAIL
 from .auth.authorization import require_resource_owner_or_fail
 from .dtos import (
     CreateNotebookRequest,

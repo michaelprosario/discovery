@@ -23,7 +23,7 @@ from ..core.queries.source_queries import (
 )
 from ..core.queries.article_search_queries import ArticleSearchQuery
 from ..core.value_objects.enums import SourceType, FileType, SortOption, SortOrder
-from .auth.firebase_auth import get_current_user_email, get_current_user_email_with_api_key
+from .auth.jwt_auth import get_current_user_email, get_current_user_email_with_api_key
 from .auth.authorization import require_resource_owner_or_fail
 from .dependencies.article_search import get_article_search_service
 from .dtos import (

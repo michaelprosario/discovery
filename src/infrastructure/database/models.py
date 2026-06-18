@@ -2,7 +2,7 @@
 from datetime import datetime
 from uuid import UUID
 import json
-from sqlalchemy import Column, String, DateTime, Integer, Text, TypeDecorator, ForeignKey, BigInteger
+from sqlalchemy import Column, String, DateTime, Integer, Text, TypeDecorator, ForeignKey, BigInteger, Boolean
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ARRAY, JSON as PG_JSON
 from sqlalchemy.orm import declarative_base, relationship, backref
 
@@ -157,3 +157,46 @@ class OutputModel(Base):
 
     def __repr__(self):
         return f"<OutputModel(id={self.id}, title='{self.title}', type='{self.output_type}', status='{self.status}')>"
+
+
+class UserModel(Base):
+    """
+    SQLAlchemy model for User entity.
+
+    Maps to the 'users' table. Infrastructure concern (Clean Architecture).
+    """
+    __tablename__ = "users"
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True)
+    email = Column(String(255), nullable=False, unique=True, index=True)
+    password_hash = Column(String(255), nullable=False)
+    display_name = Column(String(255), nullable=True)
+    roles = Column(JSONEncodedList, nullable=False, default=["user"])
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<UserModel(id={self.id}, email='{self.email}')>"
+
+
+class RefreshTokenModel(Base):
+    """
+    SQLAlchemy model for RefreshToken entity.
+
+    Maps to the 'refresh_tokens' table. Only the hash of the token is stored.
+    """
+    __tablename__ = "refresh_tokens"
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True)
+    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    token_hash = Column(String(64), nullable=False, unique=True, index=True)  # SHA256 hex digest
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    revoked_at = Column(DateTime, nullable=True)
+    replaced_by = Column(PG_UUID(as_uuid=True), nullable=True)
+
+    user = relationship("UserModel", backref=backref("refresh_tokens", passive_deletes="all"))
+
+    def __repr__(self):
+        return f"<RefreshTokenModel(id={self.id}, user_id={self.user_id}, revoked={self.revoked_at is not None})>"
