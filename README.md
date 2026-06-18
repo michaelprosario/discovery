@@ -127,6 +127,7 @@ WEAVIATE_API_KEY="your_weaviate_cloud_key"       # Only for cloud instances
 
 ### Starting Your Discovery Instance
 
+
 #### 1. Database Setup
 
 Start the PostgreSQL database using Docker:
@@ -136,8 +137,10 @@ Start the PostgreSQL database using Docker:
 docker-compose -f pgDockerCompose/docker-compose.yaml up -d
 
 # Apply database migrations
-alembic upgrade head
+uv run alembic upgrade head
 ```
+
+See [Database Migrations](#database-migrations) below for more details on creating and managing migrations.
 
 #### 2. Vector Database Setup (Optional but Recommended)
 
@@ -179,6 +182,56 @@ Verify everything works correctly:
 # Or using uv directly
 uv run pytest tests/ -v
 ```
+
+### Database Migrations
+
+Discovery uses [Alembic](https://alembic.sqlalchemy.org/) to manage the PostgreSQL schema. The configuration lives in `alembic.ini`, and migration scripts are stored in `src/infrastructure/migrations/versions/`.
+
+Alembic reads the database connection from the `DATABASE_URL` environment variable (falling back to `postgresql://postgres:Foobar321@localhost:5432/postgres` if it isn't set), so make sure your `.env` is configured and PostgreSQL is running before applying migrations.
+
+**Apply all pending migrations (most common):**
+
+```bash
+# Upgrade the database to the latest schema
+uv run alembic upgrade head
+```
+
+**Check current migration state:**
+
+```bash
+# Show the revision currently applied to the database
+uv run alembic current
+
+# List the full migration history
+uv run alembic history --verbose
+```
+
+**Create a new migration:**
+
+```bash
+# Autogenerate a migration from changes to the SQLAlchemy models
+uv run alembic revision --autogenerate -m "describe your change"
+
+# Or create an empty migration to fill in manually
+uv run alembic revision -m "describe your change"
+```
+
+Review the generated script in `src/infrastructure/migrations/versions/` before applying it, then run `uv run alembic upgrade head`.
+
+**Roll back migrations:**
+
+```bash
+# Undo the most recent migration
+uv run alembic downgrade -1
+
+# Roll back to a specific revision
+uv run alembic downgrade <revision-id>
+
+# Roll back everything
+uv run alembic downgrade base
+```
+
+> **Note:** Run all Alembic commands from the project root so it can locate `alembic.ini`. If you've activated the virtual environment (`source .venv/bin/activate`), you can drop the `uv run` prefix and call `alembic` directly.
 
 ### Vector Search Demo
 

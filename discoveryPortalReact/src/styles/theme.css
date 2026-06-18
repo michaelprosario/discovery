@@ -1,0 +1,327 @@
+:root {
+  color-scheme: dark;
+
+  /* Spotify-inspired dark palette */
+  --color-bg: #121212;
+  --color-bg-deep: #000000;
+  --color-surface: #181818;
+  --color-surface-hover: #282828;
+  --color-elevated: #242424;
+  --color-border: #2a2a2a;
+  --color-text: #ffffff;
+  --color-text-muted: #b3b3b3;
+
+  --color-primary: #1ed760;
+  --color-primary-hover: #1fdf64;
+  --on-primary: #000000;
+
+  --color-danger: #f0616d;
+  --color-danger-hover: #f47b85;
+  --color-success: #1ed760;
+
+  --radius: 8px;
+  --radius-pill: 500px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Spotify-style thin dark scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4d4d4d transparent;
+}
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #4d4d4d;
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #6a6a6a;
+  background-clip: content-box;
+}
+
+a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+h1 {
+  font-size: 1.85rem;
+}
+
+/* --- Buttons --------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.3rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--on-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    transform 0.1s ease,
+    background 0.12s ease,
+    border-color 0.12s ease,
+    filter 0.12s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:hover {
+  background: var(--color-primary-hover);
+  text-decoration: none;
+  transform: scale(1.04);
+}
+.btn:active {
+  transform: scale(0.99);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* "White" ghost button — transparent with a light outline, Spotify style */
+.btn-secondary {
+  background: transparent;
+  color: var(--color-text);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-text);
+  transform: scale(1.04);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--color-danger);
+  border-color: rgba(240, 97, 109, 0.5);
+}
+.btn-danger:hover {
+  background: rgba(240, 97, 109, 0.12);
+  border-color: var(--color-danger-hover);
+  color: var(--color-danger-hover);
+}
+
+.btn-sm {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+}
+
+/* --- Forms ----------------------------------------------------------------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+.field label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font: inherit;
+  background: var(--color-elevated);
+  color: var(--color-text);
+}
+.input::placeholder,
+.textarea::placeholder {
+  color: #777;
+}
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--color-text);
+  box-shadow: 0 0 0 1px var(--color-text);
+}
+.textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+.select option {
+  background: var(--color-elevated);
+  color: var(--color-text);
+}
+input[type='file'] {
+  color: var(--color-text-muted);
+}
+input[type='checkbox'] {
+  accent-color: var(--color-primary);
+  width: 16px;
+  height: 16px;
+}
+
+/* --- Cards & layout helpers ------------------------------------------------ */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Cards that act as links/tiles lighten on hover, like Spotify cards */
+a.card:hover {
+  background: var(--color-surface-hover);
+  text-decoration: none;
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+.text-sm {
+  font-size: 0.85rem;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  margin-right: 0.35rem;
+}
+
+.alert {
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+.alert-error {
+  background: rgba(240, 97, 109, 0.12);
+  color: var(--color-danger-hover);
+  border: 1px solid rgba(240, 97, 109, 0.4);
+}
+.alert-success {
+  background: rgba(30, 215, 96, 0.12);
+  color: var(--color-success);
+  border: 1px solid rgba(30, 215, 96, 0.4);
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Rendered markdown blocks (outputs, Q&A answers). */
+.markdown {
+  color: var(--color-text);
+}
+.markdown > *:first-child {
+  margin-top: 0;
+}
+.markdown a {
+  color: var(--color-primary);
+}
+.markdown pre {
+  background: var(--color-bg-deep);
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+}
+.markdown code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}
+.markdown pre code {
+  background: none;
+  padding: 0;
+}
+.markdown blockquote {
+  border-left: 3px solid var(--color-primary);
+  margin: 0.5rem 0;
+  padding-left: 0.8rem;
+  color: var(--color-text-muted);
+}
