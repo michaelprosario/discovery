@@ -325,3 +325,57 @@ a.card:hover {
   padding-left: 0.8rem;
   color: var(--color-text-muted);
 }
+
+/* --- Responsive Design ---------------------------------------------------- */
+
+@media (max-width: 650px) {
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .mainInner {
+    padding: 1rem 0.75rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  /* Ensure inputs/selects never overflow small viewports */
+  .input,
+  .textarea,
+  .select {
+    max-width: 100%;
+  }
+
+  /* Make row layouts wrap safely on mobile */
+  .row {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  /* Stack row-between layouts vertically on small screens */
+  .row-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  /* Make standard primary buttons stretch full width on mobile for easy tapping */
+  .btn:not(.btn-sm) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Stack side-by-side form fields vertically on mobile */
+  .row > .field {
+    flex: none !important;
+    width: 100% !important;
+  }
+}
+

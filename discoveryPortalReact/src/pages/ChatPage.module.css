@@ -43,3 +43,20 @@
   display: flex;
   gap: 0.5rem;
 }
+
+.composer input {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .question {
+    max-width: 90%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  .composer {
+    padding-bottom: 0.75rem;
+  }
+}
+
