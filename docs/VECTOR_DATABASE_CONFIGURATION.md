@@ -14,6 +14,7 @@ Weaviate is a cloud-native vector search engine with built-in machine learning m
 VECTOR_DB_PROVIDER=weaviate
 WEAVIATE_URL=http://localhost:8080  # or your cloud instance URL
 WEAVIATE_KEY=your-api-key-here      # required for cloud instances
+WEAVIATE_VECTOR_INDEX_TYPE=hnsw     # optional: 'hnsw' (default), 'hfresh', 'flat', or 'dynamic'
 ```
 
 **Local Setup (Docker):**

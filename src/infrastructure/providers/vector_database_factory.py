@@ -37,10 +37,12 @@ def create_vector_database_provider() -> IVectorDatabaseProvider:
         # Create Weaviate provider
         weaviate_url = os.getenv("WEAVIATE_URL", "http://localhost:8080")
         weaviate_key = os.getenv("WEAVIATE_KEY")
+        weaviate_index_type = os.getenv("WEAVIATE_VECTOR_INDEX_TYPE")
         
         return WeaviateVectorDatabaseProvider(
             url=weaviate_url,
-            api_key=weaviate_key
+            api_key=weaviate_key,
+            vector_index_type=weaviate_index_type
         )
 
     elif provider_type == "chroma":

@@ -13,16 +13,23 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
     This provider uses the weaviate-client library to interact with a Weaviate instance.
     """
 
-    def __init__(self, url: str = "http://localhost:8080", api_key: Optional[str] = None):
+    def __init__(
+        self,
+        url: str = "http://localhost:8080",
+        api_key: Optional[str] = None,
+        vector_index_type: Optional[str] = None
+    ):
         """
         Initialize the Weaviate provider.
 
         Args:
             url: URL of the Weaviate instance
             api_key: Optional API key for cloud instances
+            vector_index_type: Optional vector index type (e.g., 'hnsw', 'hfresh', 'flat')
         """
         self.url = url
         self.api_key = api_key
+        self.vector_index_type = vector_index_type or "hnsw"
         self._client = None
 
     def _get_client(self):
@@ -135,10 +142,23 @@ class WeaviateVectorDatabaseProvider(IVectorDatabaseProvider):
                     vectorize_collection_name=False
                 )
 
+            # Configure vector index type
+            vector_index_config = None
+            index_type_lower = (self.vector_index_type or "hnsw").lower()
+            if index_type_lower == "hfresh":
+                vector_index_config = Configure.VectorIndex.hfresh()
+            elif index_type_lower == "flat":
+                vector_index_config = Configure.VectorIndex.flat()
+            elif index_type_lower == "dynamic":
+                vector_index_config = Configure.VectorIndex.dynamic()
+            else:
+                vector_index_config = Configure.VectorIndex.hnsw()
+
             client.collections.create(
                 name=collection_name,
                 properties=weaviate_properties,
-                vectorizer_config=vectorizer_config
+                vectorizer_config=vectorizer_config,
+                vector_index_config=vector_index_config
             )
 
             return Result.success(None)
