@@ -216,7 +216,9 @@ Write a script
 - Make screens responsive and more mobile friendly.
 ===
 
-In production, I get the following error when we index a notebook.
+I get the following error when we index a notebook.
 Any ideas regarding fixing this error?
 
 Failed to create collection: Failed to create collection: Collection may not have been created properly.! Unexpected status code: 422, with response body: {'allowed': ['hfresh'], 'error': None, 'errorCode': 'CONFIG_NOT_ALLOWED', 'message': 'hnsw is not allowed for vector_index_type. Allowed values: hfresh.', 'restriction': 'vector_index_type', 'value': 'hnsw'}.
+
+Consult prompts/weaviate.md while fixing bug
