@@ -4,6 +4,7 @@ import { useBuildNotebookFromArticles } from '../../hooks/useBuildNotebookFromAr
 import { useDeleteNotebook, useIngestNotebook } from '../../hooks/queries';
 import type { ArticleResult } from '../../api/types';
 import { ErrorMessage } from '../../components/ErrorMessage';
+import { IngestReport } from '../../components/IngestReport';
 import styles from './CreateNotebookFromResults.module.css';
 
 interface Props {
@@ -111,34 +112,7 @@ export function CreateNotebookFromResults({ articles, question, onClose }: Props
             {cancelled ? ' (cancelled)' : ''}
           </h2>
 
-          {added.length > 0 && (
-            <div>
-              <h3 style={{ fontSize: '1rem' }}>✅ Added with no issues</h3>
-              {added.map((a) => (
-                <div key={a.link} className={`${styles.reportItem} ${styles.added}`}>
-                  <div style={{ fontWeight: 600 }}>{a.title}</div>
-                  <a href={a.link} target="_blank" rel="noreferrer" className={styles.articleLink}>
-                    {a.link}
-                  </a>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {failed.length > 0 && (
-            <div>
-              <h3 style={{ fontSize: '1rem' }}>⚠️ Could not be ingested</h3>
-              {failed.map((f) => (
-                <div key={f.link} className={`${styles.reportItem} ${styles.failed}`}>
-                  <div style={{ fontWeight: 600 }}>{f.title}</div>
-                  <a href={f.link} target="_blank" rel="noreferrer" className={styles.articleLink}>
-                    {f.link}
-                  </a>
-                  <div className={styles.reason}>Reason: {f.reason}</div>
-                </div>
-              ))}
-            </div>
-          )}
+          <IngestReport added={added} failed={failed} />
 
           <ErrorMessage error={ingest.error || del.error} />
           {ingest.isSuccess && ingest.data && (
