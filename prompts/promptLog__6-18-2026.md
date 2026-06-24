@@ -235,3 +235,20 @@ Then
         - list articles that could not be ingested
 
 Think about these requirements and document in addSourcesToNotebook.md
+
+===
+- explore discoveryPortalReact
+- Given
+    - I am reading an existing blog post
+- When 
+    - I click the "copy text"
+- Then
+    - The system stores the markdown into memory to be pasted in another app
+
+
+- Given
+    - I am reading an answer in quest and answer chat
+- When 
+    - I click the "copy text" on the answer
+- Then
+    - The system stores the markdown into memory to be pasted in another app
