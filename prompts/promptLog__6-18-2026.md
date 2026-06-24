@@ -214,3 +214,24 @@ Write a script
 ===
 - Update discoveryPortalReact
 - Make screens responsive and more mobile friendly.
+===
+- explore discoveryPortalReact
+
+Given
+- I am reviewing an existing notebook
+- I have populated a search term in the search field
+- I have clicked "Search"
+- The system has rendered a list of articles
+- I have selected 1 or many sources for notebook creation
+
+When
+- I click "Add sources to notebook"
+
+Then
+- The system should do the following
+    - Create notebook source records for each source
+    - When the process finishes, the system should report the following:
+        - articles added with no issues
+        - list articles that could not be ingested
+
+Think about these requirements and document in addSourcesToNotebook.md

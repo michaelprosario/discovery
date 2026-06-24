@@ -7,10 +7,11 @@ import { NotebookHeader } from './notebook/NotebookHeader';
 import { NotebookSettings } from './notebook/NotebookSettings';
 import { IndexPanel } from './notebook/IndexPanel';
 import { AddSourcePanel } from './notebook/AddSourcePanel';
+import { AddSourcesFromSearch } from './notebook/AddSourcesFromSearch';
 import { SourceList } from './notebook/SourceList';
 import { OutputsSection } from './notebook/OutputsSection';
 
-type Tab = 'sources' | 'outputs';
+type Tab = 'sources' | 'find-sources' | 'outputs';
 
 export function NotebookDetailPage() {
   const { id = '' } = useParams();
@@ -21,13 +22,14 @@ export function NotebookDetailPage() {
   if (error) return <ErrorMessage error={error} />;
   if (!notebook) return <ErrorMessage error="Notebook not found." />;
 
-  const tabBtn = (t: Tab, label: string, count: number) => (
+  const tabBtn = (t: Tab, label: string, count?: number) => (
     <button
       type="button"
       className={`btn btn-sm ${tab === t ? '' : 'btn-secondary'}`}
       onClick={() => setTab(t)}
     >
-      {label} ({count})
+      {label}
+      {count !== undefined ? ` (${count})` : ''}
     </button>
   );
 
@@ -53,17 +55,18 @@ export function NotebookDetailPage() {
 
       <div className="row">
         {tabBtn('sources', 'Sources', notebook.source_count)}
+        {tabBtn('find-sources', 'Find sources')}
         {tabBtn('outputs', 'Outputs', notebook.output_count)}
       </div>
 
-      {tab === 'sources' ? (
+      {tab === 'sources' && (
         <div className="stack">
           <AddSourcePanel notebookId={id} />
           <SourceList notebookId={id} />
         </div>
-      ) : (
-        <OutputsSection notebookId={id} />
       )}
+      {tab === 'find-sources' && <AddSourcesFromSearch notebookId={id} />}
+      {tab === 'outputs' && <OutputsSection notebookId={id} />}
     </div>
   );
 }

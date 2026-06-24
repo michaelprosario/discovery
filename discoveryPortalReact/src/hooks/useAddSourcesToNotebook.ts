@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { notebooksApi } from '../api/services';
 import { qk } from './queries';
 import {
   dedupeByLink,
@@ -13,37 +12,35 @@ import type { ArticleResult } from '../api/types';
 
 export type { AddedArticle, FailedArticle };
 
-export type BuildPhase = 'idle' | 'creating-notebook' | 'adding-sources' | 'done';
+export type AddSourcesPhase = 'idle' | 'adding-sources' | 'done';
 
-export interface BuildResult {
+export interface AddSourcesResult {
   notebookId: string;
-  notebookName: string;
   added: AddedArticle[];
   failed: FailedArticle[];
   /** True when the user cancelled before every selected article was processed. */
   cancelled: boolean;
 }
 
-export interface RunParams {
-  name: string;
-  description?: string;
-  tags?: string[];
+export interface AddSourcesRunParams {
+  notebookId: string;
   articles: ArticleResult[];
 }
 
 /**
- * Orchestrates "create a notebook from selected article-search results":
- * create the notebook (the gate), then import each selected article as a URL
- * source sequentially with per-item error isolation (see `articleIngest`),
- * building an added/failed report. Supports mid-run cancellation and retrying
- * just the failures against the already-created notebook.
+ * Orchestrates "add selected article-search results to an existing notebook":
+ * import each selected article as a URL source sequentially with per-item error
+ * isolation, building an added/failed report. Supports mid-run cancellation and
+ * retrying just the failures against the same notebook.
+ *
+ * Unlike `useBuildNotebookFromArticles`, there is no notebook-creation gate —
+ * the notebook already exists, so import begins immediately on `run`.
  */
-export function useBuildNotebookFromArticles() {
+export function useAddSourcesToNotebook() {
   const queryClient = useQueryClient();
-  const [phase, setPhase] = useState<BuildPhase>('idle');
+  const [phase, setPhase] = useState<AddSourcesPhase>('idle');
   const [progress, setProgress] = useState<ImportProgress>({ current: 0, total: 0 });
-  const [result, setResult] = useState<BuildResult | null>(null);
-  const [error, setError] = useState<unknown>(null);
+  const [result, setResult] = useState<AddSourcesResult | null>(null);
   const cancelRef = useRef(false);
 
   const invalidate = useCallback(
@@ -65,7 +62,6 @@ export function useBuildNotebookFromArticles() {
     setPhase('idle');
     setProgress({ current: 0, total: 0 });
     setResult(null);
-    setError(null);
   }, []);
 
   const importInto = useCallback((notebookId: string, articles: ArticleResult[]) => {
@@ -77,38 +73,13 @@ export function useBuildNotebookFromArticles() {
   }, []);
 
   const run = useCallback(
-    async (params: RunParams) => {
-      setError(null);
-      setResult(null);
+    async ({ notebookId, articles }: AddSourcesRunParams) => {
       cancelRef.current = false;
-
-      // Step 1 — create the notebook. This is the gate: if it fails, stop.
-      setPhase('creating-notebook');
-      let notebook;
-      try {
-        notebook = await notebooksApi.create({
-          name: params.name.trim(),
-          description: params.description?.trim() || undefined,
-          tags: params.tags?.filter(Boolean),
-        });
-      } catch (err) {
-        setError(err);
-        setPhase('idle');
-        return;
-      }
-
-      // Step 2 — import each selected article as a URL source.
-      const { added, failed } = await importInto(notebook.id, dedupeByLink(params.articles));
-
-      setResult({
-        notebookId: notebook.id,
-        notebookName: notebook.name,
-        added,
-        failed,
-        cancelled: cancelRef.current,
-      });
+      setResult(null);
+      const { added, failed } = await importInto(notebookId, dedupeByLink(articles));
+      setResult({ notebookId, added, failed, cancelled: cancelRef.current });
       setPhase('done');
-      invalidate(notebook.id);
+      invalidate(notebookId);
     },
     [importInto, invalidate],
   );
@@ -119,7 +90,6 @@ export function useBuildNotebookFromArticles() {
     cancelRef.current = false;
     const toRetry = result.failed.map((f) => ({ title: f.title, link: f.link }));
     const { added, failed } = await importInto(result.notebookId, toRetry);
-
     setResult((prev) =>
       prev
         ? {
@@ -134,5 +104,5 @@ export function useBuildNotebookFromArticles() {
     invalidate(result.notebookId);
   }, [result, importInto, invalidate]);
 
-  return { phase, progress, result, error, run, cancel, reset, retryFailed };
+  return { phase, progress, result, run, cancel, reset, retryFailed };
 }
