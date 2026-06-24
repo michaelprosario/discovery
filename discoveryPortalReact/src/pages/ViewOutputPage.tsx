@@ -4,6 +4,8 @@ import { Spinner } from '../components/Spinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Markdown } from '../components/Markdown';
 import { ReadAloud } from '../components/ReadAloud';
+import { CopyButton } from '../components/CopyButton';
+
 
 export function ViewOutputPage() {
   const { id = '', outputId = '' } = useParams();
@@ -26,7 +28,10 @@ export function ViewOutputPage() {
             {output.status} · {output.word_count.toLocaleString()} words
           </p>
         </div>
-        <ReadAloud content={output.content} />
+        <div className="row" style={{ flexShrink: 0, gap: '0.5rem' }}>
+          <ReadAloud content={output.content} />
+          <CopyButton content={output.content} />
+        </div>
       </div>
 
       <div className="card">

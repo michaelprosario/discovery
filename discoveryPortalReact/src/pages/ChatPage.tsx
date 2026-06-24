@@ -5,7 +5,9 @@ import { qaApi } from '../api/services';
 import type { QaResponse } from '../api/types';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Markdown } from '../components/Markdown';
+import { CopyButton } from '../components/CopyButton';
 import styles from './ChatPage.module.css';
+
 
 interface Turn {
   question: string;
@@ -58,6 +60,9 @@ export function ChatPage() {
               {turn.response ? (
                 <>
                   <Markdown>{turn.response.answer}</Markdown>
+                  <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                    <CopyButton content={turn.response.answer} />
+                  </div>
                   {turn.response.sources.length > 0 && (
                     <div className={styles.sources}>
                       <p className="text-sm muted" style={{ marginTop: 0 }}>
